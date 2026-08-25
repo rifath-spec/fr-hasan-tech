@@ -92,40 +92,42 @@ export const RotatableWhyChooseUs: React.FC = () => {
   return (
     <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
       
-      {/* Top Section Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#1E5AA8] font-bold text-xs mb-2.5 shadow-soft-sm">
-            <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
-            <span>Our Service Guarantee</span>
+      {/* Unified Section Header & Live Trust Metrics Strip Card */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-soft-sm p-6 sm:p-8 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-[#1E5AA8] font-bold text-xs mb-3 shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <span>Our Service Guarantee</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Why Choose Us
+            </h2>
+            <p className="text-sm sm:text-base text-slate-700 mt-2 leading-relaxed">
+              Delivering high-precision document solutions, instant telecom reloads, and dependable customer service with every visit.
+            </p>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Why Choose Us
-          </h2>
-          <p className="text-sm sm:text-base text-slate-600 mt-1.5 leading-relaxed">
-            Delivering high-precision document solutions, instant telecom reloads, and dependable customer service with every visit.
-          </p>
-        </div>
-
-        {/* Live Trust Metrics Strip */}
-        <div className="flex items-center gap-3 sm:gap-4 bg-white px-4 py-2.5 rounded-2xl border border-slate-200/90 shadow-soft-sm shrink-0">
-          <div className="text-center pr-3 border-r border-slate-100">
-            <span className="block text-base sm:text-lg font-black text-[#1E5AA8] font-mono leading-none">15k+</span>
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Prints Served</span>
-          </div>
-          <div className="text-center pr-3 border-r border-slate-100">
-            <span className="block text-base sm:text-lg font-black text-amber-500 font-mono leading-none">99.9%</span>
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Satisfaction</span>
-          </div>
-          <div className="text-center">
-            <span className="block text-base sm:text-lg font-black text-emerald-600 font-mono leading-none">7 Days</span>
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Open Daily</span>
+          {/* Integrated Trust Metrics Strip */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-slate-50/90 p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-xs shrink-0 lg:min-w-[340px]">
+            <div className="text-center px-2 py-1 border-r border-slate-200/70">
+              <span className="block text-lg sm:text-xl font-black text-[#1E5AA8] font-mono leading-none">15k+</span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider mt-1 block">Prints Served</span>
+            </div>
+            <div className="text-center px-2 py-1 border-r border-slate-200/70">
+              <span className="block text-lg sm:text-xl font-black text-[#F59E0B] font-mono leading-none">99.9%</span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider mt-1 block">Satisfaction</span>
+            </div>
+            <div className="text-center px-2 py-1">
+              <span className="block text-lg sm:text-xl font-black text-emerald-600 font-mono leading-none">7 Days</span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider mt-1 block">Open Daily</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Modern Asymmetric / Bento Feature Cards Grid */}
+      {/* Responsive Feature Cards Grid - 1 col (<768px), 2 cols (md), 4 cols (lg) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
         {features.map((feature, idx) => (
           <div
@@ -133,8 +135,8 @@ export const RotatableWhyChooseUs: React.FC = () => {
             className="group bento-card bg-white border border-slate-200/90 hover:border-slate-300 shadow-soft-sm hover:shadow-soft-lg transition-all duration-200 rounded-3xl overflow-hidden flex flex-col justify-between"
           >
             <div>
-              {/* Photo Area with Floating Badge & Stat Counter */}
-              <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-100">
+              {/* Photo Area with Strong Dark Gradient Scrim for WCAG AA Contrast */}
+              <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-900">
                 <img
                   src={feature.image}
                   alt={feature.title}
@@ -142,45 +144,46 @@ export const RotatableWhyChooseUs: React.FC = () => {
                   referrerPolicy="no-referrer"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
+                {/* Guaranteed contrast scrim (WCAG AA Compliant) */}
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/45 to-slate-950/95" />
 
-                {/* Top Badge & Metric Counter */}
-                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs border ${feature.tagBadge}`}>
+                {/* Top Badge & Metric Counter with High Contrast */}
+                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+                  <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-slate-950/85 backdrop-blur-md text-white border border-white/30 shadow-md">
                     {feature.tag}
                   </span>
-                  <div className="px-2.5 py-1 rounded-lg bg-slate-900/90 backdrop-blur-md border border-white/10 text-white flex items-center gap-1 font-mono text-[11px] font-bold">
+                  <div className="px-2.5 py-1 rounded-lg bg-slate-950/90 backdrop-blur-md border border-white/25 text-white flex items-center gap-1 font-mono text-[11px] font-bold shadow-md">
                     <span className="text-amber-400">{feature.statValue}</span>
                   </div>
                 </div>
 
                 {/* Floating Title & Icon directly over photo base */}
-                <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center gap-3">
+                <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center gap-3 pointer-events-none">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${feature.iconColor} shrink-0`}>
                     {feature.icon}
                   </div>
-                  <div className="text-white drop-shadow-sm min-w-0">
-                    <h3 className="text-base font-bold leading-tight truncate">
+                  <div className="text-white drop-shadow-md min-w-0">
+                    <h3 className="text-base font-bold leading-tight truncate text-white">
                       {feature.title}
                     </h3>
-                    <p className="text-[11px] text-blue-200 font-medium truncate mt-0.5">
+                    <p className="text-[11px] text-blue-200 font-semibold truncate mt-0.5">
                       {feature.statLabel}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Card Body & Features */}
+              {/* Card Body & Features with WCAG AA compliant text contrast */}
               <div className="p-5">
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed mb-4">
                   {feature.description}
                 </p>
 
                 {/* Bullet Points Checklist */}
                 <div className="space-y-2 pt-3 border-t border-slate-100">
                   {feature.highlights.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <div key={i} className="flex items-start gap-2 text-xs text-slate-800">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span className="font-medium leading-snug">{item}</span>
                     </div>
                   ))}
@@ -189,7 +192,7 @@ export const RotatableWhyChooseUs: React.FC = () => {
             </div>
 
             {/* Bottom Card Footer with Subtle Accent Bar */}
-            <div className="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100/90 flex items-center justify-between text-xs">
+            <div className="px-5 py-3.5 bg-slate-50/90 border-t border-slate-150 flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 font-bold text-slate-700">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span className="text-[11px]">Active Service Guarantee</span>

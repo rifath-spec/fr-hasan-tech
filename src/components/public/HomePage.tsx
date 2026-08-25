@@ -126,36 +126,36 @@ export const HomePage: React.FC = () => {
 
                 {/* Right 40% Desktop Visual Image Container */}
                 <div className="lg:col-span-5 hidden lg:block">
-                  <div className="bento-card overflow-hidden bg-slate-900 border border-slate-700/80 shadow-soft-xl rounded-2xl relative group">
-                    <div className="h-[300px] xl:h-[330px] w-full relative overflow-hidden">
+                  <div className="bento-card overflow-hidden bg-slate-950 border border-slate-700/80 shadow-soft-xl rounded-2xl relative group">
+                    <div className="w-full aspect-[4/3] xl:aspect-[16/11] relative overflow-hidden bg-slate-950 flex items-center justify-center p-2.5 sm:p-3">
                       <img
                         src="https://res.cloudinary.com/dut2fzqdd/image/upload/v1787591739/unnamed.jpg"
                         alt="FR.HASAN TECH Store & Services Showcase"
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain object-center rounded-xl group-hover:scale-[1.02] transition-transform duration-500"
                         referrerPolicy="no-referrer"
                       />
-                      {/* Subtle gradient overlay to harmonize with hero background */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20 pointer-events-none" />
+                      {/* Harmonizing subtle vignette gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/30 pointer-events-none rounded-xl" />
 
-                      {/* Badges / Overlays */}
-                      <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-xs font-semibold border border-white/20 shadow-soft-sm">
+                      {/* Badges / Overlays positioned cleanly without clipping brand text */}
+                      <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-soft-sm">
                           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                           <span>Store Open & Active</span>
                         </span>
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#F59E0B] text-white text-xs font-bold shadow-soft-sm">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#F59E0B] text-white text-xs font-bold shadow-soft-sm">
                           Express Services
                         </span>
                       </div>
 
-                      <div className="absolute bottom-3.5 left-3.5 right-3.5 p-3 rounded-xl bg-slate-950/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-between text-xs">
+                      <div className="absolute bottom-4 left-4 right-4 p-2.5 rounded-xl bg-slate-950/90 backdrop-blur-md border border-white/20 text-white flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2 font-medium text-xs">
                           <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-                          <span>{settings.openingHours?.monFri || '8:00 AM - 9:00 PM'}</span>
+                          <span className="truncate">{settings.openingHours?.monFri || '8:00 AM - 9:00 PM'}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-xs">
+                        <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-xs shrink-0">
                           <CheckCircle2 className="w-4 h-4 shrink-0" />
-                          <span>Direct WhatsApp & Walk-in</span>
+                          <span>Direct Walk-in Ready</span>
                         </div>
                       </div>
                     </div>
@@ -176,9 +176,12 @@ export const HomePage: React.FC = () => {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
               Our Services
             </h2>
+            <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed">
+              Professional document printing, digital photocopying, authorized SIM cards, and instant mobile package reloads.
+            </p>
           </div>
 
-          {/* Service Cards Bento Grid */}
+          {/* Service Cards Bento Grid - Responsive 1 to 4 cols */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7">
             {services.filter(s => s.isPublished).map((service) => (
               <motion.div
@@ -186,60 +189,61 @@ export const HomePage: React.FC = () => {
                 whileHover={{ y: -4 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => navigate(`/services/${service.slug}`)}
-                className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg cursor-pointer flex flex-col justify-between overflow-hidden bg-white"
+                className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg cursor-pointer flex flex-col justify-between overflow-hidden bg-white rounded-2xl"
               >
-                <div>
-                  {/* Service Photo Banner */}
-                  {service.image ? (
-                    <div className="h-44 sm:h-48 w-full relative overflow-hidden bg-slate-100">
-                      <img 
-                        src={service.image} 
-                        alt={service.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
-                      
-                      {/* Floating Category Badge & Icon */}
-                      <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between">
-                        <span className="px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-xs text-[#1E5AA8] font-bold text-[11px] shadow-xs">
-                          {service.category}
-                        </span>
-                        <div className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-xs flex items-center justify-center text-[#1E5AA8] shadow-xs">
-                          {getServiceIcon(service.icon, service.category)}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-6 pb-0">
-                      <div className="w-14 h-14 rounded-xl bg-[#E8F0FE] flex items-center justify-center group-hover:bg-[#1E5AA8] group-hover:text-white transition-colors">
+                <div className="flex flex-col">
+                  {/* Service Photo Banner - Consistent across all 4 services with top-left category pill and top-right icon badge */}
+                  <div className="h-44 sm:h-48 w-full relative overflow-hidden bg-slate-900">
+                    <img 
+                      src={service.image || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'} 
+                      alt={service.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                      loading="lazy"
+                    />
+                    {/* Rich dark gradient overlay for text readability & contrast */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-black/30" />
+                    
+                    {/* Top-Left Category Pill & Top-Right Icon Badge */}
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                      <span className="px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-md text-white font-bold text-xs shadow-md border border-white/20">
+                        {service.category}
+                      </span>
+                      <div className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md flex items-center justify-center text-[#1E5AA8] shadow-md border border-white/40">
                         {getServiceIcon(service.icon, service.category)}
                       </div>
                     </div>
-                  )}
+
+                    {/* Bottom floating service name over photo */}
+                    <div className="absolute bottom-3 left-3 right-3 text-white">
+                      <h3 className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm truncate">
+                        {service.name}
+                      </h3>
+                    </div>
+                  </div>
 
                   <div className="p-5">
-                    {/* Service Name */}
-                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#1E5AA8] transition-colors">
-                      {service.name}
-                    </h3>
-
-                    {/* Short Description */}
-                    <p className="text-sm text-slate-500 mt-2 leading-relaxed line-clamp-2">
+                    {/* Short Description with WCAG AA High Contrast text-slate-600 */}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2">
                       {service.shortDescription}
                     </p>
                   </div>
                 </div>
 
-                {/* Bottom price tag & View More */}
-                <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md truncate max-w-[140px]">
-                    {service.priceInfo}
-                  </span>
+                {/* Bottom price tag & View More (No text collision or overlap) */}
+                <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-3 mt-auto">
+                  <div className="min-w-0 flex-1">
+                    <span 
+                      className="inline-block text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-md truncate max-w-full"
+                      title={service.priceInfo}
+                    >
+                      {service.priceInfo}
+                    </span>
+                  </div>
                   
-                  <div className="flex items-center gap-1 text-sm font-bold text-[#1E5AA8] group-hover:text-[#164785]">
+                  <div className="flex items-center gap-1 text-xs sm:text-sm font-bold text-[#1E5AA8] group-hover:text-[#164785] shrink-0 whitespace-nowrap">
                     <span>View More</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
               </motion.div>
@@ -261,6 +265,7 @@ export const HomePage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-10 items-center">
               
               {/* CEO Photo Frame */}
+              {/* NOTE FOR FOUNDER: Replace this placeholder CEO stock photo URL with an actual high-resolution photo of FR Hasan when available for real-world authenticity. */}
               <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center">
                 <div className="relative group">
                   <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-2xl overflow-hidden border-4 border-white shadow-soft-lg bg-slate-100 relative">
@@ -301,7 +306,7 @@ export const HomePage: React.FC = () => {
                   </p>
                 </div>
 
-                <p className="text-xs sm:text-sm lg:text-base text-slate-600 leading-relaxed max-w-4xl">
+                <p className="text-xs sm:text-sm lg:text-base text-slate-700 leading-relaxed max-w-4xl">
                   Under the leadership of {ceoName}, FR HASAN TECH bridges top-tier digital imaging with all-island telecommunications support, offering our neighborhood reliable, fast, and dedicated tech service.
                 </p>
 

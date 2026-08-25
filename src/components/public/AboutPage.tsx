@@ -62,11 +62,12 @@ export const AboutPage: React.FC = () => {
         </div>
 
         {/* Executive Leadership & CEO Profile Bento Card */}
+        {/* NOTE FOR FOUNDER: Replace this placeholder CEO stock photo URL with an actual high-resolution photo of FR Hasan when available for real-world authenticity. */}
         <div className="my-8 sm:my-10 max-w-5xl mx-auto">
           <div className="bento-card p-6 sm:p-10 lg:p-12 border border-slate-200/90 shadow-soft-lg bg-gradient-to-br from-white via-slate-50/50 to-blue-50/30">
             <div className="flex items-center gap-2 pb-6 border-b border-slate-100">
               <Award className="w-5 h-5 text-[#1E5AA8]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Executive Leadership</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Executive Leadership</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-6">
@@ -114,26 +115,26 @@ export const AboutPage: React.FC = () => {
                   </p>
                 </div>
 
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-slate-700 leading-relaxed">
                   {ceoBio}
                 </p>
 
                 {/* Key Leadership Highlights */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
-                  <div className="flex items-center gap-2 text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-100 shadow-xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div className="flex items-center gap-2 text-xs text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200/90 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span className="font-semibold">Telecom & Mobile Expertise</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-100 shadow-xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div className="flex items-center gap-2 text-xs text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200/90 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span className="font-semibold">Digital Print Standards</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-100 shadow-xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div className="flex items-center gap-2 text-xs text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200/90 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span className="font-semibold">Customer-First Service</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-100 shadow-xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div className="flex items-center gap-2 text-xs text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200/90 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span className="font-semibold">IT & Network Innovation</span>
                   </div>
                 </div>
@@ -150,7 +151,7 @@ export const AboutPage: React.FC = () => {
 
                   <a
                     href={`mailto:${settings.email}`}
-                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-2 active-press transition-colors"
+                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-2 active-press transition-colors border border-slate-300/80"
                   >
                     <Mail className="w-4 h-4 text-slate-600" />
                     <span>{settings.email}</span>
@@ -176,7 +177,7 @@ export const AboutPage: React.FC = () => {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h4 className="text-base font-bold text-slate-900 mt-2">Professional Quality</h4>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+              <p className="text-sm text-slate-700 mt-2 leading-relaxed">
                 We maintain high industry standards across every document and mobile service with laser-calibrated equipment.
               </p>
             </div>
@@ -187,7 +188,7 @@ export const AboutPage: React.FC = () => {
                 <Clock className="w-6 h-6" />
               </div>
               <h4 className="text-base font-bold text-slate-900 mt-2">Fast Turnaround</h4>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+              <p className="text-sm text-slate-700 mt-2 leading-relaxed">
                 Rapid express turnaround times to get you back to your study or workday with zero delay.
               </p>
             </div>
@@ -198,7 +199,7 @@ export const AboutPage: React.FC = () => {
                 <ThumbsUp className="w-6 h-6" />
               </div>
               <h4 className="text-base font-bold text-slate-900 mt-2">Reliable Connectivity</h4>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+              <p className="text-sm text-slate-700 mt-2 leading-relaxed">
                 Genuine network SIM cards (Dialog, Mobitel, Hutch, Airtel) and authentic data reloads on demand.
               </p>
             </div>
@@ -209,7 +210,7 @@ export const AboutPage: React.FC = () => {
                 <MapPin className="w-6 h-6" />
               </div>
               <h4 className="text-base font-bold text-slate-900 mt-2">Convenient Location</h4>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+              <p className="text-sm text-slate-700 mt-2 leading-relaxed">
                 Easy walk-in storefront in Mullipotana (Plus Code: F37F+49) with instant digital WhatsApp file transfer and support.
               </p>
             </div>
