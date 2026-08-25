@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- Background Circle -->
+  <circle cx="250" cy="250" r="240" fill="#FFFFFF" stroke="#E11D48" stroke-width="4"/>
+  <circle cx="250" cy="250" r="236" fill="none" stroke="#0F2B48" stroke-width="6"/>
+
+  <!-- Circuit & FR Tech Icon -->
+  <g transform="translate(175, 100) scale(0.9)">
+    <!-- Circuit Lines & Nodes Left (Red) -->
+    <path d="M 50 15 L 20 15" stroke="#E11D48" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="16" cy="15" r="9" fill="#E11D48"/>
+
+    <path d="M 50 45 L 0 45" stroke="#E11D48" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="-4" cy="45" r="9" fill="#E11D48"/>
+
+    <path d="M 50 75 L 15 75" stroke="#E11D48" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="11" cy="75" r="9" fill="#E11D48"/>
+
+    <path d="M 50 105 L 30 105 L 30 145" stroke="#E11D48" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="30" cy="149" r="9" fill="#E11D48"/>
+
+    <!-- FR Letterforms -->
+    <!-- Top Navy Bar -->
+    <path d="M 50 12 L 150 12 L 140 34 L 50 34 Z" fill="#0F2B48"/>
+    <!-- Red F Middle Bar and Spine -->
+    <path d="M 50 34 L 145 34 C 160 34 160 75 145 75 L 80 75 L 80 115 L 50 115 Z" fill="#E11D48"/>
+    <!-- Navy R Leg and Curve -->
+    <path d="M 90 75 L 140 75 C 150 75 155 85 145 100 L 110 115 L 85 115 Z" fill="#0F2B48"/>
+    <circle cx="165" cy="112" r="9" fill="#E11D48"/>
+  </g>
+
+  <!-- Brand Typography: FR.HASAN TECH -->
+  <text x="250" y="278" font-family="'Plus Jakarta Sans', 'Arial Black', sans-serif" font-weight="900" font-size="34" fill="#0F2B48" text-anchor="middle" letter-spacing="3">
+    FR.HASAN TECH
+  </text>
+
+  <!-- Location Tag: 529, SIRAJ NAGAR, THAMPALAGAMAM -->
+  <text x="250" y="302" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="700" font-size="12.5" fill="#0F2B48" text-anchor="middle" letter-spacing="1.5">
+    529, SIRAJ NAGAR, THAMPALAGAMAM
+  </text>
+
+  <!-- Divider Arc / Bottom Border Accent -->
+  <path d="M 80 345 Q 250 365 420 345" stroke="#0F2B48" stroke-width="1.5" stroke-dasharray="3 3" fill="none" opacity="0.3"/>
+
+  <!-- WhatsApp Section -->
+  <g transform="translate(250, 395)">
+    <text x="0" y="-14" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="19" fill="#0F2B48" text-anchor="middle" letter-spacing="1">
+      WhatsApp
+    </text>
+    <!-- WhatsApp Icon & Number -->
+    <g transform="translate(-105, 5)">
+      <circle cx="12" cy="12" r="11" fill="none" stroke="#0F2B48" stroke-width="2.5"/>
+      <path d="M 8 7.5 C 7.5 8.5 7.5 10 9 12 C 10.5 14 12.5 15 14.5 15 C 16 15 16.5 13.8 16.5 13 C 16.5 12.5 15.5 11.8 14.8 11.5 C 14.2 11.2 13.8 11.5 13.5 11.8 C 13.2 12.1 12.8 12.2 12.3 11.8 C 11.5 11 11 10.5 10.2 9.7 C 9.8 9.2 9.9 8.8 10.2 8.5 C 10.5 8.2 10.8 7.8 10.5 7.2 C 10.2 6.5 9.5 5.5 9 5.5 C 8.5 5.5 8 6.5 8 7.5 Z" fill="#0F2B48"/>
+    </g>
+    <text x="14" y="24" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="22" fill="#0F2B48" text-anchor="middle" letter-spacing="1">
+      0768597800
+    </text>
+  </g>
+</svg>

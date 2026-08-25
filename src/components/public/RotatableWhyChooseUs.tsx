@@ -1,0 +1,208 @@
+import React from 'react';
+import {
+  ShieldCheck,
+  Clock,
+  ThumbsUp,
+  MapPin,
+  Sparkles,
+  CheckCircle2,
+  ArrowUpRight,
+} from 'lucide-react';
+
+interface FeatureCardData {
+  id: string;
+  icon: React.ReactNode;
+  title: string;
+  tag: string;
+  statValue: string;
+  statLabel: string;
+  description: string;
+  highlights: string[];
+  image: string;
+  accentColor: string;
+  lightBg: string;
+  tagBadge: string;
+  iconColor: string;
+}
+
+const features: FeatureCardData[] = [
+  {
+    id: 'professional',
+    icon: <ShieldCheck className="w-5 h-5" />,
+    title: 'Professional Precision',
+    tag: '100% Quality Guaranteed',
+    statValue: '99.9%',
+    statLabel: 'Accuracy Rating',
+    description: 'Exacting optical standards in high-resolution printing, vivid photocopying, and official biometric SIM registration.',
+    highlights: ['Laser optical alignment for crisp micro-text', 'ISO standard authentic toner & heavyweight paper', 'Authorized biometric KYC registration agent'],
+    image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80',
+    accentColor: '#1E5AA8',
+    lightBg: 'bg-blue-50/70',
+    tagBadge: 'bg-blue-50 text-[#1E5AA8] border-blue-200/80',
+    iconColor: 'bg-[#1E5AA8] text-white',
+  },
+  {
+    id: 'turnaround',
+    icon: <Clock className="w-5 h-5" />,
+    title: 'Express Fast Turnaround',
+    tag: 'Lightning Speed',
+    statValue: '< 3 Mins',
+    statLabel: 'Average Turnaround',
+    description: 'Rapid turnaround workflows designed to get you back to your study, office, or commute with zero waiting delays.',
+    highlights: ['< 2 min express photocopy queue', 'WhatsApp send-ahead document queue', 'Instant multi-carrier SIM activation on spot'],
+    image: 'https://images.unsplash.com/photo-1508873696983-2df570464756?auto=format&fit=crop&w=800&q=80',
+    accentColor: '#F59E0B',
+    lightBg: 'bg-amber-50/70',
+    tagBadge: 'bg-amber-50 text-amber-800 border-amber-200/80',
+    iconColor: 'bg-[#F59E0B] text-white',
+  },
+  {
+    id: 'quality',
+    icon: <ThumbsUp className="w-5 h-5" />,
+    title: 'Ultra HD Lab Standards',
+    tag: 'Lab Standard DPI',
+    statValue: '15,000+',
+    statLabel: 'Satisfied Customers',
+    description: 'Consistent, vibrant photo color grading, razor-sharp documents, and rock-solid network signal reloads.',
+    highlights: ['Smudge-proof glossy & matte photo papers', 'Official Dialog, Mobitel & Airtel registered dealer', 'Dual-side duplex auto-alignment technology'],
+    image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
+    accentColor: '#059669',
+    lightBg: 'bg-emerald-50/70',
+    tagBadge: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+    iconColor: 'bg-emerald-600 text-white',
+  },
+  {
+    id: 'location',
+    icon: <MapPin className="w-5 h-5" />,
+    title: 'Prime Accessible Location',
+    tag: 'Easy Walk-in',
+    statValue: '7 Days / Wk',
+    statLabel: 'Walk-in Hours',
+    description: 'Prime neighborhood location with quick stopping bays, customer air-conditioned lounge, and extended daily hours.',
+    highlights: ['Main road prime accessibility', 'Dedicated customer parking & waiting area', 'Open 7 days morning till late evening'],
+    image: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80',
+    accentColor: '#7C3AED',
+    lightBg: 'bg-purple-50/70',
+    tagBadge: 'bg-purple-50 text-purple-800 border-purple-200/80',
+    iconColor: 'bg-purple-600 text-white',
+  },
+];
+
+export const RotatableWhyChooseUs: React.FC = () => {
+  return (
+    <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+      
+      {/* Top Section Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-[#1E5AA8] font-bold text-xs mb-2.5 shadow-soft-sm">
+            <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
+            <span>Our Service Guarantee</span>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Why Choose Us
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600 mt-1.5 leading-relaxed">
+            Delivering high-precision document solutions, instant telecom reloads, and dependable customer service with every visit.
+          </p>
+        </div>
+
+        {/* Live Trust Metrics Strip */}
+        <div className="flex items-center gap-3 sm:gap-4 bg-white px-4 py-2.5 rounded-2xl border border-slate-200/90 shadow-soft-sm shrink-0">
+          <div className="text-center pr-3 border-r border-slate-100">
+            <span className="block text-base sm:text-lg font-black text-[#1E5AA8] font-mono leading-none">15k+</span>
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Prints Served</span>
+          </div>
+          <div className="text-center pr-3 border-r border-slate-100">
+            <span className="block text-base sm:text-lg font-black text-amber-500 font-mono leading-none">99.9%</span>
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Satisfaction</span>
+          </div>
+          <div className="text-center">
+            <span className="block text-base sm:text-lg font-black text-emerald-600 font-mono leading-none">7 Days</span>
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Open Daily</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Modern Asymmetric / Bento Feature Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+        {features.map((feature, idx) => (
+          <div
+            key={feature.id}
+            className="group bento-card bg-white border border-slate-200/90 hover:border-slate-300 shadow-soft-sm hover:shadow-soft-lg transition-all duration-200 rounded-3xl overflow-hidden flex flex-col justify-between"
+          >
+            <div>
+              {/* Photo Area with Floating Badge & Stat Counter */}
+              <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-100">
+                <img
+                  src={feature.image}
+                  alt={feature.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
+
+                {/* Top Badge & Metric Counter */}
+                <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs border ${feature.tagBadge}`}>
+                    {feature.tag}
+                  </span>
+                  <div className="px-2.5 py-1 rounded-lg bg-slate-900/90 backdrop-blur-md border border-white/10 text-white flex items-center gap-1 font-mono text-[11px] font-bold">
+                    <span className="text-amber-400">{feature.statValue}</span>
+                  </div>
+                </div>
+
+                {/* Floating Title & Icon directly over photo base */}
+                <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${feature.iconColor} shrink-0`}>
+                    {feature.icon}
+                  </div>
+                  <div className="text-white drop-shadow-sm min-w-0">
+                    <h3 className="text-base font-bold leading-tight truncate">
+                      {feature.title}
+                    </h3>
+                    <p className="text-[11px] text-blue-200 font-medium truncate mt-0.5">
+                      {feature.statLabel}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Body & Features */}
+              <div className="p-5">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                  {feature.description}
+                </p>
+
+                {/* Bullet Points Checklist */}
+                <div className="space-y-2 pt-3 border-t border-slate-100">
+                  {feature.highlights.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="font-medium leading-snug">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Card Footer with Subtle Accent Bar */}
+            <div className="px-5 py-3.5 bg-slate-50/80 border-t border-slate-100/90 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-[11px]">Active Service Guarantee</span>
+              </div>
+              <span className="text-[11px] font-extrabold text-[#1E5AA8] group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                <span>0{idx + 1}</span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#1E5AA8]" />
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  );
+};

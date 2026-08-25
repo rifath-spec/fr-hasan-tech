@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-primary: #1E5AA8;
+    --color-primary-dark: #164785;
+    --color-primary-light: #E8F0FE;
+    --color-secondary: #2D3748;
+    --color-accent: #F59E0B;
+    --color-accent-dark: #D97706;
+    --color-bg: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-border: #E2E8F0;
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    --color-text-primary: #1A202C;
+    --color-text-secondary: #64748B;
+  }
+
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Bento Grid Theme Utilities */
+.bento-card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+}
+
+.bento-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+}
+
+.bento-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+}
+
+.bento-grid-bg {
+  background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom UI tokens */
+.bg-primary-main { background-color: #1E5AA8; }
+.bg-primary-dark { background-color: #164785; }
+.bg-primary-light { background-color: #E8F0FE; }
+.text-primary-main { color: #1E5AA8; }
+.text-primary-dark { color: #164785; }
+.border-primary-main { border-color: #1E5AA8; }
+
+.bg-accent-main { background-color: #F59E0B; }
+.bg-accent-dark { background-color: #D97706; }
+.text-accent-main { color: #F59E0B; }
+.border-accent-main { border-color: #F59E0B; }
+
+.bg-surface { background-color: #FFFFFF; }
+.bg-app { background-color: #F8FAFC; }
+.border-app { border-color: #E2E8F0; }
+
+.text-main { color: #0F172A; }
+.text-muted { color: #64748B; }
+
+/* Custom shadows */
+.shadow-soft-sm { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+.shadow-soft-md { box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04); }
+.shadow-soft-lg { box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.07), 0 4px 6px -4px rgba(15, 23, 42, 0.04); }
+.shadow-soft-xl { box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03); }
+
+/* Animation active touch */
+.active-press:active {
+  transform: scale(0.98);
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
