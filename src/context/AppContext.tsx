@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { 
   ServiceItem, 
+  ServiceCategory,
   SIMCard, 
   MobilePackage, 
   POSTransaction, 
@@ -63,6 +64,8 @@ interface AppContextType {
   triggerQuickSale: (category: string, subType: string, defaultPrice: number, desc: string) => void;
   quickSalePrefill: { category: string; subType: string; price: number; desc: string } | null;
   clearQuickSalePrefill: () => void;
+  quickSalePreset: { category: ServiceCategory; subType: string; unitPrice: number; description: string } | null;
+  clearQuickSalePreset: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -76,20 +79,49 @@ const LOCAL_STORAGE_KEYS = {
   AUTH: 'frhasantech_auth_v2',
 };
 
-export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Navigation State
-  const [currentPath, setCurrentPath] = useState<string>(() => {
+// Resilient storage handler that never throws errors in sandboxes, iframes, or quota limits
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage.getItem(key);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, value);
+      }
+    } catch {
+      // Ignore quota or permission limitations silently
+    }
+  }
+};
+
+const getInitialPath = (): string => {
+  try {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace(/^#/, '');
-      return hash || '/';
+      return hash && hash.startsWith('/') ? hash : (hash ? `/${hash}` : '/');
     }
-    return '/';
-  });
+  } catch {
+    // fallback
+  }
+  return '/';
+};
+
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Navigation State
+  const [currentPath, setCurrentPath] = useState<string>(getInitialPath);
 
   // Auth State
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.AUTH);
+      const saved = safeStorage.getItem(LOCAL_STORAGE_KEYS.AUTH);
       return saved ? JSON.parse(saved) : false;
     } catch {
       return false;
@@ -102,11 +134,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     role: 'Founder & CEO'
   });
 
-  // Settings State
+  // Settings State with Deep Merging to prevent stale cache missing properties
   const [settings, setSettings] = useState<ShopSettings>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.SETTINGS);
-      return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
+      const saved = safeStorage.getItem(LOCAL_STORAGE_KEYS.SETTINGS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...INITIAL_SETTINGS,
+            ...parsed,
+            openingHours: {
+              ...INITIAL_SETTINGS.openingHours,
+              ...(parsed.openingHours || {}),
+              scheduleList: parsed.openingHours?.scheduleList || INITIAL_SETTINGS.openingHours.scheduleList
+            },
+            heroContent: {
+              ...INITIAL_SETTINGS.heroContent,
+              ...(parsed.heroContent || {})
+            },
+            aboutContent: {
+              ...INITIAL_SETTINGS.aboutContent,
+              ...(parsed.aboutContent || {})
+            },
+            posSettings: {
+              ...INITIAL_SETTINGS.posSettings,
+              ...(parsed.posSettings || {})
+            }
+          };
+        }
+      }
+      return INITIAL_SETTINGS;
     } catch {
       return INITIAL_SETTINGS;
     }
@@ -115,17 +173,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Services State
   const [services, setServices] = useState<ServiceItem[]>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.SERVICES);
+      const saved = safeStorage.getItem(LOCAL_STORAGE_KEYS.SERVICES);
       if (saved) {
-        const parsed: ServiceItem[] = JSON.parse(saved);
-        // Merge image from initial services if missing or default
-        return parsed.map(item => {
-          const defaultMatch = INITIAL_SERVICES.find(init => init.slug === item.slug || init.id === item.id);
-          if (defaultMatch && (!item.image || item.image.includes('unsplash'))) {
-            return { ...item, image: defaultMatch.image };
-          }
-          return item;
-        });
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(item => {
+            const defaultMatch = INITIAL_SERVICES.find(init => init.slug === item.slug || init.id === item.id);
+            return {
+              ...(defaultMatch || {}),
+              ...item,
+              availableServicesList: Array.isArray(item.availableServicesList) 
+                ? item.availableServicesList 
+                : (defaultMatch?.availableServicesList || []),
+              importantNotes: Array.isArray(item.importantNotes) 
+                ? item.importantNotes 
+                : (defaultMatch?.importantNotes || [])
+            };
+          });
+        }
       }
       return INITIAL_SERVICES;
     } catch {
@@ -136,8 +201,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // SIM Cards State
   const [sims, setSims] = useState<SIMCard[]>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.SIMS);
-      return saved ? JSON.parse(saved) : INITIAL_SIMS;
+      const saved = safeStorage.getItem(LOCAL_STORAGE_KEYS.SIMS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+      return INITIAL_SIMS;
     } catch {
       return INITIAL_SIMS;
     }
@@ -146,8 +217,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Packages State
   const [packages, setPackages] = useState<MobilePackage[]>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PACKAGES);
-      return saved ? JSON.parse(saved) : INITIAL_PACKAGES;
+      const saved = safeStorage.getItem(LOCAL_STORAGE_KEYS.PACKAGES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+      return INITIAL_PACKAGES;
     } catch {
       return INITIAL_PACKAGES;
     }
@@ -156,8 +233,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Transactions State
   const [transactions, setTransactions] = useState<POSTransaction[]>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.TRANSACTIONS);
-      return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+      const saved = safeStorage.getItem(LOCAL_STORAGE_KEYS.TRANSACTIONS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+      return INITIAL_TRANSACTIONS;
     } catch {
       return INITIAL_TRANSACTIONS;
     }
@@ -169,45 +252,60 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Quick Sale Prefill
   const [quickSalePrefill, setQuickSalePrefill] = useState<{ category: string; subType: string; price: number; desc: string } | null>(null);
 
-  // Sync window hash
+  // Sync window hash safely
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace(/^#/, '');
-      setCurrentPath(hash || '/');
+      try {
+        let hash = window.location.hash.replace(/^#/, '');
+        if (!hash) hash = '/';
+        if (!hash.startsWith('/')) hash = '/' + hash;
+        setCurrentPath(hash);
+      } catch {
+        // Safe fallback
+      }
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const navigate = (path: string) => {
-    window.location.hash = path;
-    setCurrentPath(path);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      if (typeof window !== 'undefined') {
+        if (window.location.hash !== `#${cleanPath}`) {
+          window.location.hash = cleanPath;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      setCurrentPath(cleanPath);
+    } catch {
+      setCurrentPath(path);
+    }
   };
 
-  // Persist items
+  // Safe Persistence
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
   }, [settings]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SERVICES, JSON.stringify(services));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.SERVICES, JSON.stringify(services));
   }, [services]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SIMS, JSON.stringify(sims));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.SIMS, JSON.stringify(sims));
   }, [sims]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.PACKAGES, JSON.stringify(packages));
   }, [packages]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
   }, [transactions]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.AUTH, JSON.stringify(isAdminAuthenticated));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.AUTH, JSON.stringify(isAdminAuthenticated));
   }, [isAdminAuthenticated]);
 
   // Toast helper
@@ -225,7 +323,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Auth methods
   const loginAdmin = (email: string, pass: string): boolean => {
-    // Simple mock auth for client-side demo
     if (email && pass) {
       setIsAdminAuthenticated(true);
       showToast("Welcome back, Admin! Signed in successfully.", "success");
@@ -262,11 +359,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setSims(INITIAL_SIMS);
     setPackages(INITIAL_PACKAGES);
     setTransactions(INITIAL_TRANSACTIONS);
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SETTINGS, JSON.stringify(INITIAL_SETTINGS));
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SERVICES, JSON.stringify(INITIAL_SERVICES));
-    localStorage.setItem(LOCAL_STORAGE_KEYS.SIMS, JSON.stringify(INITIAL_SIMS));
-    localStorage.setItem(LOCAL_STORAGE_KEYS.PACKAGES, JSON.stringify(INITIAL_PACKAGES));
-    localStorage.setItem(LOCAL_STORAGE_KEYS.TRANSACTIONS, JSON.stringify(INITIAL_TRANSACTIONS));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.SETTINGS, JSON.stringify(INITIAL_SETTINGS));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.SERVICES, JSON.stringify(INITIAL_SERVICES));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.SIMS, JSON.stringify(INITIAL_SIMS));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.PACKAGES, JSON.stringify(INITIAL_PACKAGES));
+    safeStorage.setItem(LOCAL_STORAGE_KEYS.TRANSACTIONS, JSON.stringify(INITIAL_TRANSACTIONS));
     showToast("All data successfully restored to FR HASAN TECH defaults", "info");
   };
 
@@ -342,6 +439,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newTx: POSTransaction = {
       ...tx,
       id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdBy: tx.createdBy || 'FR Hasan (CEO)',
       createdAt: nowIso,
       updatedAt: nowIso
     };
@@ -384,6 +482,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setQuickSalePrefill(null);
   };
 
+  const quickSalePreset = quickSalePrefill ? {
+    category: quickSalePrefill.category as any,
+    subType: quickSalePrefill.subType,
+    unitPrice: quickSalePrefill.price,
+    description: quickSalePrefill.desc
+  } : null;
+
+  const clearQuickSalePreset = clearQuickSalePrefill;
+
   const value = useMemo(() => ({
     currentPath,
     navigate,
@@ -417,7 +524,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     dismissToast,
     triggerQuickSale,
     quickSalePrefill,
-    clearQuickSalePrefill
+    clearQuickSalePrefill,
+    quickSalePreset,
+    clearQuickSalePreset
   }), [
     currentPath,
     isAdminAuthenticated,
@@ -428,7 +537,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     packages,
     transactions,
     toasts,
-    quickSalePrefill
+    quickSalePrefill,
+    quickSalePreset
   ]);
 
   return (

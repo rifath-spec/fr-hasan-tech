@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { ToastContainer } from './components/common/ToastContainer';
 import { PublicLayout } from './components/public/PublicLayout';
@@ -23,6 +23,81 @@ import { NewSaleForm } from './components/admin/pos/NewSaleForm';
 import { NewExpenseForm } from './components/admin/pos/NewExpenseForm';
 import { TransactionHistory } from './components/admin/pos/TransactionHistory';
 import { RevenueReports } from './components/admin/pos/RevenueReports';
+import { RefreshCw, AlertCircle } from 'lucide-react';
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Application error captured by boundary:", error, errorInfo);
+  }
+
+  handleReload = () => {
+    window.location.hash = '#/';
+    window.location.reload();
+  };
+
+  handleReset = () => {
+    try {
+      localStorage.clear();
+    } catch {
+      // ignore
+    }
+    window.location.hash = '#/';
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-2xl p-8 border border-slate-200 shadow-soft-lg text-center">
+            <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Something went wrong</h2>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              The application encountered a temporary display issue. You can quickly reload to continue.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={this.handleReload}
+                className="w-full py-3 px-4 bg-[#1E5AA8] hover:bg-[#164785] text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm shadow-soft-sm active-press transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Reload Application</span>
+              </button>
+              <button
+                onClick={this.handleReset}
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs active-press transition-colors"
+              >
+                Reset Cache & Restore Defaults
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const AppRouter: React.FC = () => {
   const { currentPath, navigate, isAdminAuthenticated } = useApp();
@@ -184,7 +259,7 @@ const AppRouter: React.FC = () => {
           <p className="text-sm text-gray-600 mb-6">The requested page does not exist or has been moved.</p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-[#1E5AA8] hover:bg-[#164785] text-white text-sm font-bold rounded-md"
+            className="px-6 py-3 bg-[#1E5AA8] hover:bg-[#164785] text-white text-sm font-bold rounded-xl shadow-soft-sm"
           >
             Return to Home
           </button>
@@ -203,8 +278,10 @@ const AppRouter: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppRouter />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <AppRouter />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

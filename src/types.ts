@@ -65,9 +65,11 @@ export interface POSTransaction {
   paymentMethod: PaymentMethod;
   customerName?: string;
   vendor?: string;
+  referenceNumber?: string;
+  simCardId?: string;
   receiptUrl?: string;
   notes?: string;
-  createdBy: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
