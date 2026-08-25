@@ -7,6 +7,7 @@ interface FRHasanLogoProps {
   showLocation?: boolean;
   showContact?: boolean;
   customSrc?: string;
+  theme?: 'light' | 'dark';
 }
 
 export const FRHasanLogo: React.FC<FRHasanLogoProps> = ({
@@ -14,7 +15,8 @@ export const FRHasanLogo: React.FC<FRHasanLogoProps> = ({
   size = 'md',
   variant = 'horizontal',
   showLocation = true,
-  customSrc
+  customSrc,
+  theme = 'light'
 }) => {
   // Dimension mapping
   const sizeClasses = {
@@ -26,6 +28,8 @@ export const FRHasanLogo: React.FC<FRHasanLogoProps> = ({
     '2xl': 'w-36 h-36',
     custom: ''
   };
+
+  const isDark = theme === 'dark';
 
   // If a custom image source (uploaded logo URL or data URL) is provided, render it directly
   if (customSrc) {
@@ -53,11 +57,11 @@ export const FRHasanLogo: React.FC<FRHasanLogoProps> = ({
           />
         </div>
         <div className="flex flex-col text-left">
-          <span className="font-extrabold text-slate-900 tracking-tight text-base sm:text-lg leading-tight">
-            FR.HASAN <span className="text-[#1E5AA8]">TECH</span>
+          <span className={`font-extrabold tracking-tight text-base sm:text-lg leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            FR.HASAN <span className={isDark ? 'text-sky-400' : 'text-[#1E5AA8]'}>TECH</span>
           </span>
           {showLocation && (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+            <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-blue-200/80' : 'text-slate-500'}`}>
               529, Siraj Nagar, Thampalagamam
             </span>
           )}
@@ -176,12 +180,12 @@ export const FRHasanLogo: React.FC<FRHasanLogoProps> = ({
         </svg>
       </div>
       <div className="flex flex-col text-left">
-        <div className="flex items-center gap-1.5 font-black text-slate-900 tracking-tight text-base sm:text-lg leading-tight">
+        <div className={`flex items-center gap-1.5 font-black tracking-tight text-base sm:text-lg leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
           <span>FR.HASAN</span>
-          <span className="text-[#1E5AA8]">TECH</span>
+          <span className={isDark ? 'text-sky-400' : 'text-[#1E5AA8]'}>TECH</span>
         </div>
         {showLocation && (
-          <span className="text-[10px] font-semibold text-slate-500 tracking-wide">
+          <span className={`text-[10px] font-semibold tracking-wide ${isDark ? 'text-blue-200/80' : 'text-slate-500'}`}>
             529, Siraj Nagar, Thampalagamam
           </span>
         )}

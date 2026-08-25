@@ -78,8 +78,8 @@ export const PublicHeader: React.FC = () => {
 
   return (
     <>
-      {/* Main Sticky Header */}
-      <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-soft-sm transition-all">
+      {/* Main Sticky Header with Brand Color Theme */}
+      <header className="sticky top-0 left-0 right-0 z-40 bg-gradient-to-r from-[#0C203B] via-[#164785] to-[#1E5AA8] border-b border-blue-900/40 shadow-soft-md transition-all">
         <div className="w-full max-w-[1760px] mx-auto h-16 sm:h-20 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 flex items-center justify-between">
           
           {/* Brand Left: Logo + Shop Name */}
@@ -94,11 +94,12 @@ export const PublicHeader: React.FC = () => {
               variant="horizontal" 
               showLocation={true} 
               customSrc={settings.logoUrl} 
+              theme="dark"
             />
           </div>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-1.5 p-1.5 bg-slate-100/90 backdrop-blur-sm rounded-full border border-slate-200 shadow-xs">
+          <nav className="hidden md:flex items-center gap-1 lg:gap-1.5 p-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 shadow-xs">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -109,15 +110,15 @@ export const PublicHeader: React.FC = () => {
                   onClick={() => handleNav(item.path)}
                   className={`group relative px-4 lg:px-5 py-2 rounded-full text-xs lg:text-sm font-medium flex items-center gap-2 transition-all duration-200 cursor-pointer select-none active:scale-[0.97] ${
                     active
-                      ? 'bg-[#1E5AA8] text-white font-semibold shadow-xs'
-                      : 'text-slate-600 hover:text-[#1E5AA8] hover:bg-white hover:shadow-xs'
+                      ? 'bg-white text-[#164785] font-bold shadow-xs'
+                      : 'text-blue-100/90 hover:text-white hover:bg-white/15'
                   }`}
                 >
                   <Icon
                     className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
                       active
-                        ? 'text-white'
-                        : 'text-slate-400 group-hover:text-[#1E5AA8]'
+                        ? 'text-[#164785]'
+                        : 'text-blue-200/80 group-hover:text-white'
                     }`}
                   />
                   <span>{item.label}</span>
@@ -133,7 +134,7 @@ export const PublicHeader: React.FC = () => {
               href={groupUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-[#25D366] hover:bg-[#20bd5a] rounded-full transition-all cursor-pointer shadow-xs active-press border border-white/20"
+              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#25D366] hover:bg-[#20bd5a] rounded-full transition-all cursor-pointer shadow-xs active-press border border-white/25"
               title="Join our official WhatsApp Community Group"
             >
               <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
@@ -144,7 +145,7 @@ export const PublicHeader: React.FC = () => {
             <button
               type="button"
               onClick={handleWhatsAppClick}
-              className="h-9 w-9 sm:w-auto sm:px-4 sm:py-2 rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold shadow-xs active-press transition-all shrink-0 cursor-pointer"
+              className="h-9 w-9 sm:w-auto sm:px-4 sm:py-2 rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold shadow-xs active-press transition-all shrink-0 cursor-pointer border border-white/25"
               title="Direct Chat on WhatsApp"
               aria-label="WhatsApp Contact"
             >
@@ -156,10 +157,10 @@ export const PublicHeader: React.FC = () => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden w-9 h-9 rounded-full text-[#2D3748] hover:bg-slate-100 active:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer border border-slate-200"
+              className="md:hidden w-9 h-9 rounded-full text-white bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-colors cursor-pointer border border-white/20"
               aria-label="Open menu"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6 text-white" />
             </button>
           </div>
         </div>
