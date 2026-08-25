@@ -17,7 +17,9 @@ import {
   MapPin,
   Sparkles,
   Users,
-  ExternalLink
+  ExternalLink,
+  Zap,
+  Gift
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FRHasanLogo } from '../common/FRHasanLogo';
@@ -58,6 +60,39 @@ export const PublicHeader: React.FC = () => {
     { label: 'Packages & Reloads', path: '/services/packages', icon: Package, badge: 'All Telcos' },
   ];
 
+  const marqueeItems = [
+    {
+      tag: 'WhatsApp Community',
+      text: 'Join our official WhatsApp group for instant reload updates, live repair status & exclusive deals!',
+      highlight: true,
+      icon: Users
+    },
+    {
+      tag: 'Instant Reloads',
+      text: 'Dialog, Mobitel, Airtel & Hutch reload packs & data add-ons processed in seconds.',
+      highlight: false,
+      icon: Zap
+    },
+    {
+      tag: 'Special Deals',
+      text: 'Subscriber-only discounts & mobile accessory offers posted weekly in our community!',
+      highlight: true,
+      icon: Gift
+    },
+    {
+      tag: 'Phone Repairs',
+      text: 'Quality screen replacements, battery fixes & hardware servicing with warranty.',
+      highlight: false,
+      icon: Smartphone
+    },
+    {
+      tag: 'Print & Copy',
+      text: 'Fast high-volume photocopy, laser color prints, document laminating & scanning.',
+      highlight: false,
+      icon: Printer
+    }
+  ];
+
   const handleWhatsAppClick = () => {
     openWhatsAppChat(
       settings.whatsappNumber || '076 859 7800',
@@ -80,32 +115,9 @@ export const PublicHeader: React.FC = () => {
 
   return (
     <>
-      {/* Top Notification Announcement Bar */}
-      <div className="bg-gradient-to-r from-[#164785] via-[#1E5AA8] to-[#0f766e] text-white py-1.5 px-3 sm:px-6 text-xs select-none border-b border-white/10">
-        <div className="w-full max-w-[1760px] mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 truncate">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#25D366] text-white shrink-0 shadow-xs">
-              <Users className="w-3 h-3" />
-            </span>
-            <span className="truncate text-[11px] sm:text-xs">
-              <strong className="font-bold text-amber-300">Join Community:</strong> Stay updated on reloads, exclusive deals & tech alerts!
-            </span>
-          </div>
-
-          <a
-            href={groupUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-[11px] sm:text-xs shrink-0 shadow-xs transition-all hover:scale-105 active:scale-95 border border-white/30"
-          >
-            <span>Join Group</span>
-            <ExternalLink className="w-3 h-3 text-white/90" />
-          </a>
-        </div>
-      </div>
-
-      <header className="sticky top-0 left-0 right-0 z-40 h-16 sm:h-20 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-soft-sm transition-all">
-        <div className="w-full max-w-[1760px] mx-auto h-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 flex items-center justify-between">
+      {/* Main Sticky Header */}
+      <header className="sticky top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-soft-sm transition-all">
+        <div className="w-full max-w-[1760px] mx-auto h-16 sm:h-20 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 flex items-center justify-between">
           
           {/* Brand Left: Logo + Shop Name */}
           <div 
@@ -187,7 +199,99 @@ export const PublicHeader: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Dynamic Community Marquee Ticker Bar Under Nav Bar */}
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-t border-b border-slate-800/80 text-slate-200 text-xs py-2 px-3 sm:px-6 relative overflow-hidden select-none">
+          <div className="w-full max-w-[1760px] mx-auto flex items-center gap-3">
+            
+            {/* Left Community Pulse Badge */}
+            <a
+              href={groupUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/30 text-[#25D366] text-[11px] font-bold shrink-0 transition-colors shadow-2xs z-20 cursor-pointer"
+              title="Join our WhatsApp Community Group"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]"></span>
+              </span>
+              <Users className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline font-semibold">Community</span>
+            </a>
+
+            {/* Center Scrolling Stream with Fade Mask */}
+            <div className="flex-1 overflow-hidden relative flex items-center group">
+              {/* Fade Overlays */}
+              <div className="absolute left-0 top-0 bottom-0 w-6 sm:w-10 bg-gradient-to-r from-slate-950 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-6 sm:w-10 bg-gradient-to-l from-slate-950 to-transparent z-10 pointer-events-none" />
+
+              {/* Ticker Content */}
+              <a
+                href={groupUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="animate-marquee-infinite flex items-center gap-8 py-0.5 cursor-pointer hover:text-white"
+                title="Click to Join WhatsApp Group"
+              >
+                {/* Loop 1 */}
+                {marqueeItems.map((item, idx) => {
+                  const ItemIcon = item.icon;
+                  return (
+                    <div key={`m1-${idx}`} className="inline-flex items-center gap-2 whitespace-nowrap text-xs">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        item.highlight 
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      }`}>
+                        <ItemIcon className="w-3 h-3" />
+                        <span>{item.tag}</span>
+                      </span>
+                      <span className="text-slate-300 hover:text-white font-medium transition-colors">
+                        {item.text}
+                      </span>
+                      <span className="text-slate-700 font-bold ml-4">•</span>
+                    </div>
+                  );
+                })}
+
+                {/* Loop 2 (Continuous seamless scroll) */}
+                {marqueeItems.map((item, idx) => {
+                  const ItemIcon = item.icon;
+                  return (
+                    <div key={`m2-${idx}`} className="inline-flex items-center gap-2 whitespace-nowrap text-xs">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        item.highlight 
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      }`}>
+                        <ItemIcon className="w-3 h-3" />
+                        <span>{item.tag}</span>
+                      </span>
+                      <span className="text-slate-300 hover:text-white font-medium transition-colors">
+                        {item.text}
+                      </span>
+                      <span className="text-slate-700 font-bold ml-4">•</span>
+                    </div>
+                  );
+                })}
+              </a>
+            </div>
+
+            {/* Right Action Button */}
+            <a
+              href={groupUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-[11px] shrink-0 shadow-xs transition-all hover:scale-105 active:scale-95 border border-white/20 z-20 cursor-pointer"
+            >
+              <span>Join Group</span>
+              <ExternalLink className="w-3 h-3 text-white/90" />
+            </a>
+          </div>
+        </div>
       </header>
+
 
       {/* Portal-rendered Mobile Menu Drawer for 100% reliable viewport layering */}
       {mounted && createPortal(
