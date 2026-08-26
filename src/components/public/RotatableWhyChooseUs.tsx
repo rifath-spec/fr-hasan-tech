@@ -92,39 +92,11 @@ export const RotatableWhyChooseUs: React.FC = () => {
   return (
     <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
       
-      {/* Unified Section Header & Live Trust Metrics Strip Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-soft-sm p-6 sm:p-8 mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-[#1E5AA8] font-bold text-xs mb-3 shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
-              <span>Our Service Guarantee</span>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Why Choose Us
-            </h2>
-            <p className="text-sm sm:text-base text-slate-700 mt-2 leading-relaxed">
-              Delivering high-precision document solutions, instant telecom reloads, and dependable customer service with every visit.
-            </p>
-          </div>
-
-          {/* Integrated Trust Metrics Strip */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-slate-50/90 p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-xs shrink-0 lg:min-w-[340px]">
-            <div className="text-center px-2 py-1 border-r border-slate-200/70">
-              <span className="block text-lg sm:text-xl font-black text-[#1E5AA8] font-mono leading-none">15k+</span>
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider mt-1 block">Prints Served</span>
-            </div>
-            <div className="text-center px-2 py-1 border-r border-slate-200/70">
-              <span className="block text-lg sm:text-xl font-black text-[#F59E0B] font-mono leading-none">99.9%</span>
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider mt-1 block">Satisfaction</span>
-            </div>
-            <div className="text-center px-2 py-1">
-              <span className="block text-lg sm:text-xl font-black text-emerald-600 font-mono leading-none">7 Days</span>
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 uppercase tracking-wider mt-1 block">Open Daily</span>
-            </div>
-          </div>
-        </div>
+      {/* Section Header */}
+      <div className="text-center max-w-3xl mx-auto mb-8">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
+          Why Choose Us
+        </h2>
       </div>
 
       {/* Responsive Feature Cards Grid - 1 col (<768px), 2 cols (md), 4 cols (lg) */}

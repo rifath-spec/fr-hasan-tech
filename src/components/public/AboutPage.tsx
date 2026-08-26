@@ -218,7 +218,7 @@ export const AboutPage: React.FC = () => {
         </div>
 
         {/* CTA banner Bento Card */}
-        <div className="mt-14 max-w-3xl mx-auto p-8 rounded-2xl bg-[#1E5AA8] text-white text-center shadow-soft-lg border border-blue-600/50">
+        <div className="mt-14 max-w-3xl mx-auto p-8 rounded-2xl bg-gradient-to-r from-[#0C203B] via-[#164785] to-[#1E5AA8] text-white text-center shadow-soft-lg border border-blue-900/40">
           <h3 className="text-xl sm:text-2xl font-bold">Have a print job or mobile query?</h3>
           <p className="text-blue-100 text-sm mt-2 max-w-lg mx-auto">
             Drop us a message on WhatsApp or visit our physical counter in Mullipotana, Thampalagamam. We're ready to assist.
@@ -226,7 +226,7 @@ export const AboutPage: React.FC = () => {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => navigate('/contact')}
-              className="px-6 py-3 rounded-xl bg-white text-[#1E5AA8] font-bold text-sm hover:bg-blue-50 transition-colors shadow-sm"
+              className="px-6 py-3 rounded-xl bg-white text-[#164785] font-bold text-sm hover:bg-blue-50 transition-colors shadow-sm"
             >
               Contact Us Now
             </button>

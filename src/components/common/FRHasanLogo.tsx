@@ -56,12 +56,12 @@ export const FRHasanLogo: React.FC<FRHasanLogoProps> = ({
             referrerPolicy="no-referrer"
           />
         </div>
-        <div className="flex flex-col text-left">
-          <span className={`font-extrabold tracking-tight text-base sm:text-lg leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+        <div className="flex flex-col text-left min-w-0">
+          <span className={`font-extrabold tracking-tight text-base sm:text-lg leading-tight whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
             FR.HASAN <span className={isDark ? 'text-sky-400' : 'text-[#1E5AA8]'}>TECH</span>
           </span>
           {showLocation && (
-            <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-blue-200/80' : 'text-slate-500'}`}>
+            <span className={`text-[10px] font-semibold uppercase tracking-wider hidden sm:block truncate max-w-[180px] md:max-w-none ${isDark ? 'text-blue-200/80' : 'text-slate-500'}`}>
               529, Siraj Nagar, Thampalagamam
             </span>
           )}
@@ -179,13 +179,13 @@ export const FRHasanLogo: React.FC<FRHasanLogoProps> = ({
           </g>
         </svg>
       </div>
-      <div className="flex flex-col text-left">
-        <div className={`flex items-center gap-1.5 font-black tracking-tight text-base sm:text-lg leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+      <div className="flex flex-col text-left min-w-0">
+        <div className={`flex items-center gap-1.5 font-extrabold tracking-tight text-base sm:text-lg leading-tight whitespace-nowrap ${isDark ? 'text-white' : 'text-slate-900'}`}>
           <span>FR.HASAN</span>
-          <span className={isDark ? 'text-sky-400' : 'text-[#1E5AA8]'}>TECH</span>
+          <span className={isDark ? 'text-[#19A7E8]' : 'text-[#1E5AA8]'}>TECH</span>
         </div>
         {showLocation && (
-          <span className={`text-[10px] font-semibold tracking-wide ${isDark ? 'text-blue-200/80' : 'text-slate-500'}`}>
+          <span className={`text-[10px] font-semibold tracking-wide hidden sm:block truncate max-w-[180px] md:max-w-none ${isDark ? 'text-blue-100/80' : 'text-slate-500'}`}>
             529, Siraj Nagar, Thampalagamam
           </span>
         )}

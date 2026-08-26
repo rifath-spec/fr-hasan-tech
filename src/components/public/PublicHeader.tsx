@@ -78,49 +78,48 @@ export const PublicHeader: React.FC = () => {
 
   return (
     <>
-      {/* Main Sticky Header with Brand Color Theme */}
-      <header className="sticky top-0 left-0 right-0 z-40 bg-gradient-to-r from-[#0C203B] via-[#164785] to-[#1E5AA8] border-b border-blue-900/40 shadow-soft-md transition-all">
-        <div className="w-full max-w-[1760px] mx-auto h-16 sm:h-20 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 flex items-center justify-between">
+      {/* Main Sticky Header with Deep Navy Gradient Theme */}
+      <header 
+        className="sticky top-0 left-0 right-0 z-40 transition-all border-b"
+        style={{
+          background: 'linear-gradient(90deg, #062B5C 0%, #0A4385 100%)',
+          borderColor: 'rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 4px 20px -2px rgba(6, 43, 92, 0.25)'
+        }}
+      >
+        <div className="w-full max-w-[1760px] mx-auto h-16 sm:h-[68px] px-3.5 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Brand Left: Logo + Shop Name */}
           <div 
             onClick={() => handleNav('/')}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group"
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group select-none shrink-0 min-w-0"
             role="button"
             tabIndex={0}
           >
             <FRHasanLogo 
-              size="md" 
+              size="sm" 
               variant="horizontal" 
               showLocation={true} 
+              theme="dark" 
               customSrc={settings.logoUrl} 
-              theme="dark"
             />
           </div>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-1.5 p-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/15 shadow-xs">
+          <nav className="hidden md:flex items-center gap-1.5 p-1 bg-white/[0.06] backdrop-blur-md rounded-full border border-white/[0.12] shadow-xs">
             {navItems.map((item) => {
-              const Icon = item.icon;
               const active = isActive(item.path);
               return (
                 <button
                   key={item.path}
                   type="button"
                   onClick={() => handleNav(item.path)}
-                  className={`group relative px-4 lg:px-5 py-2 rounded-full text-xs lg:text-sm font-medium flex items-center gap-2 transition-all duration-200 cursor-pointer select-none active:scale-[0.97] ${
+                  className={`group relative px-4 lg:px-5 py-2 rounded-full text-xs lg:text-sm font-semibold transition-all duration-200 cursor-pointer select-none active:scale-[0.97] ${
                     active
-                      ? 'bg-white text-[#164785] font-bold shadow-xs'
-                      : 'text-blue-100/90 hover:text-white hover:bg-white/15'
+                      ? 'bg-white text-[#062B5C] shadow-sm font-bold'
+                      : 'text-[#E8F1FF] hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <Icon
-                    className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                      active
-                        ? 'text-[#164785]'
-                        : 'text-blue-200/80 group-hover:text-white'
-                    }`}
-                  />
                   <span>{item.label}</span>
                 </button>
               );
@@ -128,39 +127,45 @@ export const PublicHeader: React.FC = () => {
           </nav>
 
           {/* Header Actions Right */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Join WhatsApp Group CTA button replacing Admin button */}
+          <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 shrink-0">
+            {/* Green Join WhatsApp Group CTA button (hidden on mobile, available in mobile menu) */}
             <a
               href={groupUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#25D366] hover:bg-[#20bd5a] rounded-full transition-all cursor-pointer shadow-xs active-press border border-white/25"
+              className="hidden md:inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-white rounded-xl transition-all cursor-pointer shadow-sm active-press border border-white/20 whitespace-nowrap"
+              style={{ backgroundColor: '#16B95A' }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#12A94F')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#16B95A')}
               title="Join our official WhatsApp Community Group"
             >
-              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              <Users className="w-4 h-4 text-white shrink-0" />
               <span>Join Group</span>
             </a>
 
-            {/* WhatsApp Direct Chat CTA button */}
+            {/* Orange Chat Direct CTA button (hidden on mobile, available in mobile menu) */}
             <button
               type="button"
               onClick={handleWhatsAppClick}
-              className="h-9 w-9 sm:w-auto sm:px-4 sm:py-2 rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white flex items-center justify-center gap-1.5 text-xs sm:text-sm font-bold shadow-xs active-press transition-all shrink-0 cursor-pointer border border-white/25"
+              className="hidden md:flex px-4 py-2 rounded-xl text-white items-center justify-center gap-2 text-xs sm:text-sm font-semibold shadow-sm active-press transition-all shrink-0 cursor-pointer border border-white/20 whitespace-nowrap"
+              style={{ backgroundColor: '#FF9D1C' }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F28C08')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FF9D1C')}
               title="Direct Chat on WhatsApp"
               aria-label="WhatsApp Contact"
             >
-              <MessageCircle className="w-4 h-4 fill-white text-[#F59E0B]" />
-              <span className="hidden sm:inline">Chat</span>
+              <MessageCircle className="w-4 h-4 text-white fill-white shrink-0" />
+              <span className="text-xs sm:text-sm font-bold">Chat</span>
             </button>
 
             {/* Hamburger Menu on Mobile */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden w-9 h-9 rounded-full text-white bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-colors cursor-pointer border border-white/20"
+              className="md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-white bg-white/10 hover:bg-white/20 active:bg-white/30 flex items-center justify-center transition-colors cursor-pointer border border-white/20 shrink-0"
               aria-label="Open menu"
             >
-              <Menu className="w-6 h-6 text-white" />
+              <Menu className="w-5 h-5 text-white" />
             </button>
           </div>
         </div>
@@ -229,7 +234,7 @@ export const PublicHeader: React.FC = () => {
                             onClick={() => handleNav(item.path)}
                             className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-bold text-left transition-all active:scale-[0.98] ${
                               active
-                                ? 'bg-[#1E5AA8] text-white shadow-soft-sm'
+                                ? 'bg-[#062B5C] text-white shadow-soft-sm'
                                 : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
                             }`}
                           >
@@ -297,7 +302,8 @@ export const PublicHeader: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-soft-sm active:scale-[0.98] transition-all"
+                    className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 shadow-soft-sm active:scale-[0.98] transition-all"
+                    style={{ backgroundColor: '#16B95A' }}
                   >
                     <Users className="w-4 h-4 text-white" />
                     <span>Join WhatsApp Group</span>
@@ -309,9 +315,10 @@ export const PublicHeader: React.FC = () => {
                       handleWhatsAppClick();
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-3 px-4 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-soft-sm active:scale-[0.98] transition-all"
+                    className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 shadow-soft-sm active:scale-[0.98] transition-all"
+                    style={{ backgroundColor: '#FF9D1C' }}
                   >
-                    <MessageCircle className="w-4 h-4 fill-white text-[#F59E0B]" />
+                    <MessageCircle className="w-4 h-4 fill-white text-[#FF9D1C]" />
                     <span>Chat on WhatsApp</span>
                   </button>
 
