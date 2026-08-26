@@ -334,83 +334,83 @@ export const HomePage: React.FC = () => {
 
       {/* User-Friendly Quick Utility Bar */}
       <section className="relative -mt-4 sm:-mt-6 z-20 max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-md p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-soft-lg p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
           
-          {/* Quick Action 1: Instant Document Print */}
+          {/* Quick Action 1: Instant Document Print (Blue / Sky Theme) */}
           <div 
             onClick={handleWhatsApp}
-            className="flex items-center gap-3.5 p-3 rounded-xl hover:bg-blue-50/60 transition-colors cursor-pointer border border-transparent hover:border-blue-100 group"
+            className="flex items-center gap-3.5 p-3.5 rounded-xl bg-gradient-to-br from-blue-50/90 via-blue-50/40 to-sky-50/80 border border-blue-200/80 hover:border-blue-300 hover:shadow-soft-md transition-all cursor-pointer group"
           >
-            <div className="w-11 h-11 rounded-xl bg-blue-100/80 text-[#0D6EFD] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#0D6EFD] to-[#38BDF8] text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/25 group-hover:scale-105 transition-transform">
               <Printer className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <h4 className="text-sm font-bold text-slate-900 leading-snug group-hover:text-[#0D6EFD] transition-colors">
                 Send to Print
               </h4>
-              <p className="text-xs text-slate-500 truncate">
-                Send files via WhatsApp for instant print
+              <p className="text-xs text-blue-900/70 font-medium truncate">
+                Send files via WhatsApp
               </p>
             </div>
           </div>
 
-          {/* Quick Action 2: SIM & Mobile Reload */}
+          {/* Quick Action 2: SIM & Mobile Reload (Emerald / Mint Theme) */}
           <div 
             onClick={() => navigate('/services/sims')}
-            className="flex items-center gap-3.5 p-3 rounded-xl hover:bg-emerald-50/60 transition-colors cursor-pointer border border-transparent hover:border-emerald-100 group"
+            className="flex items-center gap-3.5 p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/90 via-emerald-50/40 to-teal-50/80 border border-emerald-200/80 hover:border-emerald-300 hover:shadow-soft-md transition-all cursor-pointer group"
           >
-            <div className="w-11 h-11 rounded-xl bg-emerald-100/80 text-[#16B95A] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#16B95A] to-[#10B981] text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/25 group-hover:scale-105 transition-transform">
               <Smartphone className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-sm font-bold text-slate-900 leading-snug group-hover:text-emerald-600 transition-colors">
+              <h4 className="text-sm font-bold text-slate-900 leading-snug group-hover:text-emerald-700 transition-colors">
                 SIM & Reloads
               </h4>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-xs text-emerald-900/70 font-medium truncate">
                 Dialog, Mobitel, Airtel, Hutch
               </p>
             </div>
           </div>
 
-          {/* Quick Action 3: Opening Hours & Schedule */}
-          <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50/60 border border-slate-100">
-            <div className="w-11 h-11 rounded-xl bg-amber-100/80 text-[#FF9D1C] flex items-center justify-center shrink-0">
+          {/* Quick Action 3: Opening Hours & Schedule (Amber / Orange Theme) */}
+          <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-gradient-to-br from-amber-50/90 via-amber-50/40 to-orange-50/80 border border-amber-200/80 hover:border-amber-300 hover:shadow-soft-md transition-all">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#F59E0B] to-[#FF9D1C] text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/25">
               <Clock className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#16B95A] shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-[#16B95A] animate-pulse shrink-0" />
                 <h4 className="text-sm font-bold text-slate-900 leading-snug">
                   Open Today
                 </h4>
               </div>
-              <p className="text-xs text-slate-500 truncate">
+              <p className="text-xs text-amber-900/70 font-medium truncate">
                 8:00 AM – 10:00 PM (Daily)
               </p>
             </div>
           </div>
 
-          {/* Quick Action 4: Google Maps & Directions */}
+          {/* Quick Action 4: Google Maps & Directions (Deep Navy to Ocean Gradient) */}
           <a
             href="https://maps.google.com/?q=8.5064,81.1378"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between p-3 rounded-xl bg-[#062B5C] text-white hover:bg-[#083875] transition-all group shadow-sm"
+            className="flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-[#062B5C] via-[#0D6EFD] to-[#1E5AA8] text-white hover:from-[#083875] hover:to-[#0D6EFD] transition-all group shadow-soft-md border border-blue-400/30"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
                 <MapPin className="w-5 h-5 text-[#38BDF8]" />
               </div>
               <div className="min-w-0">
                 <h4 className="text-sm font-bold text-white leading-snug">
                   Get Directions
                 </h4>
-                <p className="text-[11px] text-blue-200 truncate">
+                <p className="text-[11px] text-blue-100 font-medium truncate">
                   529, Siraj Nagar, Thampalagamam
                 </p>
               </div>
             </div>
-            <ArrowRight className="w-4 h-4 text-sky-300 group-hover:translate-x-1 transition-transform shrink-0 ml-2" />
+            <ArrowRight className="w-4 h-4 text-sky-200 group-hover:translate-x-1 transition-transform shrink-0 ml-2" />
           </a>
 
         </div>

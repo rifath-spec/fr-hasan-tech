@@ -1,8 +1,18 @@
-export type NetworkProvider = 'Dialog' | 'Mobitel' | 'Hutch' | 'Airtel';
+export type NetworkProvider = 'Dialog' | 'Mobitel' | 'Hutch' | 'Airtel' | 'SLT-Mobitel';
 
 export type ServiceCategory = 'Photocopy' | 'Printing' | 'SIM Cards' | 'Packages';
 
 export type SIMStatus = 'Available' | 'Reserved' | 'Sold' | 'Returned' | 'Damaged';
+
+export type SIMType = 'Standard Prepaid 4G/5G' | 'Postpaid SIM' | 'eSIM' | 'Home Broadband Router SIM' | 'Tourist SIM';
+
+export type PackageCategory = 
+  | 'Mobile SIM Plans' 
+  | 'Home Broadband (Router / Wi-Fi)' 
+  | 'Social & Streaming' 
+  | 'Work & Study' 
+  | 'DTV & Satellite TV' 
+  | 'Special / Tourist';
 
 export type TransactionType = 'sale' | 'expense';
 
@@ -27,9 +37,11 @@ export interface ServiceItem {
 export interface SIMCard {
   id: string;
   network: NetworkProvider;
+  simType?: SIMType;
   simNumber: string;
   iccid: string;
   package: string;
+  category?: PackageCategory;
   purchasePrice: number;
   sellingPrice: number;
   status: SIMStatus;
@@ -41,14 +53,20 @@ export interface SIMCard {
 export interface MobilePackage {
   id: string;
   network: NetworkProvider;
+  category?: PackageCategory;
   name: string;
-  type: 'Data' | 'Voice' | 'Combo' | 'Reload';
+  type: string; // 'Data' | 'Voice' | 'Combo' | 'Home Broadband' | 'Social' | 'Unlimited' | 'Work & Study' | 'Reload' | string
   description: string;
   price: number;
   status: 'Active' | 'Inactive';
   displayOrder: number;
   validity?: string;
   quota?: string;
+  speed?: string;
+  features?: string[];
+  badge?: string;
+  ussdCode?: string;
+  billingType?: 'Prepaid' | 'Postpaid' | 'Both';
 }
 
 export interface POSTransaction {

@@ -72,9 +72,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEYS = {
   SETTINGS: 'frhasantech_settings_v3',
-  SERVICES: 'frhasantech_services_v2',
-  SIMS: 'frhasantech_sims_v2',
-  PACKAGES: 'frhasantech_packages_v2',
+  SERVICES: 'frhasantech_services_v3',
+  SIMS: 'frhasantech_sims_v3',
+  PACKAGES: 'frhasantech_packages_v3',
   TRANSACTIONS: 'frhasantech_transactions_v2',
   AUTH: 'frhasantech_auth_v2',
 };
@@ -260,7 +260,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Quick Sale Prefill
   const [quickSalePrefill, setQuickSalePrefill] = useState<{ category: string; subType: string; price: number; desc: string } | null>(null);
 
-  // Sync browser back/forward history navigation cleanly without hashtag
+  // Sync browser back/forward history navigation cleanly
   useEffect(() => {
     const handlePopState = () => {
       try {

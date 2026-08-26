@@ -78,7 +78,7 @@ export const ServicesListPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Services Cards Bento Grid */}
+        {/* Services Cards Bento Grid in One Row */}
         {filtered.length === 0 ? (
           <div className="bento-card p-12 text-center">
             <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
@@ -86,60 +86,60 @@ export const ServicesListPage: React.FC = () => {
             <p className="text-sm text-slate-500 mt-1">Try adjusting your category filter or search terms.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7">
             {filtered.map((service) => (
               <motion.div
                 key={service.id}
                 whileHover={{ y: -3 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => navigate(`/services/${service.slug}`)}
-                className="bento-card cursor-pointer flex flex-col justify-between overflow-hidden bg-white border border-slate-200 shadow-soft-sm hover:shadow-soft-md"
+                className="bento-card cursor-pointer flex flex-col justify-between overflow-hidden bg-white border border-slate-200/90 shadow-soft-sm hover:shadow-soft-md rounded-2xl"
               >
                 <div>
                   {service.image && (
-                    <div className="h-48 w-full relative overflow-hidden bg-slate-100">
+                    <div className="h-44 w-full relative overflow-hidden bg-slate-900">
                       <img
                         src={service.image}
                         alt={service.name}
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
-                      <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                        <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-xs text-[#1E5AA8] font-bold text-xs shadow-xs">
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent" />
+                      <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between">
+                        <span className="px-2.5 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-[#1E5AA8] font-bold text-[11px] shadow-xs">
                           {service.category}
                         </span>
-                        <div className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-xs flex items-center justify-center text-[#1E5AA8] shadow-xs">
+                        <div className="w-8 h-8 rounded-lg bg-white/95 backdrop-blur-xs flex items-center justify-center text-[#1E5AA8] shadow-xs">
                           {getServiceIcon(service.category)}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  <div className="p-6 sm:p-7">
+                  <div className="p-5">
                     {!service.image && (
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div className="w-14 h-14 rounded-xl bg-[#E8F0FE] flex items-center justify-center shrink-0">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-xl bg-[#E8F0FE] flex items-center justify-center shrink-0">
                           {getServiceIcon(service.category)}
                         </div>
-                        <span className="px-3 py-1 rounded-full bg-blue-50 text-[#1E5AA8] font-bold text-xs border border-blue-100">
+                        <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1E5AA8] font-bold text-xs border border-blue-100">
                           {service.category}
                         </span>
                       </div>
                     )}
 
-                    <h2 className="text-xl font-bold text-slate-900">
+                    <h2 className="text-lg font-bold text-slate-900">
                       {service.name}
                     </h2>
 
-                    <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-                      {service.fullDescription}
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed line-clamp-2">
+                      {service.shortDescription || service.fullDescription}
                     </p>
 
                     {/* Highlights list */}
-                    <div className="mt-4 pt-4 border-t border-slate-100 space-y-1.5">
+                    <div className="mt-3.5 pt-3 border-t border-slate-100 space-y-1.5">
                       {service.availableServicesList.slice(0, 3).map((item, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs text-slate-700">
+                        <div key={i} className="flex items-center gap-1.5 text-xs text-slate-700">
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
                           <span className="truncate">{item}</span>
                         </div>
@@ -148,13 +148,13 @@ export const ServicesListPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="px-6 sm:px-7 pb-6 pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-sm font-bold text-[#1E5AA8]">
+                <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <span className="text-xs sm:text-sm font-bold text-[#1E5AA8] truncate">
                     {service.priceInfo}
                   </span>
-                  <div className="flex items-center gap-1 text-sm font-bold text-[#1E5AA8] hover:text-[#164785]">
-                    <span>Explore Details</span>
-                    <ArrowRight className="w-4 h-4" />
+                  <div className="flex items-center gap-1 text-xs font-bold text-[#1E5AA8] shrink-0 hover:text-[#164785]">
+                    <span>Explore</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
               </motion.div>

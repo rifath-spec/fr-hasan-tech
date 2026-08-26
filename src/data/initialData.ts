@@ -104,7 +104,7 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     shortDescription: "Professional black & white and colour photocopy services with high-speed digital clarity.",
     fullDescription: "Fast, crisp, and high-volume photocopying for documents, study materials, legal papers, and IDs. We offer single-sided and double-sided copies with sharp contrast on premium paper stocks.",
     priceInfo: "From LKR 5.00 / page",
-    image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80",
+    image: "https://res.cloudinary.com/dut2fzqdd/image/upload/v1787721397/PHOTOCOPY.jpg",
     availableServicesList: [
       "Black & White Photocopy (A4, A3, Legal)",
       "Colour Photocopy",
@@ -128,7 +128,7 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     shortDescription: "Quality document, colour, black & white and photo printing services on various media.",
     fullDescription: "From university assignments and business proposals to vibrant studio-grade photo printing and personalized event invitations. Available on plain, art paper, photo glossy, and sticker sheets.",
     priceInfo: "From LKR 10.00 / page (B&W), LKR 35.00 (Colour)",
-    image: "https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?auto=format&fit=crop&w=1200&q=80",
+    image: "https://res.cloudinary.com/dut2fzqdd/image/upload/v1787721395/PRINTING.jpg",
     availableServicesList: [
       "Document Printing (B&W and Colour)",
       "Photo Printing (High-res glossy & matte)",
@@ -153,7 +153,7 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     shortDescription: "Official authorized SIM cards (Dialog, Mobitel, Hutch, Airtel) with instant on-spot KYC registration.",
     fullDescription: "Authorized retailer for all major telecommunication providers in Sri Lanka. Instant SIM registration with your National Identity Card (NIC) or Passport for tourists and locals.",
     priceInfo: "From LKR 350.00",
-    image: "https://images.unsplash.com/photo-1580910051074-3eb694886505?auto=format&fit=crop&w=1200&q=80",
+    image: "https://res.cloudinary.com/dut2fzqdd/image/upload/v1787721392/SIMs.jpg",
     availableServicesList: [
       "Dialog 4G / 5G Prepaid & Postpaid SIMs",
       "Mobitel eSIM & Regular 4G SIMs",
@@ -177,7 +177,7 @@ export const INITIAL_SERVICES: ServiceItem[] = [
     shortDescription: "Instant mobile reloads, unlimited social packages, voice bundles and high-speed data add-ons.",
     fullDescription: "Instant online top-ups and activation for all work-from-home, streaming, unlimited YouTube/TikTok/Social bundles, and monthly voice packs across Dialog, Mobitel, Hutch, and Airtel.",
     priceInfo: "LKR 50.00 to LKR 3,500.00+",
-    image: "https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=1200&q=80",
+    image: "https://res.cloudinary.com/dut2fzqdd/image/upload/v1787721391/packages_for.jpg",
     availableServicesList: [
       "High-Speed Mobile Data Packages (Daily, 7-Day, 30-Day)",
       "Unlimited Social Media & Streaming Packs (YouTube, Zoom, Teams)",
@@ -197,9 +197,11 @@ export const INITIAL_SIMS: SIMCard[] = [
   {
     id: "sim-101",
     network: "Dialog",
+    simType: "Standard Prepaid 4G/5G",
     simNumber: "0771928341",
     iccid: "899401012345678901",
     package: "Dialog Triple Play Starter (30GB)",
+    category: "Mobile SIM Plans",
     purchasePrice: 300,
     sellingPrice: 500,
     status: "Available",
@@ -209,20 +211,25 @@ export const INITIAL_SIMS: SIMCard[] = [
   {
     id: "sim-102",
     network: "Dialog",
+    simType: "Home Broadband Router SIM",
     simNumber: "0778841290",
     iccid: "899401012345678902",
-    package: "Dialog Power Plan 4G",
-    purchasePrice: 300,
-    sellingPrice: 500,
+    package: "Dialog Home Broadband 100GB Ultra",
+    category: "Home Broadband (Router / Wi-Fi)",
+    purchasePrice: 600,
+    sellingPrice: 1200,
     status: "Available",
-    receivedDate: "2026-08-15"
+    receivedDate: "2026-08-15",
+    notes: "Pre-configured for 4G/5G Wi-Fi Router units"
   },
   {
     id: "sim-103",
     network: "Mobitel",
+    simType: "Standard Prepaid 4G/5G",
     simNumber: "0714589201",
     iccid: "899402098765432101",
     package: "Mobitel Master Unlimited Data",
+    category: "Mobile SIM Plans",
     purchasePrice: 350,
     sellingPrice: 600,
     status: "Available",
@@ -232,11 +239,13 @@ export const INITIAL_SIMS: SIMCard[] = [
   {
     id: "sim-104",
     network: "Mobitel",
+    simType: "Home Broadband Router SIM",
     simNumber: "0719823412",
     iccid: "899402098765432102",
-    package: "Mobitel Upahara Voice & Data",
-    purchasePrice: 300,
-    sellingPrice: 500,
+    package: "Mobitel 120GB Router Wi-Fi Plan",
+    category: "Home Broadband (Router / Wi-Fi)",
+    purchasePrice: 600,
+    sellingPrice: 1200,
     status: "Reserved",
     receivedDate: "2026-08-18",
     notes: "Reserved for Mr. Bandara (071...)"
@@ -244,9 +253,11 @@ export const INITIAL_SIMS: SIMCard[] = [
   {
     id: "sim-105",
     network: "Hutch",
+    simType: "Standard Prepaid 4G/5G",
     simNumber: "0785129043",
     iccid: "899403011223344556",
     package: "Hutch CliQ 30-Day Non-Stop",
+    category: "Mobile SIM Plans",
     purchasePrice: 200,
     sellingPrice: 400,
     status: "Available",
@@ -255,9 +266,11 @@ export const INITIAL_SIMS: SIMCard[] = [
   {
     id: "sim-106",
     network: "Airtel",
+    simType: "Standard Prepaid 4G/5G",
     simNumber: "0756781294",
     iccid: "899404099887766554",
     package: "Airtel Freedom Unlimited Calls + 40GB",
+    category: "Mobile SIM Plans",
     purchasePrice: 250,
     sellingPrice: 450,
     status: "Available",
@@ -266,9 +279,11 @@ export const INITIAL_SIMS: SIMCard[] = [
   {
     id: "sim-107",
     network: "Dialog",
+    simType: "Tourist SIM",
     simNumber: "0773341908",
     iccid: "899401012345678903",
     package: "Dialog Tourist 50GB Starter",
+    category: "Special / Tourist",
     purchasePrice: 800,
     sellingPrice: 1500,
     status: "Sold",
@@ -279,87 +294,362 @@ export const INITIAL_SIMS: SIMCard[] = [
   {
     id: "sim-108",
     network: "Hutch",
+    simType: "Home Broadband Router SIM",
     simNumber: "0723391024",
     iccid: "899403011223344557",
-    package: "Hutch Data Pack 15GB",
-    purchasePrice: 200,
-    sellingPrice: 350,
-    status: "Damaged",
+    package: "Hutch Home Wi-Fi 100GB Pack",
+    category: "Home Broadband (Router / Wi-Fi)",
+    purchasePrice: 500,
+    sellingPrice: 1000,
+    status: "Available",
     receivedDate: "2026-08-12",
-    notes: "Chip scratched during unpacking"
+    notes: "Includes 4G router configuration support"
   }
 ];
 
 export const INITIAL_PACKAGES: MobilePackage[] = [
+  // DIALOG - Mobile SIM Plans
   {
     id: "pkg-1",
     network: "Dialog",
+    category: "Mobile SIM Plans",
     name: "Dialog Power Plan 30 Days",
-    type: "Data",
-    description: "30GB Anytime Data + Unlimited WhatsApp & YouTube (HD 1080p)",
+    type: "Data & Social",
+    description: "30GB Anytime High-Speed Data + Unlimited WhatsApp & YouTube (1080p HD stream)",
     price: 990,
     status: "Active",
     displayOrder: 1,
     validity: "30 Days",
-    quota: "30 GB"
+    quota: "30 GB Anytime",
+    speed: "4G / 5G Ultra Speed",
+    badge: "Most Popular",
+    features: [
+      "30GB Anytime High-Speed Data",
+      "Unlimited YouTube (1080p streaming)",
+      "Unlimited WhatsApp & Messenger",
+      "Instant counter activation"
+    ],
+    ussdCode: "#678# or Direct Reload",
+    billingType: "Prepaid"
   },
   {
     id: "pkg-2",
     network: "Dialog",
-    name: "Dialog Unlimited Voice & SMS",
-    type: "Voice",
-    description: "Unlimited D2D & Any-Net Calls + 1000 SMS to any network",
+    category: "Mobile SIM Plans",
+    name: "Dialog Unlimited Any-Net Voice & SMS",
+    type: "Voice & SMS",
+    description: "Unlimited Calls to ANY mobile or landline network in Sri Lanka + 1,000 SMS",
     price: 650,
     status: "Active",
     displayOrder: 2,
-    validity: "30 Days"
+    validity: "30 Days",
+    quota: "Unlimited Calls",
+    badge: "Best Value",
+    features: [
+      "100% Unlimited Any-Net Voice Calls",
+      "1,000 Free SMS to any network",
+      "Crystal-clear VoLTE HD Calling",
+      "No peak / off-peak restrictions"
+    ],
+    ussdCode: "#170# or Counter Reload",
+    billingType: "Both"
   },
   {
     id: "pkg-3",
-    network: "Mobitel",
-    name: "Mobitel SelfCare Mega Booster",
-    type: "Data",
-    description: "45GB 4G/5G High Speed Data + Unlimited Zoom & MS Teams for Work/Study",
-    price: 1250,
+    network: "Dialog",
+    category: "Mobile SIM Plans",
+    name: "Dialog Blaster Triple Play Unlimited",
+    type: "Combo (Voice + Data)",
+    description: "Unlimited Any-Net Voice + 60GB Anytime 4G/5G Data + Unlimited Social Apps",
+    price: 1450,
     status: "Active",
     displayOrder: 3,
     validity: "30 Days",
-    quota: "45 GB"
+    quota: "60 GB + Unlimited Calls",
+    speed: "5G Ready",
+    badge: "All-in-One",
+    features: [
+      "Unlimited Calls to all Sri Lankan networks",
+      "60 GB Anytime High-Speed Data",
+      "Unlimited TikTok, Facebook, Instagram & WhatsApp",
+      "100 Free SMS per day"
+    ],
+    ussdCode: "#678*1# or Direct Top-up",
+    billingType: "Prepaid"
   },
+
+  // DIALOG - Home Broadband (Router / Wi-Fi)
   {
     id: "pkg-4",
-    network: "Mobitel",
-    name: "Mobitel One Shot Unlimited",
-    type: "Combo",
-    description: "Truly Unlimited Calls to all networks + 1.5GB daily data",
-    price: 1099,
+    network: "Dialog",
+    category: "Home Broadband (Router / Wi-Fi)",
+    name: "Dialog Home Broadband 100GB Ultra",
+    type: "Home Broadband",
+    description: "100GB Total Home Wi-Fi: 50GB Anytime Day Data + 50GB Night-time Booster for 4G/5G Routers",
+    price: 1890,
     status: "Active",
     displayOrder: 4,
-    validity: "30 Days"
+    validity: "30 Days / Monthly",
+    quota: "100 GB (50GB Day + 50GB Night)",
+    speed: "Up to 50 Mbps",
+    badge: "Broadband Choice",
+    features: [
+      "50 GB Anytime Day-time Data",
+      "50 GB Free Night-time High-Speed Data",
+      "Compatible with all 4G/5G Home Routers",
+      "Free in-store Router configuration assistance"
+    ],
+    ussdCode: "MyDialog / Counter Reload",
+    billingType: "Both"
   },
   {
     id: "pkg-5",
-    network: "Hutch",
-    name: "Hutch CliQ 30-Day Non-Stop Data",
-    type: "Data",
-    description: "Non-stop data browsing + 50GB high-speed bonus",
-    price: 780,
+    network: "Dialog",
+    category: "Home Broadband (Router / Wi-Fi)",
+    name: "Dialog Home Broadband Unlimited 50 Mbps",
+    type: "Unlimited Broadband",
+    description: "Truly Unlimited High-Speed Home Wi-Fi with guaranteed speeds up to 50 Mbps without throttling",
+    price: 3990,
     status: "Active",
     displayOrder: 5,
-    validity: "30 Days",
-    quota: "50 GB"
+    validity: "Monthly Bill",
+    quota: "Truly Unlimited",
+    speed: "50 Mbps Dedicated",
+    badge: "Ultra Fast",
+    features: [
+      "Truly Unlimited Data — No volume caps",
+      "Perfect for 4K Streaming & Multi-device Families",
+      "Low latency for online gaming & Zoom meetings",
+      "Instant new router SIM provisioning"
+    ],
+    ussdCode: "Counter Order / Bill Pay",
+    billingType: "Postpaid"
   },
   {
     id: "pkg-6",
-    network: "Airtel",
-    name: "Airtel 5G Freedom Unlimited Pack",
-    type: "Combo",
-    description: "Unlimited Any-Net Voice Calls + 2GB per day + Free SMS",
-    price: 888,
+    network: "Dialog",
+    category: "Social & Streaming",
+    name: "Dialog Unlimited Video & Social Media",
+    type: "Social & Video",
+    description: "Non-stop HD streaming on YouTube, TikTok, Instagram, Facebook, and WhatsApp",
+    price: 490,
     status: "Active",
     displayOrder: 6,
     validity: "30 Days",
-    quota: "60 GB"
+    quota: "Unlimited Apps Data",
+    features: [
+      "Unlimited YouTube HD Streaming",
+      "Unlimited TikTok & Instagram Reels",
+      "Unlimited Facebook & WhatsApp messaging/calls",
+      "Works on any prepaid 4G/5G SIM"
+    ],
+    ussdCode: "#678# -> Video Packs",
+    billingType: "Prepaid"
+  },
+
+  // MOBITEL / SLT-MOBITEL - Mobile & Home Broadband
+  {
+    id: "pkg-7",
+    network: "Mobitel",
+    category: "Mobile SIM Plans",
+    name: "Mobitel One Shot Truly Unlimited",
+    type: "Combo (Voice + Data)",
+    description: "Unlimited Voice to ALL networks + 1.5GB High-Speed Data every day (45GB/month)",
+    price: 1099,
+    status: "Active",
+    displayOrder: 7,
+    validity: "30 Days",
+    quota: "45 GB (1.5GB/day) + Unlimited Calls",
+    speed: "4G / 5G Super-Fast",
+    badge: "Top Seller",
+    features: [
+      "Unlimited Voice Calls to ANY network",
+      "1.5 GB Anytime 4G Data refreshed every day",
+      "Unlimited SMS to all local numbers",
+      "National coverage across Sri Lanka"
+    ],
+    ussdCode: "#170# or Instant Reload",
+    billingType: "Prepaid"
+  },
+  {
+    id: "pkg-8",
+    network: "Mobitel",
+    category: "Mobile SIM Plans",
+    name: "Mobitel SelfCare Mega Booster 45GB",
+    type: "Data & Learning",
+    description: "45GB Anytime Data + Unlimited Zoom, Microsoft Teams & Google Meet for Work & Study",
+    price: 1250,
+    status: "Active",
+    displayOrder: 8,
+    validity: "30 Days",
+    quota: "45 GB + Unlimited E-Learning",
+    features: [
+      "45 GB Anytime High-Speed 4G/5G Data",
+      "Unlimited Zoom & MS Teams conference calls",
+      "Free 5GB cloud storage add-on",
+      "Instant activation via counter reload"
+    ],
+    ussdCode: "#170# or Counter Reload",
+    billingType: "Both"
+  },
+  {
+    id: "pkg-9",
+    network: "Mobitel",
+    category: "Home Broadband (Router / Wi-Fi)",
+    name: "SLT-Mobitel Home Broadband 120GB Router Pack",
+    type: "Home Broadband",
+    description: "120GB Total Data: 60GB Standard Anytime + 60GB Night-time Data for SLT-Mobitel 4G Routers",
+    price: 2150,
+    status: "Active",
+    displayOrder: 9,
+    validity: "30 Days",
+    quota: "120 GB (60GB Day + 60GB Night)",
+    speed: "Up to 40 Mbps",
+    badge: "Router Wi-Fi",
+    features: [
+      "60 GB Anytime Daytime Data",
+      "60 GB High-Speed Night Data",
+      "Compatible with all SLT-Mobitel 4G & 5G Routers",
+      "Prepaid reload and Postpaid bill payment available"
+    ],
+    ussdCode: "SelfCare / Counter Reload",
+    billingType: "Both"
+  },
+  {
+    id: "pkg-10",
+    network: "Mobitel",
+    category: "Home Broadband (Router / Wi-Fi)",
+    name: "SLT-Mobitel Unlimited Fiber Broadband",
+    type: "Unlimited Fiber",
+    description: "Truly Unlimited High-Speed Fiber Internet up to 100 Mbps with unlimited downloads",
+    price: 4490,
+    status: "Active",
+    displayOrder: 10,
+    validity: "Monthly Bill",
+    quota: "Truly Unlimited Fiber",
+    speed: "Up to 100 Mbps Fiber",
+    badge: "Extreme Speed",
+    features: [
+      "Zero Data Caps — Unlimited 24/7",
+      "Optical Fiber high reliability",
+      "Ideal for HD Smart TVs, CCTV & work stations",
+      "Official bill settlement at our store"
+    ],
+    billingType: "Postpaid"
+  },
+
+  // HUTCH - Mobile & Home Wi-Fi
+  {
+    id: "pkg-11",
+    network: "Hutch",
+    category: "Mobile SIM Plans",
+    name: "Hutch CliQ 30-Day Non-Stop Data",
+    type: "Data",
+    description: "Non-stop data browsing + 50GB high-speed bonus quota on Hutch 4G network",
+    price: 780,
+    status: "Active",
+    displayOrder: 11,
+    validity: "30 Days",
+    quota: "50 GB + Non-stop Surfing",
+    badge: "Budget Hero",
+    features: [
+      "50 GB High-Speed 4G Anytime Quota",
+      "Non-stop social & web browsing",
+      "Lowest per-GB rate in Sri Lanka",
+      "Instant USSD *123# activation"
+    ],
+    ussdCode: "*123# or Direct Reload",
+    billingType: "Prepaid"
+  },
+  {
+    id: "pkg-12",
+    network: "Hutch",
+    category: "Mobile SIM Plans",
+    name: "Hutch Unlimited Any-Net King Pack",
+    type: "Combo (Voice + Data)",
+    description: "Unlimited Voice Calls to ANY Network in Sri Lanka + 30GB Anytime 4G Data",
+    price: 890,
+    status: "Active",
+    displayOrder: 12,
+    validity: "30 Days",
+    quota: "30 GB + Unlimited Calls",
+    features: [
+      "100% Unlimited Any-Net Calling",
+      "30 GB Anytime Data with no time windows",
+      "Free 500 SMS",
+      "Direct counter reload"
+    ],
+    ussdCode: "*141# or Counter Reload",
+    billingType: "Prepaid"
+  },
+  {
+    id: "pkg-13",
+    network: "Hutch",
+    category: "Home Broadband (Router / Wi-Fi)",
+    name: "Hutch 4G Home Wi-Fi 100GB Router Pack",
+    type: "Home Broadband",
+    description: "100GB Anytime Data dedicated for Hutch 4G Wi-Fi Routers and Mobile Hotspots",
+    price: 1650,
+    status: "Active",
+    displayOrder: 13,
+    validity: "30 Days",
+    quota: "100 GB Anytime",
+    speed: "Up to 30 Mbps",
+    badge: "Affordable Wi-Fi",
+    features: [
+      "100 GB Anytime Data (No day/night split)",
+      "High speed for home router devices",
+      "Router data SIM available in-store",
+      "Quick reload via WhatsApp or Counter"
+    ],
+    billingType: "Prepaid"
+  },
+
+  // AIRTEL - Mobile & Home Plans
+  {
+    id: "pkg-14",
+    network: "Airtel",
+    category: "Mobile SIM Plans",
+    name: "Airtel 5G Freedom Unlimited Pack",
+    type: "Combo (Voice + Data)",
+    description: "Unlimited Any-Net Voice Calls + 2GB per day high-speed data (60GB total) + Free SMS",
+    price: 888,
+    status: "Active",
+    displayOrder: 14,
+    validity: "30 Days",
+    quota: "60 GB (2GB/day) + Unlimited Calls",
+    speed: "5G Ultra Speed",
+    badge: "Freedom Pack",
+    features: [
+      "Unlimited Calls to ANY mobile & landline network",
+      "2 GB Daily high-speed data allowance (60GB)",
+      "100 Free SMS per day",
+      "Instant prepaid reload"
+    ],
+    ussdCode: "*555# or Direct Reload",
+    billingType: "Prepaid"
+  },
+  {
+    id: "pkg-15",
+    network: "Airtel",
+    category: "Home Broadband (Router / Wi-Fi)",
+    name: "Airtel 4G Home Router 80GB Plan",
+    type: "Home Broadband",
+    description: "80GB High-Speed Data for Home Wi-Fi Routers + Free Router SIM configuration",
+    price: 1490,
+    status: "Active",
+    displayOrder: 15,
+    validity: "30 Days",
+    quota: "80 GB Anytime",
+    speed: "Up to 35 Mbps",
+    badge: "Home Wi-Fi",
+    features: [
+      "80 GB Anytime Data",
+      "Optimized for home office & study",
+      "Router SIM setup support at store",
+      "Reliable 4G coverage"
+    ],
+    billingType: "Prepaid"
   }
 ];
 
