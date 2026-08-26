@@ -104,7 +104,7 @@ export const RotatableWhyChooseUs: React.FC = () => {
         {features.map((feature, idx) => (
           <div
             key={feature.id}
-            className="group bento-card bg-white border border-slate-200/90 hover:border-slate-300 shadow-soft-sm hover:shadow-soft-lg transition-all duration-200 rounded-3xl overflow-hidden flex flex-col justify-between"
+            className="group bento-card bg-white border border-slate-200/90 hover:border-slate-300 shadow-soft-sm hover:shadow-soft-lg transition-all duration-200 rounded-3xl overflow-hidden flex flex-col justify-between transform-gpu hover:-translate-y-1"
           >
             <div>
               {/* Photo Area with Strong Dark Gradient Scrim for WCAG AA Contrast */}
@@ -112,9 +112,10 @@ export const RotatableWhyChooseUs: React.FC = () => {
                 <img
                   src={feature.image}
                   alt={feature.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   referrerPolicy="no-referrer"
                   loading="lazy"
+                  decoding="async"
                 />
                 {/* Guaranteed contrast scrim (WCAG AA Compliant) */}
                 <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/45 to-slate-950/95" />

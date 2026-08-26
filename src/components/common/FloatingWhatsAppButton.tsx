@@ -56,19 +56,14 @@ export const FloatingWhatsAppButton: React.FC = () => {
       </AnimatePresence>
 
       {/* Main Floating WhatsApp Button */}
-      <motion.a
+      <a
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="pointer-events-auto group relative flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white p-3 sm:px-4 sm:py-3 rounded-full shadow-soft-xl hover:shadow-2xl transition-all duration-200 border border-white/40 active:scale-95 cursor-pointer"
+        className="pointer-events-auto group relative flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white p-3 sm:px-4 sm:py-3 rounded-full shadow-soft-xl hover:shadow-2xl transition-all duration-200 border border-white/40 active:scale-95 cursor-pointer transform-gpu hover:scale-105"
         aria-label="Chat on WhatsApp"
         title="Direct WhatsApp Support"
       >
-        {/* Glow / Pulse ring */}
-        <span className="absolute -inset-1 rounded-full bg-[#25D366]/30 animate-pulse pointer-events-none" />
-
         <div className="relative flex items-center justify-center shrink-0">
           <MessageCircle className="w-5 h-5 sm:w-5.5 sm:h-5.5 fill-white text-[#25D366]" />
         </div>
@@ -76,7 +71,7 @@ export const FloatingWhatsAppButton: React.FC = () => {
         <span className="hidden sm:inline-block font-bold text-xs sm:text-sm tracking-wide pr-0.5">
           WhatsApp
         </span>
-      </motion.a>
+      </a>
     </div>
   );
 };

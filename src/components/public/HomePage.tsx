@@ -429,11 +429,9 @@ export const HomePage: React.FC = () => {
           {/* Service Cards Bento Grid - Responsive 1 to 4 cols */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7">
             {services.filter(s => s.isPublished).map((service) => (
-              <motion.div
+              <div
                 key={service.id}
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.2 }}
-                className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg flex flex-col justify-between overflow-hidden bg-white rounded-2xl"
+                className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg flex flex-col justify-between overflow-hidden bg-white rounded-2xl transform-gpu hover:-translate-y-1 transition-all duration-200"
               >
                 <div className="flex flex-col">
                   {/* Service Photo Banner */}
@@ -444,12 +442,13 @@ export const HomePage: React.FC = () => {
                     <img 
                       src={service.image || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'} 
                       alt={service.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                       loading="lazy"
+                      decoding="async"
                     />
                     {/* Rich dark gradient overlay for text readability & contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-black/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-black/30 pointer-events-none" />
                     
                     {/* Top-Left Category Pill & Top-Right Icon Badge */}
                     <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
@@ -462,7 +461,7 @@ export const HomePage: React.FC = () => {
                     </div>
 
                     {/* Bottom floating service name over photo */}
-                    <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none">
                       <h3 className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm truncate">
                         {service.name}
                       </h3>
@@ -498,7 +497,7 @@ export const HomePage: React.FC = () => {
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
 
