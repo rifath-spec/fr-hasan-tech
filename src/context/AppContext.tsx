@@ -105,8 +105,16 @@ const safeStorage = {
 const getInitialPath = (): string => {
   try {
     if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace(/^#/, '');
-      return hash && hash.startsWith('/') ? hash : (hash ? `/${hash}` : '/');
+      // If there was an old hash from prior visits (e.g. #/about), clean it up and use its path
+      if (window.location.hash) {
+        const hashPath = window.location.hash.replace(/^#/, '');
+        if (hashPath) {
+          const cleanPath = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+          window.history.replaceState(null, '', cleanPath);
+          return cleanPath;
+        }
+      }
+      return window.location.pathname || '/';
     }
   } catch {
     // fallback
@@ -252,28 +260,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Quick Sale Prefill
   const [quickSalePrefill, setQuickSalePrefill] = useState<{ category: string; subType: string; price: number; desc: string } | null>(null);
 
-  // Sync window hash safely
+  // Sync browser back/forward history navigation cleanly without hashtag
   useEffect(() => {
-    const handleHashChange = () => {
+    const handlePopState = () => {
       try {
-        let hash = window.location.hash.replace(/^#/, '');
-        if (!hash) hash = '/';
-        if (!hash.startsWith('/')) hash = '/' + hash;
-        setCurrentPath(hash);
+        const path = window.location.pathname || '/';
+        setCurrentPath(path);
       } catch {
         // Safe fallback
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const navigate = (path: string) => {
     try {
       const cleanPath = path.startsWith('/') ? path : `/${path}`;
       if (typeof window !== 'undefined') {
-        if (window.location.hash !== `#${cleanPath}`) {
-          window.location.hash = cleanPath;
+        if (window.location.pathname !== cleanPath) {
+          window.history.pushState(null, '', cleanPath);
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }

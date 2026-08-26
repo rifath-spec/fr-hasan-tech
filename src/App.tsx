@@ -49,8 +49,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   handleReload = () => {
-    window.location.hash = '#/';
-    window.location.reload();
+    window.location.href = '/';
   };
 
   handleReset = () => {
@@ -59,8 +58,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     } catch {
       // ignore
     }
-    window.location.hash = '#/';
-    window.location.reload();
+    window.location.href = '/';
   };
 
   render() {

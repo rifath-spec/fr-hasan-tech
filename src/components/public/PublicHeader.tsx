@@ -7,7 +7,6 @@ import {
   X, 
   Printer, 
   ChevronRight, 
-  ShieldCheck, 
   Copy, 
   Smartphone, 
   Package, 
@@ -320,15 +319,6 @@ export const PublicHeader: React.FC = () => {
                   >
                     <MessageCircle className="w-4 h-4 fill-white text-[#FF9D1C]" />
                     <span>Chat on WhatsApp</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleNav('/admin/dashboard')}
-                    className="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-[#1E5AA8]" />
-                    <span>Admin Console</span>
                   </button>
                 </div>
               </motion.div>
