@@ -29,7 +29,7 @@ export const AdminLogin: React.FC = () => {
       setIsLoading(false);
       const success = loginAdmin(email, password);
       if (success) {
-        navigate('/admin/dashboard');
+        navigate('/admin/pos');
       } else {
         setError('Invalid credentials. Please verify your password.');
       }

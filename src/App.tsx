@@ -151,10 +151,18 @@ const AppRouter: React.FC = () => {
         );
       }
 
-      if (currentPath === '/admin/pos' || currentPath === '/admin/pos/dashboard') {
+      if (currentPath === '/admin' || currentPath === '/admin/' || currentPath === '/admin/pos' || currentPath === '/admin/pos/dashboard') {
         return (
-          <AdminLayout pageTitle="Point of Sale">
+          <AdminLayout pageTitle="Point of Sale (POS)">
             <PosDashboard />
+          </AdminLayout>
+        );
+      }
+
+      if (currentPath === '/admin/dashboard') {
+        return (
+          <AdminLayout pageTitle="Overview Analytics">
+            <AdminDashboardOverview />
           </AdminLayout>
         );
       }

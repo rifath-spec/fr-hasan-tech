@@ -29,7 +29,7 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle }) => {
-  const { currentPath, navigate, logoutAdmin, adminUser, settings, isAdminAuthenticated } = useApp();
+  const { currentPath, navigate, logoutAdmin, adminUser, settings, isAdminAuthenticated, transactions } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -55,19 +55,31 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
     return null;
   }
 
+  // Calculate today's live revenue & transaction count
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayTxs = (transactions || []).filter(t => t.date === todayStr);
+  const todaySalesTotal = todayTxs
+    .filter(t => t.type === 'sale')
+    .reduce((sum, t) => sum + (t.totalAmount || 0), 0);
+
   const sidebarItems = [
-    { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'Services', path: '/admin/services', icon: Grid },
+    { label: 'Point of Sale (POS)', path: '/admin/pos', icon: Receipt, badge: 'Main POS' },
+    { label: 'Record New Sale', path: '/admin/pos/new-sale', icon: Plus, isSub: true },
+    { label: 'Transactions Ledger', path: '/admin/pos/transactions', icon: Receipt, isSub: true },
+    { label: 'Revenue Reports', path: '/admin/pos/reports', icon: TrendingUp, isSub: true },
+    { label: 'Services & Pricing', path: '/admin/services', icon: Grid },
     { label: 'SIM Management', path: '/admin/sims', icon: Smartphone },
     { label: 'Packages', path: '/admin/packages', icon: Package },
-    { label: 'POS / Sales', path: '/admin/pos', icon: Receipt },
-    { label: 'Settings', path: '/admin/settings', icon: Settings },
+    { label: 'Overview Analytics', path: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'System Settings', path: '/admin/settings', icon: Settings },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/admin/dashboard') return currentPath === '/admin/dashboard';
     if (path === '/admin/pos') {
-      return currentPath.startsWith('/admin/pos');
+      return currentPath === '/admin/pos' || currentPath === '/admin/pos/dashboard';
+    }
+    if (path === '/admin/dashboard') {
+      return currentPath === '/admin/dashboard';
     }
     return currentPath.startsWith(path);
   };
@@ -87,9 +99,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
 
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded bg-[#1E5AA8] flex items-center justify-center font-bold text-xs">
-            LP
+            POS
           </div>
-          <span className="font-bold text-sm tracking-tight">Admin Console</span>
+          <span className="font-bold text-sm tracking-tight">Admin & POS Console</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -107,22 +119,25 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
       <aside className="hidden lg:flex w-[260px] bg-[#1E293B] text-white flex-col fixed top-0 bottom-0 left-0 z-30 select-none">
         
         {/* Top Logo Area */}
-        <div className="p-4 pb-5 border-b border-slate-700/80 flex items-center justify-between">
+        <div className="p-4 pb-4 border-b border-slate-700/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#1E5AA8] text-white flex items-center justify-center font-bold shadow-xs">
-              <Shield className="w-5 h-5 text-[#F59E0B]" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1E5AA8] to-[#0D47A1] text-white flex items-center justify-center font-bold shadow-md">
+              <Receipt className="w-5 h-5 text-[#F59E0B]" />
             </div>
             <div className="overflow-hidden">
               <h2 className="font-bold text-sm text-white truncate leading-tight">
                 {settings.shopName}
               </h2>
-              <span className="text-[11px] text-slate-400 font-medium">Admin & POS System</span>
+              <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                POS Register Ready
+              </span>
             </div>
           </div>
         </div>
 
         {/* Sidebar Navigation Links */}
-        <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -131,17 +146,19 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-lg text-sm font-semibold transition-colors min-h-[44px] ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all min-h-[40px] ${
+                  item.isSub ? 'pl-7 text-xs opacity-90' : ''
+                } ${
                   active
-                    ? 'bg-[#1E5AA8] text-white shadow-soft-sm'
+                    ? 'bg-[#1E5AA8] text-white shadow-soft-sm font-bold'
                     : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                 }`}
               >
-                <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
-                <span>{item.label}</span>
-                {item.label.includes('POS') && (
-                  <span className="ml-auto text-[10px] uppercase font-bold bg-[#F59E0B] text-white px-2 py-0.5 rounded">
-                    Active
+                <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : item.isSub ? 'text-slate-500' : 'text-slate-400'}`} />
+                <span className="truncate">{item.label}</span>
+                {item.badge && (
+                  <span className="ml-auto text-[9px] uppercase font-bold bg-[#F59E0B] text-slate-900 px-1.5 py-0.5 rounded font-mono">
+                    {item.badge}
                   </span>
                 )}
               </button>
@@ -151,7 +168,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
 
         {/* Quick POS Short-cuts in Sidebar */}
         <div className="px-3 pb-3">
-          <div className="bg-slate-800/90 rounded-xl p-3 border border-slate-700 space-y-2">
+          <div className="bg-slate-800/90 rounded-xl p-3 border border-slate-700/80 space-y-2">
             <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
               <span>Fast Actions</span>
               <Receipt className="w-3.5 h-3.5 text-[#F59E0B]" />
@@ -159,13 +176,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => navigate('/admin/pos/new-sale')}
-                className="py-1.5 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold text-center active-press"
+                className="py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold text-center active-press transition-colors shadow-xs"
               >
                 + Sale
               </button>
               <button
                 onClick={() => navigate('/admin/pos/new-expense')}
-                className="py-1.5 px-2 rounded bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold text-center active-press"
+                className="py-1.5 px-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold text-center active-press transition-colors shadow-xs"
               >
                 + Expense
               </button>
@@ -174,11 +191,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
         </div>
 
         {/* Bottom User info & Logout */}
-        <div className="p-3.5 border-t border-slate-700/80 bg-slate-900/60">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-xs shrink-0">
-                <User className="w-4 h-4" />
+        <div className="p-3 border-t border-slate-700/80 bg-slate-900/60">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <div className="w-7 h-7 rounded-full bg-slate-700 text-slate-200 flex items-center justify-center font-bold text-xs shrink-0">
+                <User className="w-3.5 h-3.5" />
               </div>
               <div className="overflow-hidden">
                 <p className="text-xs font-semibold text-white truncate">{adminUser?.name}</p>
@@ -232,7 +249,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
                 <div className="p-4 border-b border-slate-700 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-[#1E5AA8] text-white flex items-center justify-center font-bold text-xs">
-                      <Shield className="w-4 h-4 text-[#F59E0B]" />
+                      <Receipt className="w-4 h-4 text-[#F59E0B]" />
                     </div>
                     <span className="font-bold text-sm text-white truncate max-w-[170px]">
                       {settings.shopName}
@@ -248,7 +265,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
                 </div>
 
                 {/* Navigation Links */}
-                <div className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+                <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                   {sidebarItems.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item.path);
@@ -261,14 +278,21 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
                           navigate(item.path);
                           setMobileSidebarOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] min-h-[46px] ${
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] min-h-[42px] ${
+                          item.isSub ? 'pl-6 opacity-90' : ''
+                        } ${
                           active
-                            ? 'bg-[#1E5AA8] text-white shadow-soft-sm'
+                            ? 'bg-[#1E5AA8] text-white shadow-soft-sm font-bold'
                             : 'text-slate-300 hover:bg-slate-800 active:bg-slate-700'
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
-                        <span>{item.label}</span>
+                        <Icon className="w-4 h-4" />
+                        <span className="truncate">{item.label}</span>
+                        {item.badge && (
+                          <span className="ml-auto text-[9px] uppercase font-bold bg-[#F59E0B] text-slate-900 px-1.5 py-0.5 rounded font-mono">
+                            {item.badge}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -313,27 +337,41 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
         <header className="h-16 bg-white border-b border-gray-200 shadow-soft-sm px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
           
           {/* Left Title & Breadcrumbs */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <h1 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
               {pageTitle}
             </h1>
           </div>
 
           {/* Right Action buttons & status */}
-          <div className="flex items-center gap-2.5 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Live Today's POS Sales Counter Pill in Header */}
+            <div 
+              onClick={() => navigate('/admin/pos')}
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold cursor-pointer hover:bg-emerald-100/70 transition-colors"
+              title="Click to open POS Register"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-emerald-700">Today's Sales:</span>
+              <span className="font-bold font-mono text-emerald-800">
+                LKR {todaySalesTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
             {/* Direct Quick Sale & Quick Expense CTAs on Header */}
             <button
               onClick={() => navigate('/admin/pos/new-sale')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#10B981] hover:bg-emerald-600 text-white text-xs font-bold rounded-md shadow-soft-sm active-press transition-colors min-h-[38px]"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#10B981] hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-soft-sm active-press transition-colors min-h-[38px]"
             >
               <Plus className="w-4 h-4" />
-              <span>Record Sale</span>
+              <span className="hidden sm:inline">Record Sale</span>
+              <span className="sm:hidden">Sale</span>
             </button>
 
             <button
               onClick={() => navigate('/admin/pos/new-expense')}
-              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-md shadow-soft-sm active-press transition-colors min-h-[38px]"
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-soft-sm active-press transition-colors min-h-[38px]"
             >
               <Plus className="w-4 h-4" />
               <span>Expense</span>
@@ -343,11 +381,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
             <div className="relative">
               <button
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="w-10 h-10 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center relative transition-colors"
+                className="w-10 h-10 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center relative transition-colors"
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#EF4444]"></span>
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#EF4444]"></span>
               </button>
 
               {notificationsOpen && (
@@ -379,9 +417,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
             {/* User Avatar */}
             <div 
               onClick={() => navigate('/admin/settings')}
-              className="flex items-center gap-2 cursor-pointer p-1 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 cursor-pointer p-1 rounded-xl hover:bg-gray-50"
             >
-              <div className="w-9 h-9 rounded-full bg-[#1E5AA8] text-white flex items-center justify-center font-bold text-xs">
+              <div className="w-9 h-9 rounded-full bg-[#1E5AA8] text-white flex items-center justify-center font-bold text-xs shadow-xs">
                 {adminUser?.name.charAt(0) || 'A'}
               </div>
               <div className="hidden sm:block text-left">

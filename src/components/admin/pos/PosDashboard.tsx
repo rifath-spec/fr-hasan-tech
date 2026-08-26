@@ -224,34 +224,50 @@ export const PosDashboard: React.FC = () => {
       </div>
 
       {/* Fast Sale Quick Buttons Bar */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-soft-sm space-y-2">
-        <span className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
-          1-Tap Quick Sale Entry:
-        </span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="bg-white p-4 sm:p-5 rounded-xl border border-blue-100 shadow-soft-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+            1-Tap Counter Speed Cashiering:
+          </span>
+          <span className="text-[11px] text-[#1E5AA8] font-medium hidden sm:inline">Auto-populates new sale form</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2">
           <button
             onClick={() => triggerQuickSale('Photocopy', 'Black & White (A4)', 5, 'A4 B&W Photocopy')}
-            className="p-2.5 rounded bg-blue-50 hover:bg-blue-100 text-left border border-blue-200 text-xs font-semibold text-[#1E5AA8] active-press transition-colors"
+            className="p-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-left border border-blue-200 text-xs font-semibold text-[#1E5AA8] active:scale-95 transition-all shadow-xs"
           >
             + A4 B&W (Rs. 5)
           </button>
           <button
             onClick={() => triggerQuickSale('Photocopy', 'Colour (A4)', 35, 'A4 Colour Photocopy')}
-            className="p-2.5 rounded bg-amber-50 hover:bg-amber-100 text-left border border-amber-200 text-xs font-semibold text-amber-800 active-press transition-colors"
+            className="p-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-left border border-amber-200 text-xs font-semibold text-amber-800 active:scale-95 transition-all shadow-xs"
           >
             + A4 Colour (Rs. 35)
           </button>
           <button
-            onClick={() => triggerQuickSale('SIM Cards', 'Dialog 4G/5G SIM', 500, 'Dialog SIM Card')}
-            className="p-2.5 rounded bg-red-50 hover:bg-red-100 text-left border border-red-200 text-xs font-semibold text-red-700 active-press transition-colors"
+            onClick={() => triggerQuickSale('Photocopy', 'Double-Sided B&W (A4)', 8, 'Double-Sided A4')}
+            className="p-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-left border border-emerald-200 text-xs font-semibold text-emerald-800 active:scale-95 transition-all shadow-xs"
+          >
+            + Double-Sided (Rs. 8)
+          </button>
+          <button
+            onClick={() => triggerQuickSale('Printing', 'Passport Photos (Set of 4)', 200, 'Passport Photos')}
+            className="p-2.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-left border border-indigo-200 text-xs font-semibold text-indigo-800 active:scale-95 transition-all shadow-xs"
+          >
+            + Passports (Rs. 200)
+          </button>
+          <button
+            onClick={() => triggerQuickSale('SIM Cards', 'Dialog 4G Standard SIM', 500, 'Dialog SIM Card')}
+            className="p-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-left border border-red-200 text-xs font-semibold text-red-700 active:scale-95 transition-all shadow-xs"
           >
             + Dialog SIM (Rs. 500)
           </button>
           <button
-            onClick={() => triggerQuickSale('Packages', 'Data Package Reload', 990, 'Dialog 30-Day Data')}
-            className="p-2.5 rounded bg-purple-50 hover:bg-purple-100 text-left border border-purple-200 text-xs font-semibold text-purple-700 active-press transition-colors"
+            onClick={() => triggerQuickSale('Packages', 'Dialog - Unlimited 30 Days', 990, 'Dialog 30-Day Data')}
+            className="p-2.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-left border border-purple-200 text-xs font-semibold text-purple-700 active:scale-95 transition-all shadow-xs"
           >
-            + Dialog 30D (Rs. 990)
+            + 30D Data (Rs. 990)
           </button>
         </div>
       </div>
