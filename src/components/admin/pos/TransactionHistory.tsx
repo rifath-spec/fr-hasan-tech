@@ -252,124 +252,148 @@ export const TransactionHistory: React.FC = () => {
         </div>
       </div>
 
-      {/* Desktop Ledger Table */}
-      <div className="hidden lg:block bg-white rounded-xl border border-gray-200 shadow-soft-sm overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-gray-50 text-gray-600 uppercase font-semibold border-b border-gray-200">
-            <tr>
-              <th className="py-3.5 px-4">Date & Time</th>
-              <th className="py-3.5 px-4">Type</th>
-              <th className="py-3.5 px-4">Category & Sub-Type</th>
-              <th className="py-3.5 px-4">Customer / Vendor</th>
-              <th className="py-3.5 px-4">Method</th>
-              <th className="py-3.5 px-4 text-right">Amount (LKR)</th>
-              <th className="py-3.5 px-4 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+      {/* Ledger Table / Cards / Empty State */}
+      {sorted.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-soft-sm">
+          <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <h4 className="text-base font-bold text-slate-800">No Transactions Found</h4>
+          <p className="text-xs text-slate-500 mt-1 mb-4">
+            {searchQuery || typeFilter !== 'all' || categoryFilter !== 'All' || startDate || endDate
+              ? 'Try clearing your search query or adjusting your filters'
+              : 'No sales or expenses have been recorded yet.'}
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => navigate('/admin/pos/new-sale')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg inline-flex items-center gap-1.5 shadow-soft-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Record First Sale</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Desktop Ledger Table */}
+          <div className="hidden lg:block bg-white rounded-xl border border-gray-200 shadow-soft-sm overflow-hidden">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-gray-50 text-gray-600 uppercase font-semibold border-b border-gray-200">
+                <tr>
+                  <th className="py-3.5 px-4">Date & Time</th>
+                  <th className="py-3.5 px-4">Type</th>
+                  <th className="py-3.5 px-4">Category & Sub-Type</th>
+                  <th className="py-3.5 px-4">Customer / Vendor</th>
+                  <th className="py-3.5 px-4">Method</th>
+                  <th className="py-3.5 px-4 text-right">Amount (LKR)</th>
+                  <th className="py-3.5 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {sorted.map(tx => (
+                  <tr key={tx.id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="py-3 px-4 font-mono text-gray-700">
+                      <div className="font-bold">{tx.date}</div>
+                      <div className="text-[10px] text-gray-400">{tx.time}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {tx.type}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-medium text-gray-900">
+                      <div>{tx.category}</div>
+                      <div className="text-[11px] text-gray-500 font-normal truncate max-w-xs">{tx.description}</div>
+                    </td>
+                    <td className="py-3 px-4 text-gray-700">
+                      {tx.customerName || tx.vendor || <span className="text-gray-400 italic">Walk-in</span>}
+                    </td>
+                    <td className="py-3 px-4 text-gray-600 font-medium">
+                      {tx.paymentMethod}
+                    </td>
+                    <td className={`py-3 px-4 text-right font-mono font-bold ${
+                      tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
+                    }`}>
+                      {tx.type === 'expense' ? '-' : '+'} {tx.totalAmount.toFixed(2)}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => setViewReceiptTx(tx)}
+                          className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#1E5AA8] transition-colors"
+                          title="View Slip"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTargetTx(tx)}
+                          className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
+                          title="Delete Transaction"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Stacked Card View */}
+          <div className="lg:hidden space-y-3">
             {sorted.map(tx => (
-              <tr key={tx.id} className="hover:bg-gray-50/80 transition-colors">
-                <td className="py-3 px-4 font-mono text-gray-700">
-                  <div className="font-bold">{tx.date}</div>
-                  <div className="text-[10px] text-gray-400">{tx.time}</div>
-                </td>
-                <td className="py-3 px-4">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                    tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {tx.type}
+              <div key={tx.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-soft-sm space-y-2.5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {tx.type}
+                      </span>
+                      <span className="font-bold text-sm text-gray-900">{tx.category}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">{tx.description}</p>
+                    <span className="text-[10px] text-gray-400 font-mono">{tx.date} • {tx.time}</span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className={`font-mono font-bold text-base block ${
+                      tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
+                    }`}>
+                      {tx.type === 'expense' ? '-' : '+'} LKR {tx.totalAmount.toFixed(2)}
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-medium block mt-0.5">{tx.paymentMethod}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-600 truncate max-w-[170px]">
+                    {tx.customerName || tx.vendor || 'Walk-in'}
                   </span>
-                </td>
-                <td className="py-3 px-4 font-medium text-gray-900">
-                  <div>{tx.category}</div>
-                  <div className="text-[11px] text-gray-500 font-normal truncate max-w-xs">{tx.description}</div>
-                </td>
-                <td className="py-3 px-4 text-gray-700">
-                  {tx.customerName || tx.vendor || <span className="text-gray-400 italic">Walk-in</span>}
-                </td>
-                <td className="py-3 px-4 text-gray-600 font-medium">
-                  {tx.paymentMethod}
-                </td>
-                <td className={`py-3 px-4 text-right font-mono font-bold ${
-                  tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
-                }`}>
-                  {tx.type === 'expense' ? '-' : '+'} {tx.totalAmount.toFixed(2)}
-                </td>
-                <td className="py-3 px-4 text-center">
-                  <div className="flex items-center justify-center gap-1.5">
+
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setViewReceiptTx(tx)}
-                      className="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-[#1E5AA8]"
-                      title="View Slip"
+                      className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold"
                     >
-                      <Eye className="w-4 h-4" />
+                      Slip
                     </button>
                     <button
                       onClick={() => setDeleteTargetTx(tx)}
-                      className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
-                      title="Delete Transaction"
+                      className="p-1 text-gray-400 hover:text-red-600"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile Stacked Card View */}
-      <div className="lg:hidden space-y-3">
-        {sorted.map(tx => (
-          <div key={tx.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-soft-sm space-y-2.5">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                    tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {tx.type}
-                  </span>
-                  <span className="font-bold text-sm text-gray-900">{tx.category}</span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">{tx.description}</p>
-                <span className="text-[10px] text-gray-400 font-mono">{tx.date} • {tx.time}</span>
               </div>
-
-              <div className="text-right">
-                <span className={`font-mono font-bold text-base block ${
-                  tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
-                }`}>
-                  {tx.type === 'expense' ? '-' : '+'} LKR {tx.totalAmount.toFixed(2)}
-                </span>
-                <span className="text-[10px] text-gray-500 font-medium block mt-0.5">{tx.paymentMethod}</span>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-[11px] text-gray-600 truncate max-w-[170px]">
-                {tx.customerName || tx.vendor || 'Walk-in'}
-              </span>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setViewReceiptTx(tx)}
-                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold"
-                >
-                  Slip
-                </button>
-                <button
-                  onClick={() => setDeleteTargetTx(tx)}
-                  className="p-1 text-gray-400 hover:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
       {/* Slip Modal */}
       {viewReceiptTx && (

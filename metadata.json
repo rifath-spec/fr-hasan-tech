@@ -1,6 +1,6 @@
 {
   "name": "FR HASAN TECH",
-  "description": "Public website, management dashboard, and Point of Sale (POS) system for FR HASAN TECH - Technology, digital printing, and telecommunications services in Sri Lanka.",
+  "description": "Public website, Instant Estimate Calculator, management dashboard, and Point of Sale (POS) system for FR HASAN TECH - Technology, digital printing, and telecommunications services in Sri Lanka.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

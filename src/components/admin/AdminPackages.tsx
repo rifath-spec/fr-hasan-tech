@@ -22,7 +22,7 @@ import {
 import { ConfirmModal } from '../common/ConfirmModal';
 
 export const AdminPackages: React.FC = () => {
-  const { packages, addPackage, updatePackage, deletePackage, reorderPackages } = useApp();
+  const { packages, addPackage, updatePackage, deletePackage, reorderPackages, clearPackages } = useApp();
 
   const [networkFilter, setNetworkFilter] = useState<string>('All');
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
@@ -32,6 +32,7 @@ export const AdminPackages: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<MobilePackage | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MobilePackage | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Form fields
   const [network, setNetwork] = useState<NetworkProvider>('Dialog');
@@ -39,16 +40,16 @@ export const AdminPackages: React.FC = () => {
   const [name, setName] = useState('');
   const [type, setType] = useState<string>('Data & Social');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState<number>(990);
+  const [price, setPrice] = useState<number>(0);
   const [status, setStatus] = useState<'Active' | 'Inactive'>('Active');
   const [displayOrder, setDisplayOrder] = useState<number>(1);
   const [validity, setValidity] = useState('30 Days');
-  const [quota, setQuota] = useState('30 GB Anytime');
-  const [speed, setSpeed] = useState('4G / 5G High Speed');
-  const [badge, setBadge] = useState('Most Popular');
-  const [ussdCode, setUssdCode] = useState('#678# or Counter Reload');
+  const [quota, setQuota] = useState('');
+  const [speed, setSpeed] = useState('');
+  const [badge, setBadge] = useState('');
+  const [ussdCode, setUssdCode] = useState('');
   const [billingType, setBillingType] = useState<'Prepaid' | 'Postpaid' | 'Both'>('Prepaid');
-  const [featuresText, setFeaturesText] = useState('30GB Anytime High-Speed Data\nUnlimited WhatsApp & Messenger\nInstant counter reload');
+  const [featuresText, setFeaturesText] = useState('');
 
   const openAddModal = (initialCategory?: PackageCategory) => {
     setEditingPackage(null);
@@ -57,16 +58,16 @@ export const AdminPackages: React.FC = () => {
     setName('');
     setType(initialCategory === 'Home Broadband (Router / Wi-Fi)' ? 'Home Broadband' : 'Data & Social');
     setDescription('');
-    setPrice(initialCategory === 'Home Broadband (Router / Wi-Fi)' ? 1890 : 990);
+    setPrice(0);
     setStatus('Active');
     setDisplayOrder(packages.length + 1);
-    setValidity(initialCategory === 'Home Broadband (Router / Wi-Fi)' ? '30 Days / Monthly' : '30 Days');
-    setQuota(initialCategory === 'Home Broadband (Router / Wi-Fi)' ? '100 GB (50GB Day + 50GB Night)' : '30 GB Anytime');
-    setSpeed('4G / 5G High Speed');
-    setBadge(initialCategory === 'Home Broadband (Router / Wi-Fi)' ? 'Broadband Choice' : 'Most Popular');
-    setUssdCode('Counter Reload or App Top-Up');
+    setValidity('30 Days');
+    setQuota('');
+    setSpeed('');
+    setBadge('');
+    setUssdCode('');
     setBillingType('Prepaid');
-    setFeaturesText('High-speed data without speed drops\nInstant counter activation\nCustomer support included');
+    setFeaturesText('');
     setIsModalOpen(true);
   };
 
@@ -195,6 +196,15 @@ export const AdminPackages: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
+          {packages.length > 0 && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="px-3.5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-lg border border-red-200 shadow-xs flex items-center justify-center gap-1.5 active-press transition-colors min-h-[42px]"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Clear All</span>
+            </button>
+          )}
           <button
             onClick={() => openAddModal('Home Broadband (Router / Wi-Fi)')}
             className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-soft-sm flex items-center justify-center gap-1.5 active-press transition-colors min-h-[42px]"
@@ -798,6 +808,19 @@ export const AdminPackages: React.FC = () => {
           }
         }}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      {/* Clear All Packages Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        title="Clear All Mobile & Broadband Packages?"
+        message="This will delete all packages from your database and catalog. You can create new custom packages or restore default templates in Settings > Data."
+        confirmLabel="Yes, Clear All Packages"
+        onConfirm={async () => {
+          await clearPackages();
+          setShowClearConfirm(false);
+        }}
+        onCancel={() => setShowClearConfirm(false)}
       />
 
     </div>

@@ -333,87 +333,97 @@ export const AdminDashboardOverview: React.FC = () => {
             </button>
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-600 uppercase font-semibold border-b border-slate-100">
-                <tr>
-                  <th className="py-3 px-4">Time</th>
-                  <th className="py-3 px-4">Type</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4 text-right">Amount</th>
-                  <th className="py-3 px-4 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {transactions.slice(0, 5).map((tx) => (
-                  <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 font-mono text-slate-600">
-                      {tx.time || '10:00 AM'}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
-                        tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+          {transactions.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 text-xs">
+              <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+              <p className="font-semibold text-slate-700">No POS transactions recorded yet</p>
+              <p className="text-[11px] text-slate-400 mt-1">Start recording sales or store expenses in POS.</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 uppercase font-semibold border-b border-slate-100">
+                    <tr>
+                      <th className="py-3 px-4">Time</th>
+                      <th className="py-3 px-4">Type</th>
+                      <th className="py-3 px-4">Category</th>
+                      <th className="py-3 px-4 text-right">Amount</th>
+                      <th className="py-3 px-4 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {transactions.slice(0, 5).map((tx) => (
+                      <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-4 font-mono text-slate-600">
+                          {tx.time || '10:00 AM'}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
+                            tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {tx.type}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 font-medium text-slate-900">
+                          <div>{tx.category}</div>
+                          <div className="text-[11px] text-slate-500 truncate max-w-[180px]">{tx.description}</div>
+                        </td>
+                        <td className={`py-3 px-4 text-right font-mono font-bold ${
+                          tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
+                        }`}>
+                          {settings.posSettings.currencySymbol} {tx.totalAmount.toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            onClick={() => setSelectedTx(tx)}
+                            className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-[#1E5AA8]"
+                            title="View Slip"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Stacked Cards View */}
+              <div className="sm:hidden divide-y divide-slate-100 p-3 space-y-2">
+                {transactions.slice(0, 4).map((tx) => (
+                  <div key={tx.id} className="pt-2 flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {tx.type}
+                        </span>
+                        <span className="text-[11px] font-semibold text-slate-800">{tx.category}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">{tx.description}</p>
+                      <span className="text-[10px] text-slate-400 font-mono">{tx.date} • {tx.time}</span>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className={`font-mono font-bold text-sm block ${
+                        tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
                       }`}>
-                        {tx.type}
+                        LKR {tx.totalAmount.toFixed(2)}
                       </span>
-                    </td>
-                    <td className="py-3 px-4 font-medium text-slate-900">
-                      <div>{tx.category}</div>
-                      <div className="text-[11px] text-slate-500 truncate max-w-[180px]">{tx.description}</div>
-                    </td>
-                    <td className={`py-3 px-4 text-right font-mono font-bold ${
-                      tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
-                    }`}>
-                      {settings.posSettings.currencySymbol} {tx.totalAmount.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
                       <button
                         onClick={() => setSelectedTx(tx)}
-                        className="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-[#1E5AA8]"
-                        title="View Slip"
+                        className="text-[11px] text-[#1E5AA8] underline mt-1"
                       >
-                        <Eye className="w-4 h-4" />
+                        View Slip
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Stacked Cards View */}
-          <div className="sm:hidden divide-y divide-slate-100 p-3 space-y-2">
-            {transactions.slice(0, 4).map((tx) => (
-              <div key={tx.id} className="pt-2 flex items-start justify-between gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                      tx.type === 'sale' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {tx.type}
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-800">{tx.category}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 mt-1">{tx.description}</p>
-                  <span className="text-[10px] text-slate-400 font-mono">{tx.date} • {tx.time}</span>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className={`font-mono font-bold text-sm block ${
-                    tx.type === 'sale' ? 'text-emerald-700' : 'text-red-600'
-                  }`}>
-                    LKR {tx.totalAmount.toFixed(2)}
-                  </span>
-                  <button
-                    onClick={() => setSelectedTx(tx)}
-                    className="text-[11px] text-[#1E5AA8] underline mt-1"
-                  >
-                    View Slip
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
 
           <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
             <button

@@ -1,6 +1,6 @@
 export type NetworkProvider = 'Dialog' | 'Mobitel' | 'Hutch' | 'Airtel' | 'SLT-Mobitel';
 
-export type ServiceCategory = 'Photocopy' | 'Printing' | 'SIM Cards' | 'Packages';
+export type ServiceCategory = 'Photocopy' | 'Printing' | 'SIM Cards' | 'Packages' | string;
 
 export type SIMStatus = 'Available' | 'Reserved' | 'Sold' | 'Returned' | 'Damaged';
 
@@ -160,4 +160,166 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info' | 'warning';
   title?: string;
   message: string;
+}
+
+// ============================================================================
+// INSTANT ESTIMATE CALCULATOR DOMAIN TYPES
+// ============================================================================
+
+export type UnitOfLength = 'mm' | 'cm' | 'in';
+
+export interface SupportedOptionFlags {
+  hasColorOption?: boolean;
+  colorPrices?: { bwPriceAdjustment: number; colorPriceAdjustment: number };
+  hasSidesOption?: boolean;
+  sidesPrices?: { singlePriceAdjustment: number; doublePriceAdjustment: number };
+  hasSizesOption?: boolean;
+  hasThicknessOption?: boolean;
+  thicknessPrices?: Record<string, number>;
+  hasBindingOption?: boolean;
+  bindingPrices?: Record<string, number>;
+  hasPaperWeightOption?: boolean;
+  paperWeightPrices?: Record<string, number>;
+  hasCustomDimensions?: boolean;
+  minWidthMm?: number;
+  maxWidthMm?: number;
+  minHeightMm?: number;
+  maxHeightMm?: number;
+}
+
+export type EstimateSizeGroup = 
+  | 'ISO_A' 
+  | 'ISO_B' 
+  | 'ISO_C' 
+  | 'US_ANSI' 
+  | 'US_COMMON' 
+  | 'JIS' 
+  | 'ARCHITECTURAL' 
+  | 'PHOTO' 
+  | 'ID_CARD' 
+  | 'LAMINATION' 
+  | 'CUSTOM';
+
+export interface EstimateSize {
+  id: string;
+  name: string;
+  code: string;
+  sizeGroup: EstimateSizeGroup;
+  widthMm: number;
+  heightMm: number;
+  widthIn?: number;
+  heightIn?: number;
+  sizeType: 'document' | 'pouch' | 'photo' | 'card' | 'large_format' | 'custom';
+  pouchWidthMm?: number; // Pouch size distinct from document size
+  pouchHeightMm?: number;
+  priceMultiplier?: number;
+  active: boolean;
+  sortOrder: number;
+  isCustom?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EstimateCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  active: boolean;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EstimateServiceOptionValue {
+  label: string;
+  value: string;
+  priceAdjustment: number; // in LKR or modifier
+  isDefault?: boolean;
+}
+
+export interface EstimateServiceOption {
+  id: string;
+  serviceId?: string;
+  optionName: string;
+  optionType: 'select' | 'radio' | 'checkbox';
+  optionValues: EstimateServiceOptionValue[];
+  active: boolean;
+  sortOrder: number;
+}
+
+export interface EstimateService {
+  id: string;
+  categoryId: string;
+  name: string;
+  description: string;
+  unit: string; // e.g. 'Page', 'Copy', 'Document', 'Pouch', 'Book', 'Set'
+  basePrice: number; // Unit price in LKR
+  pricePerUnit: number;
+  minQuantity: number;
+  maxQuantity?: number;
+  pricingModel: 'per_unit' | 'per_page' | 'per_copy' | 'fixed' | 'tiered' | 'area_based';
+  allowedSizeGroups?: EstimateSizeGroup[];
+  allowedSizeIds?: string[];
+  supportedOptions?: {
+    hasColorOption?: boolean;
+    colorPrices?: { bwPriceAdjustment: number; colorPriceAdjustment: number };
+    hasSidesOption?: boolean;
+    sidesPrices?: { singlePriceAdjustment: number; doublePriceAdjustment: number };
+    hasSizesOption?: boolean;
+    hasThicknessOption?: boolean;
+    thicknessPrices?: Record<string, number>; // e.g. { "80 micron": 0, "100 micron": 10, "125 micron": 20, "150 micron": 30, "200 micron": 50 }
+    hasBindingOption?: boolean;
+    bindingPrices?: Record<string, number>;
+    hasPaperWeightOption?: boolean;
+    paperWeightPrices?: Record<string, number>;
+    hasCustomDimensions?: boolean;
+    minWidthMm?: number;
+    maxWidthMm?: number;
+    minHeightMm?: number;
+    maxHeightMm?: number;
+  };
+  active: boolean;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EstimateItem {
+  id: string;
+  serviceId: string;
+  serviceName: string;
+  categoryName: string;
+  unit: string;
+  baseUnitPrice: number;
+  calculatedUnitPrice: number;
+  quantity: number; // e.g. pages or items
+  copies: number; // default 1
+  selectedSize?: {
+    id?: string;
+    name: string;
+    widthMm: number;
+    heightMm: number;
+    isCustom?: boolean;
+    customLabel?: string;
+  };
+  selectedOptions: {
+    color?: 'Black & White' | 'Colour';
+    sides?: 'Single Side' | 'Double Side';
+    thickness?: string;
+    bindingType?: string;
+    paperWeight?: string;
+    notes?: string;
+    [key: string]: any;
+  };
+  itemTotal: number;
+}
+
+export interface EstimateCalculation {
+  items: EstimateItem[];
+  itemCount: number;
+  subtotal: number;
+  estimatedTotal: number;
+  currency: string;
+  disclaimer: string;
 }

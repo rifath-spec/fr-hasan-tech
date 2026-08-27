@@ -23,7 +23,7 @@ export const AboutPage: React.FC = () => {
 
   const ceoName = settings.aboutContent.ceoName || 'FR Hasan';
   const ceoTitle = settings.aboutContent.ceoTitle || 'Founder & Chief Executive Officer (CEO)';
-  const ceoPhoto = settings.aboutContent.ceoPhoto || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80';
+  const ceoPhoto = settings.aboutContent.ceoPhoto || 'https://res.cloudinary.com/dut2fzqdd/image/upload/v1787850870/WhatsApp_Image_2026-08-27_at_7.46.48_PM.jpg';
   const ceoBio = settings.aboutContent.ceoBio || "FR Hasan is the founder and visionary leader of FR HASAN TECH. With extensive experience across telecommunication networks, digital imaging, and information technology infrastructure, he oversees the company's continuous commitment to customer satisfaction, fast turnaround times, and high-performance digital services.";
   const ceoQuote = settings.aboutContent.ceoQuote || "Empowering individuals and local businesses through reliable technology, seamless telecommunication connectivity, and precision digital print solutions.";
 

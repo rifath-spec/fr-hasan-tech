@@ -95,9 +95,6 @@ export const NewSaleForm: React.FC = () => {
     { label: 'Colour Print (Rs. 40)', cat: 'Printing' as ServiceCategory, sub: 'Document Print Colour (A4)', price: 40 },
     { label: 'A4 Lamination (Rs. 70)', cat: 'Printing' as ServiceCategory, sub: 'A4 Document Lamination', price: 70 },
     { label: 'Passport Photo (Rs. 200)', cat: 'Printing' as ServiceCategory, sub: 'Passport Photos (Set of 4)', price: 200 },
-    { label: 'Dialog SIM (Rs. 500)', cat: 'SIM Cards' as ServiceCategory, sub: 'Dialog 4G Standard SIM', price: 500 },
-    { label: 'Mobitel SIM (Rs. 500)', cat: 'SIM Cards' as ServiceCategory, sub: 'Mobitel 4G Standard SIM', price: 500 },
-    { label: 'Dialog 30D (Rs. 990)', cat: 'Packages' as ServiceCategory, sub: 'Dialog - Unlimited 30 Days', price: 990 },
   ];
 
   const handleApplyQuickItem = (item: typeof quickItems[0]) => {
@@ -122,8 +119,9 @@ export const NewSaleForm: React.FC = () => {
         setUnitPrice(avail.sellingPrice);
         setSelectedSimId(avail.id);
       } else {
-        setSubType('Dialog 4G Standard SIM');
-        setUnitPrice(500);
+        setSubType('SIM Card Sale');
+        setUnitPrice(0);
+        setSelectedSimId('');
       }
     } else if (newCat === 'Packages') {
       const firstPkg = packages[0];
@@ -131,8 +129,8 @@ export const NewSaleForm: React.FC = () => {
         setSubType(`${firstPkg.network} - ${firstPkg.name}`);
         setUnitPrice(firstPkg.price);
       } else {
-        setSubType('Data Package Reload');
-        setUnitPrice(990);
+        setSubType('Package Reload');
+        setUnitPrice(0);
       }
     }
   };
@@ -168,10 +166,10 @@ export const NewSaleForm: React.FC = () => {
   const changeDue = tenderedNum > 0 ? tenderedNum - finalTotal : 0;
 
   // Save Sale logic
-  const handleSave = (addAnother: boolean = false) => {
+  const handleSave = async (addAnother: boolean = false) => {
     if (finalTotal <= 0) return;
 
-    const savedTx = addTransaction({
+    const savedTx = await addTransaction({
       date,
       time,
       type: 'sale',

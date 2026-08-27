@@ -17,12 +17,14 @@ import { AdminServices } from './components/admin/AdminServices';
 import { AdminSims } from './components/admin/AdminSims';
 import { AdminPackages } from './components/admin/AdminPackages';
 import { AdminSettings } from './components/admin/AdminSettings';
+import { AdminEstimateManagement } from './components/admin/AdminEstimateManagement';
 
 import { PosDashboard } from './components/admin/pos/PosDashboard';
 import { NewSaleForm } from './components/admin/pos/NewSaleForm';
 import { NewExpenseForm } from './components/admin/pos/NewExpenseForm';
 import { TransactionHistory } from './components/admin/pos/TransactionHistory';
 import { RevenueReports } from './components/admin/pos/RevenueReports';
+import { InstantEstimateModal } from './components/estimate/InstantEstimateModal';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 
 interface ErrorBoundaryProps {
@@ -53,11 +55,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   };
 
   handleReset = () => {
-    try {
-      localStorage.clear();
-    } catch {
-      // ignore
-    }
     window.location.href = '/';
   };
 
@@ -98,7 +95,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 const AppRouter: React.FC = () => {
-  const { currentPath, navigate, isAdminAuthenticated } = useApp();
+  const { currentPath, navigate, isAdminAuthenticated, openEstimateModal } = useApp();
+
+  React.useEffect(() => {
+    if (currentPath === '/estimate') {
+      openEstimateModal();
+    }
+  }, [currentPath, openEstimateModal]);
 
   // Route parser
   const renderRoute = () => {
@@ -131,6 +134,14 @@ const AppRouter: React.FC = () => {
         return (
           <AdminLayout pageTitle="Services Catalog">
             <AdminServices />
+          </AdminLayout>
+        );
+      }
+
+      if (currentPath === '/admin/estimate-settings' || currentPath === '/admin/estimates') {
+        return (
+          <AdminLayout pageTitle="Estimate Calculator Management">
+            <AdminEstimateManagement />
           </AdminLayout>
         );
       }
@@ -257,6 +268,14 @@ const AppRouter: React.FC = () => {
       );
     }
 
+    if (currentPath === '/estimate') {
+      return (
+        <PublicLayout>
+          <HomePage />
+        </PublicLayout>
+      );
+    }
+
     // 404 Fallback
     return (
       <PublicLayout>
@@ -277,6 +296,7 @@ const AppRouter: React.FC = () => {
   return (
     <>
       <ToastContainer />
+      <InstantEstimateModal />
       {renderRoute()}
     </>
   );

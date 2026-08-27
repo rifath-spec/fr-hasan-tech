@@ -21,7 +21,7 @@ import {
 import { ConfirmModal } from '../common/ConfirmModal';
 
 export const AdminSims: React.FC = () => {
-  const { sims, addSIM, updateSIM, deleteSIM, settings } = useApp();
+  const { sims, addSIM, updateSIM, deleteSIM, clearSims, settings } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [networkFilter, setNetworkFilter] = useState<string>('All');
@@ -32,6 +32,7 @@ export const AdminSims: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSIM, setEditingSIM] = useState<SIMCard | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SIMCard | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [expandedMobileCard, setExpandedMobileCard] = useState<string | null>(null);
 
   // Form Fields
@@ -49,11 +50,11 @@ export const AdminSims: React.FC = () => {
   const openAddModal = () => {
     setEditingSIM(null);
     setNetwork('Dialog');
-    setSimNumber('077' + Math.floor(1000000 + Math.random() * 9000000));
-    setIccid('899401' + Math.floor(100000000000 + Math.random() * 900000000000));
-    setPackageName('Dialog Triple Play 30GB Starter');
-    setPurchasePrice(300);
-    setSellingPrice(500);
+    setSimNumber('');
+    setIccid('');
+    setPackageName('');
+    setPurchasePrice(0);
+    setSellingPrice(0);
     setStatus('Available');
     setReceivedDate(new Date().toISOString().split('T')[0]);
     setSoldDate('');

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Copy, Printer, Smartphone, Package, ArrowRight, Search, FileText, CheckCircle2 } from 'lucide-react';
+import { Copy, Printer, Smartphone, Package, ArrowRight, Search, FileText, CheckCircle2, Sparkles, Layers, Palette, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const ServicesListPage: React.FC = () => {
@@ -8,28 +8,35 @@ export const ServicesListPage: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  const dynamicCategories = ['All', ...Array.from(new Set([
+    'Photocopy',
+    'Printing',
+    'SIM Cards',
+    'Packages',
+    ...services.filter(s => s.isPublished).map(s => s.category).filter(Boolean)
+  ]))];
+
   const filtered = services.filter(s => {
     if (!s.isPublished) return false;
     const matchesCategory = filterCategory === 'All' || s.category === filterCategory;
     const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           s.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          s.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           s.availableServicesList.some(item => item.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
   const getServiceIcon = (category: string) => {
-    switch (category) {
-      case 'Photocopy':
-        return <Copy className="w-8 h-8 text-[#1E5AA8]" />;
-      case 'Printing':
-        return <Printer className="w-8 h-8 text-[#1E5AA8]" />;
-      case 'SIM Cards':
-        return <Smartphone className="w-8 h-8 text-[#1E5AA8]" />;
-      case 'Packages':
-        return <Package className="w-8 h-8 text-[#1E5AA8]" />;
-      default:
-        return <FileText className="w-8 h-8 text-[#1E5AA8]" />;
-    }
+    const lower = (category || '').toLowerCase();
+    if (lower === 'photocopy') return <Copy className="w-8 h-8 text-[#1E5AA8]" />;
+    if (lower === 'printing') return <Printer className="w-8 h-8 text-[#1E5AA8]" />;
+    if (lower === 'sim cards') return <Smartphone className="w-8 h-8 text-[#1E5AA8]" />;
+    if (lower === 'packages') return <Package className="w-8 h-8 text-[#1E5AA8]" />;
+    if (lower.includes('laminat')) return <Sparkles className="w-8 h-8 text-[#1E5AA8]" />;
+    if (lower.includes('bind')) return <Layers className="w-8 h-8 text-[#1E5AA8]" />;
+    if (lower.includes('photo') || lower.includes('design')) return <Palette className="w-8 h-8 text-[#1E5AA8]" />;
+    if (lower.includes('id') || lower.includes('card')) return <ShieldCheck className="w-8 h-8 text-[#1E5AA8]" />;
+    return <FileText className="w-8 h-8 text-[#1E5AA8]" />;
   };
 
   return (
@@ -50,7 +57,7 @@ export const ServicesListPage: React.FC = () => {
         <div className="bento-card p-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Category Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
-            {['All', 'Photocopy', 'Printing', 'SIM Cards', 'Packages'].map((cat) => (
+            {dynamicCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilterCategory(cat)}

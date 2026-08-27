@@ -19,7 +19,8 @@ import {
   User,
   Shield,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Calculator
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -68,6 +69,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
     { label: 'Transactions Ledger', path: '/admin/pos/transactions', icon: Receipt, isSub: true },
     { label: 'Revenue Reports', path: '/admin/pos/reports', icon: TrendingUp, isSub: true },
     { label: 'Services & Pricing', path: '/admin/services', icon: Grid },
+    { label: 'Estimate Calculator', path: '/admin/estimate-settings', icon: Calculator, badge: 'New' },
     { label: 'SIM Management', path: '/admin/sims', icon: Smartphone },
     { label: 'Packages', path: '/admin/packages', icon: Package },
     { label: 'Overview Analytics', path: '/admin/dashboard', icon: LayoutDashboard },

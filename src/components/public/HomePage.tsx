@@ -12,14 +12,17 @@ import {
   ThumbsUp, 
   MapPin, 
   CheckCircle2, 
-  Sparkles,
-  Phone,
-  Radio,
-  FileText,
-  Quote,
-  Zap,
-  Award,
-  Share2
+  Sparkles, 
+  Phone, 
+  Radio, 
+  FileText, 
+  Quote, 
+  Zap, 
+  Award, 
+  Share2,
+  Calculator,
+  Layers,
+  Palette
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { RotatableWhyChooseUs } from './RotatableWhyChooseUs';
@@ -27,7 +30,7 @@ import { ShareLocationModal } from '../common/ShareLocationModal';
 import { openWhatsAppChat } from '../../utils/whatsapp';
 
 export const HomePage: React.FC = () => {
-  const { navigate, settings, services } = useApp();
+  const { navigate, settings, services, openEstimateModal } = useApp();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const ceoName = settings.aboutContent.ceoName || 'FR Hasan';
@@ -43,18 +46,16 @@ export const HomePage: React.FC = () => {
   };
 
   const getServiceIcon = (iconName: string, category: string) => {
-    switch (category) {
-      case 'Photocopy':
-        return <Copy className="w-7 h-7 text-[#1E5AA8]" />;
-      case 'Printing':
-        return <Printer className="w-7 h-7 text-[#1E5AA8]" />;
-      case 'SIM Cards':
-        return <Smartphone className="w-7 h-7 text-[#1E5AA8]" />;
-      case 'Packages':
-        return <Package className="w-7 h-7 text-[#1E5AA8]" />;
-      default:
-        return <FileText className="w-7 h-7 text-[#1E5AA8]" />;
-    }
+    const lower = (category || '').toLowerCase();
+    if (lower === 'photocopy') return <Copy className="w-7 h-7 text-[#1E5AA8]" />;
+    if (lower === 'printing') return <Printer className="w-7 h-7 text-[#1E5AA8]" />;
+    if (lower === 'sim cards') return <Smartphone className="w-7 h-7 text-[#1E5AA8]" />;
+    if (lower === 'packages') return <Package className="w-7 h-7 text-[#1E5AA8]" />;
+    if (lower.includes('laminat')) return <Sparkles className="w-7 h-7 text-[#1E5AA8]" />;
+    if (lower.includes('bind')) return <Layers className="w-7 h-7 text-[#1E5AA8]" />;
+    if (lower.includes('photo') || lower.includes('design')) return <Palette className="w-7 h-7 text-[#1E5AA8]" />;
+    if (lower.includes('id') || lower.includes('card')) return <ShieldCheck className="w-7 h-7 text-[#1E5AA8]" />;
+    return <FileText className="w-7 h-7 text-[#1E5AA8]" />;
   };
 
   return (
@@ -176,23 +177,24 @@ export const HomePage: React.FC = () => {
                   <ArrowRight className="w-4 h-4 shrink-0" />
                 </button>
 
-                {/* Tertiary CTA: Share Location */}
+                {/* Tertiary CTA: Instant Estimate */}
                 <button
                   type="button"
-                  onClick={() => setIsShareModalOpen(true)}
-                  className="w-full sm:w-auto px-5 py-3.5 rounded-xl text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-all active-press cursor-pointer min-h-[48px]"
+                  id="hero-instant-estimate-btn"
+                  onClick={() => openEstimateModal()}
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-all active-press cursor-pointer min-h-[48px]"
                   style={{
                     backgroundColor: '#FFFFFF',
                     color: '#062B5C',
-                    border: '1px solid rgba(255, 255, 255, 0.5)',
-                    boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.08)'
+                    border: '1px solid rgba(255, 255, 255, 0.7)',
+                    boxShadow: '0 4px 14px 0 rgba(0, 0, 0, 0.12)'
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0F5FF')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-                  title="Share Store Location with Customers & Friends"
+                  title="Calculate instant estimated price for printing, photocopy, lamination & binding"
                 >
-                  <Share2 className="w-4 h-4 text-[#062B5C] shrink-0" />
-                  <span>Share Location</span>
+                  <Calculator className="w-5 h-5 text-[#0D6EFD] shrink-0" />
+                  <span>Instant Estimate</span>
                 </button>
               </div>
 
@@ -427,79 +429,91 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Service Cards Bento Grid - Responsive 1 to 4 cols */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7">
-            {services.filter(s => s.isPublished).map((service) => (
-              <div
-                key={service.id}
-                className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg flex flex-col justify-between overflow-hidden bg-white rounded-2xl transform-gpu hover:-translate-y-1 transition-all duration-200"
-              >
-                <div className="flex flex-col">
-                  {/* Service Photo Banner */}
-                  <div 
-                    onClick={() => navigate(`/services/${service.slug}`)}
-                    className="h-44 sm:h-48 w-full relative overflow-hidden bg-slate-900 cursor-pointer"
-                  >
-                    <img 
-                      src={service.image || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'} 
-                      alt={service.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    {/* Rich dark gradient overlay for text readability & contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-black/30 pointer-events-none" />
-                    
-                    {/* Top-Left Category Pill & Top-Right Icon Badge */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                      <span className="px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-md text-white font-bold text-xs shadow-md border border-white/20">
-                        {service.category}
-                      </span>
-                      <div className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md flex items-center justify-center text-[#1E5AA8] shadow-md border border-white/40">
-                        {getServiceIcon(service.icon, service.category)}
+          {services.filter(s => s.isPublished).length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200/90 p-10 sm:p-14 text-center max-w-xl mx-auto shadow-soft-sm">
+              <div className="w-14 h-14 bg-blue-50 text-[#1E5AA8] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
+                <Printer className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-1.5">No Services Published Yet</h3>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                Services will appear here once added to the catalog. Contact us directly on WhatsApp for any printing or telecom inquiries.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7">
+              {services.filter(s => s.isPublished).map((service) => (
+                <div
+                  key={service.id}
+                  className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg flex flex-col justify-between overflow-hidden bg-white rounded-2xl transform-gpu hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="flex flex-col">
+                    {/* Service Photo Banner */}
+                    <div 
+                      onClick={() => navigate(`/services/${service.slug}`)}
+                      className="h-44 sm:h-48 w-full relative overflow-hidden bg-slate-900 cursor-pointer"
+                    >
+                      <img 
+                        src={service.image || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'} 
+                        alt={service.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      {/* Rich dark gradient overlay for text readability & contrast */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-black/30 pointer-events-none" />
+                      
+                      {/* Top-Left Category Pill & Top-Right Icon Badge */}
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                        <span className="px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-md text-white font-bold text-xs shadow-md border border-white/20">
+                          {service.category}
+                        </span>
+                        <div className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md flex items-center justify-center text-[#1E5AA8] shadow-md border border-white/40">
+                          {getServiceIcon(service.icon, service.category)}
+                        </div>
+                      </div>
+
+                      {/* Bottom floating service name over photo */}
+                      <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none">
+                        <h3 className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm truncate">
+                          {service.name}
+                        </h3>
                       </div>
                     </div>
 
-                    {/* Bottom floating service name over photo */}
-                    <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none">
-                      <h3 className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm truncate">
-                        {service.name}
-                      </h3>
+                    <div className="p-5">
+                      {/* Short Description with WCAG AA High Contrast text-slate-600 */}
+                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2">
+                        {service.shortDescription}
+                      </p>
+
+                      {/* Price Info Pill */}
+                      <div className="mt-3">
+                        <span 
+                          className="inline-block text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-md truncate max-w-full"
+                          title={service.priceInfo}
+                        >
+                          {service.priceInfo}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="p-5">
-                    {/* Short Description with WCAG AA High Contrast text-slate-600 */}
-                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2">
-                      {service.shortDescription}
-                    </p>
-
-                    {/* Price Info Pill */}
-                    <div className="mt-3">
-                      <span 
-                        className="inline-block text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-md truncate max-w-full"
-                        title={service.priceInfo}
-                      >
-                        {service.priceInfo}
-                      </span>
-                    </div>
+                  {/* Bottom Action Controls: View Details */}
+                  <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center mt-auto">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/services/${service.slug}`)}
+                      className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-[#0D6EFD] bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span>View Details</span>
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </button>
                   </div>
                 </div>
-
-                {/* Bottom Action Controls: View Details */}
-                <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center mt-auto">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/services/${service.slug}`)}
-                    className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-[#0D6EFD] bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <span>View Details</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
         </div>
       </section>
