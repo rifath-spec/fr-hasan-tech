@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, getActiveCredentials } from '../lib/supabase';
 import { 
   ServiceItem, 
   SIMCard, 
@@ -368,10 +368,12 @@ export const formatSupabaseError = (err: any): string => {
 // SUPABASE API CRUD SERVICES
 // ============================================================================
 
+const isConfigured = () => getActiveCredentials().isConfigured;
+
 export const SupabaseService = {
   // Test connection & table verification
   async testConnection(): Promise<{ ok: boolean; message: string; tables?: Record<string, number> }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { 
         ok: false, 
         message: 'Supabase credentials are not configured in environment (VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required)' 
@@ -432,7 +434,7 @@ export const SupabaseService = {
 
   // 1. Settings
   async getSettings(): Promise<ShopSettings | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('shop_settings')
@@ -448,7 +450,7 @@ export const SupabaseService = {
   },
 
   async saveSettings(settings: ShopSettings): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials are not configured in environment' };
     }
     try {
@@ -468,7 +470,7 @@ export const SupabaseService = {
 
   // 2. Services
   async getServices(): Promise<ServiceItem[] | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('services')
@@ -483,7 +485,7 @@ export const SupabaseService = {
   },
 
   async createService(service: Omit<ServiceItem, 'id'> & { id?: string }): Promise<{ ok: boolean; data?: ServiceItem; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -505,7 +507,7 @@ export const SupabaseService = {
   },
 
   async updateService(id: string, updates: Partial<ServiceItem>): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -525,7 +527,7 @@ export const SupabaseService = {
   },
 
   async deleteService(id: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -545,7 +547,7 @@ export const SupabaseService = {
 
   // 3. SIM Cards
   async getSIMs(): Promise<SIMCard[] | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('sim_cards')
@@ -560,7 +562,7 @@ export const SupabaseService = {
   },
 
   async createSIM(sim: Omit<SIMCard, 'id'> & { id?: string }): Promise<{ ok: boolean; data?: SIMCard; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -582,7 +584,7 @@ export const SupabaseService = {
   },
 
   async updateSIM(id: string, updates: Partial<SIMCard>): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -602,7 +604,7 @@ export const SupabaseService = {
   },
 
   async deleteSIM(id: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -622,7 +624,7 @@ export const SupabaseService = {
 
   // 4. Mobile Packages
   async getPackages(): Promise<MobilePackage[] | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('mobile_packages')
@@ -638,7 +640,7 @@ export const SupabaseService = {
   },
 
   async createPackage(pkg: Omit<MobilePackage, 'id'> & { id?: string }): Promise<{ ok: boolean; data?: MobilePackage; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -660,7 +662,7 @@ export const SupabaseService = {
   },
 
   async updatePackage(id: string, updates: Partial<MobilePackage>): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -680,7 +682,7 @@ export const SupabaseService = {
   },
 
   async deletePackage(id: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -699,7 +701,7 @@ export const SupabaseService = {
   },
 
   async reorderPackages(packages: MobilePackage[]): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -722,7 +724,7 @@ export const SupabaseService = {
 
   // 5. POS Transactions
   async getTransactions(): Promise<POSTransaction[] | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('pos_transactions')
@@ -738,7 +740,7 @@ export const SupabaseService = {
   },
 
   async createTransaction(tx: Omit<POSTransaction, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<{ ok: boolean; data?: POSTransaction; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -760,7 +762,7 @@ export const SupabaseService = {
   },
 
   async updateTransaction(id: string, updates: Partial<POSTransaction>): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -780,7 +782,7 @@ export const SupabaseService = {
   },
 
   async deleteTransaction(id: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -800,7 +802,7 @@ export const SupabaseService = {
 
   // 6. Estimate Categories
   async getEstimateCategories(): Promise<EstimateCategory[] | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('estimate_categories')
@@ -816,7 +818,7 @@ export const SupabaseService = {
   },
 
   async createEstimateCategory(category: Omit<EstimateCategory, 'id'> & { id?: string }): Promise<{ ok: boolean; data?: EstimateCategory; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -837,7 +839,7 @@ export const SupabaseService = {
   },
 
   async updateEstimateCategory(id: string, updates: Partial<EstimateCategory>): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -856,7 +858,7 @@ export const SupabaseService = {
   },
 
   async deleteEstimateCategory(id: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -875,7 +877,7 @@ export const SupabaseService = {
 
   // 7. Estimate Sizes
   async getEstimateSizes(): Promise<EstimateSize[] | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('estimate_sizes')
@@ -891,7 +893,7 @@ export const SupabaseService = {
   },
 
   async createEstimateSize(size: Omit<EstimateSize, 'id'> & { id?: string }): Promise<{ ok: boolean; data?: EstimateSize; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -912,7 +914,7 @@ export const SupabaseService = {
   },
 
   async updateEstimateSize(id: string, updates: Partial<EstimateSize>): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -931,7 +933,7 @@ export const SupabaseService = {
   },
 
   async deleteEstimateSize(id: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -950,7 +952,7 @@ export const SupabaseService = {
 
   // 8. Estimate Services
   async getEstimateServices(): Promise<EstimateService[] | null> {
-    if (!isSupabaseConfigured) return null;
+    if (!isConfigured()) return null;
     try {
       const { data, error } = await supabase
         .from('estimate_services')
@@ -966,7 +968,7 @@ export const SupabaseService = {
   },
 
   async createEstimateService(service: Omit<EstimateService, 'id'> & { id?: string }): Promise<{ ok: boolean; data?: EstimateService; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -987,7 +989,7 @@ export const SupabaseService = {
   },
 
   async updateEstimateService(id: string, updates: Partial<EstimateService>): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -1006,7 +1008,7 @@ export const SupabaseService = {
   },
 
   async deleteEstimateService(id: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
@@ -1028,7 +1030,7 @@ export const SupabaseService = {
     services: EstimateService[];
     sizes: EstimateSize[];
   }): Promise<{ ok: boolean; message: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, message: 'Supabase credentials not configured' };
     }
     try {
@@ -1064,7 +1066,7 @@ export const SupabaseService = {
     packages: MobilePackage[];
     transactions: POSTransaction[];
   }): Promise<{ ok: boolean; message: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: false, message: 'Supabase credentials not configured in environment' };
     }
     try {
@@ -1108,7 +1110,7 @@ export const SupabaseService = {
 
   // 7. Clear Database / Wipe catalog and dummy data
   async clearAllCatalogData(): Promise<{ ok: boolean; message: string }> {
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       return { ok: true, message: 'Local catalog cleared (Supabase credentials not configured in environment)' };
     }
     try {
@@ -1131,7 +1133,7 @@ export const SupabaseService = {
   },
 
   async clearServicesTable(): Promise<{ ok: boolean; message: string }> {
-    if (!isSupabaseConfigured) return { ok: true, message: 'Cleared services locally' };
+    if (!isConfigured()) return { ok: true, message: 'Cleared services locally' };
     try {
       const { error } = await supabase.from('services').delete().neq('id', '___non_existent___');
       if (error) throw error;
@@ -1142,7 +1144,7 @@ export const SupabaseService = {
   },
 
   async clearPackagesTable(): Promise<{ ok: boolean; message: string }> {
-    if (!isSupabaseConfigured) return { ok: true, message: 'Cleared packages locally' };
+    if (!isConfigured()) return { ok: true, message: 'Cleared packages locally' };
     try {
       const { error } = await supabase.from('mobile_packages').delete().neq('id', '___non_existent___');
       if (error) throw error;
@@ -1153,7 +1155,7 @@ export const SupabaseService = {
   },
 
   async clearSimsTable(): Promise<{ ok: boolean; message: string }> {
-    if (!isSupabaseConfigured) return { ok: true, message: 'Cleared SIMs locally' };
+    if (!isConfigured()) return { ok: true, message: 'Cleared SIMs locally' };
     try {
       const { error } = await supabase.from('sim_cards').delete().neq('id', '___non_existent___');
       if (error) throw error;
@@ -1164,7 +1166,7 @@ export const SupabaseService = {
   },
 
   async clearTransactionsTable(): Promise<{ ok: boolean; message: string }> {
-    if (!isSupabaseConfigured) return { ok: true, message: 'Cleared transactions locally' };
+    if (!isConfigured()) return { ok: true, message: 'Cleared transactions locally' };
     try {
       const { error } = await supabase.from('pos_transactions').delete().neq('id', '___non_existent___');
       if (error) throw error;

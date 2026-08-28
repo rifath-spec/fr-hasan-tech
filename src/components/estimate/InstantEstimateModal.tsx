@@ -10,15 +10,19 @@ import {
   Printer, 
   FileText, 
   Layers, 
-  Sliders, 
   Search, 
-  HelpCircle, 
   Info, 
-  ArrowRight,
   Sparkles,
+  ShoppingBag,
+  Palette,
+  ShieldCheck,
+  Smartphone,
+  BookOpen,
+  ArrowRight,
+  RotateCcw,
+  CheckCircle2,
   SlidersHorizontal,
-  ChevronDown,
-  ShoppingBag
+  ChevronRight
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { 
@@ -32,8 +36,8 @@ import {
   calculateItemTotal, 
   calculateEstimateSummary, 
   generateEstimateWhatsAppText, 
-  STANDARD_SIZE_GROUPS,
-  convertLength 
+  convertLength,
+  formatCurrency
 } from '../../services/estimateCalculator';
 import { openWhatsAppChat } from '../../utils/whatsapp';
 
@@ -58,7 +62,7 @@ export const InstantEstimateModal: React.FC = () => {
   // Service configuration inputs
   const [quantity, setQuantity] = useState<number>(1);
   const [copies, setCopies] = useState<number>(1);
-  const [selectedSizeId, setSelectedSizeId] = useState<string>('size-a4');
+  const [selectedSizeId, setSelectedSizeId] = useState<string>('size-iso-a4');
   const [isCustomSize, setIsCustomSize] = useState<boolean>(false);
   const [customWidth, setCustomWidth] = useState<number>(210);
   const [customHeight, setCustomHeight] = useState<number>(297);
@@ -77,28 +81,27 @@ export const InstantEstimateModal: React.FC = () => {
   const [estimateList, setEstimateList] = useState<EstimateItem[]>([]);
   const [customerName, setCustomerName] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'configure' | 'basket'>('configure');
 
-  // Set default active service when list loads or modal opens
-  useEffect(() => {
-    if (estimateServices.length > 0 && !activeServiceId) {
-      const defaultService = estimateServices.find(s => s.active) || estimateServices[0];
-      if (defaultService) {
-        setActiveServiceId(defaultService.id);
-        // If it's a color service by default, set color option
-        if (defaultService.name.toLowerCase().includes('colour') || defaultService.name.toLowerCase().includes('color')) {
-          setIsColor(true);
-        } else {
-          setIsColor(false);
-        }
-      }
-    }
-  }, [estimateServices, activeServiceId]);
-
-  // If active service changes, adapt options
+  // Active service helper
   const currentService = useMemo(() => {
     return estimateServices.find(s => s.id === activeServiceId) || null;
   }, [estimateServices, activeServiceId]);
 
+  // Set default active service when modal opens or services load
+  useEffect(() => {
+    if (estimateServices.length > 0 && (!activeServiceId || !estimateServices.some(s => s.id === activeServiceId))) {
+      const activeList = estimateServices.filter(s => s.active);
+      const defaultService = activeList.find(s => s.categoryId === 'cat-photocopy' || s.categoryId === 'cat-printing') || activeList[0];
+      if (defaultService) {
+        setActiveServiceId(defaultService.id);
+        const isCol = defaultService.name.toLowerCase().includes('colour') || defaultService.name.toLowerCase().includes('color');
+        setIsColor(isCol);
+      }
+    }
+  }, [estimateServices, activeServiceId, isEstimateModalOpen]);
+
+  // Handle service switch defaults
   useEffect(() => {
     if (currentService) {
       setQuantity(Math.max(currentService.minQuantity || 1, 1));
@@ -106,7 +109,7 @@ export const InstantEstimateModal: React.FC = () => {
         setIsColor(true);
       }
     }
-  }, [currentService]);
+  }, [currentService?.id]);
 
   // Filtered Services List
   const filteredServices = useMemo(() => {
@@ -151,7 +154,7 @@ export const InstantEstimateModal: React.FC = () => {
     return estimateSizes.find(s => s.id === selectedSizeId) || estimateSizes.find(s => s.code === 'A4') || null;
   }, [estimateSizes, selectedSizeId, isCustomSize, customWidth, customHeight, customUnit]);
 
-  // Calculation for active configured item
+  // Live calculation for active configured item
   const currentCalculated = useMemo(() => {
     if (!currentService) return null;
     return calculateItemTotal({
@@ -167,9 +170,23 @@ export const InstantEstimateModal: React.FC = () => {
       bindingType: currentService.supportedOptions?.hasBindingOption ? selectedBinding : undefined,
       additionalNotes: customNotes.trim() || undefined,
     });
-  }, [currentService, quantity, copies, currentSize, isCustomSize, customWidth, customHeight, customUnit, isColor, isDoubleSided, selectedThickness, selectedBinding, customNotes]);
+  }, [
+    currentService, 
+    quantity, 
+    copies, 
+    currentSize, 
+    isCustomSize, 
+    customWidth, 
+    customHeight, 
+    customUnit, 
+    isColor, 
+    isDoubleSided, 
+    selectedThickness, 
+    selectedBinding, 
+    customNotes
+  ]);
 
-  // Single Item configured object as EstimateItem
+  // Current configured item as EstimateItem
   const currentConfiguredItem: EstimateItem | null = useMemo(() => {
     if (!currentService || !currentCalculated) return null;
     const category = estimateCategories.find(c => c.id === currentService.categoryId);
@@ -224,11 +241,36 @@ export const InstantEstimateModal: React.FC = () => {
     return calculateEstimateSummary(itemsToEstimate);
   }, [itemsToEstimate]);
 
+  // Category Icon resolver
+  const getCategoryIcon = (iconName?: string) => {
+    switch (iconName) {
+      case 'Copy':
+        return <Copy className="w-4 h-4" />;
+      case 'Printer':
+        return <Printer className="w-4 h-4" />;
+      case 'Palette':
+        return <Palette className="w-4 h-4" />;
+      case 'Shield':
+      case 'ShieldCheck':
+        return <ShieldCheck className="w-4 h-4" />;
+      case 'BookOpen':
+      case 'Layers':
+        return <Layers className="w-4 h-4" />;
+      case 'Smartphone':
+        return <Smartphone className="w-4 h-4" />;
+      default:
+        return <FileText className="w-4 h-4" />;
+    }
+  };
+
+  // Quick preset quantities for rapid customer selection
+  const quantityPresets = [1, 5, 10, 25, 50, 100, 250, 500];
+
   // Add currently configured item to estimate list
   const handleAddToList = () => {
     if (!currentConfiguredItem) return;
     setEstimateList(prev => [...prev, currentConfiguredItem]);
-    showToast(`Added "${currentConfiguredItem.serviceName}" to estimate list`, 'success');
+    showToast(`Added "${currentConfiguredItem.serviceName}" to order list!`, 'success');
     // Reset quantity for next item
     setQuantity(1);
     setCustomNotes('');
@@ -237,7 +279,7 @@ export const InstantEstimateModal: React.FC = () => {
   // Remove item from list
   const handleRemoveFromList = (index: number) => {
     setEstimateList(prev => prev.filter((_, idx) => idx !== index));
-    showToast('Item removed from estimate list', 'info');
+    showToast('Item removed from order list', 'info');
   };
 
   // Clear all items in basket
@@ -245,7 +287,8 @@ export const InstantEstimateModal: React.FC = () => {
     setEstimateList([]);
     setQuantity(1);
     setCustomNotes('');
-    showToast('Estimate list cleared', 'info');
+    setViewMode('configure');
+    showToast('Order list reset', 'info');
   };
 
   // WhatsApp Order Trigger
@@ -257,7 +300,7 @@ export const InstantEstimateModal: React.FC = () => {
     );
 
     if (customerName.trim()) {
-      message = `*Customer:* ${customerName.trim()}\n\n` + message;
+      message = `*Customer Name:* ${customerName.trim()}\n\n` + message;
     }
 
     openWhatsAppChat(settings.whatsappNumber || '076 859 7800', message);
@@ -272,28 +315,28 @@ export const InstantEstimateModal: React.FC = () => {
     );
 
     if (customerName.trim()) {
-      message = `*Customer:* ${customerName.trim()}\n\n` + message;
+      message = `*Customer Name:* ${customerName.trim()}\n\n` + message;
     }
 
     navigator.clipboard.writeText(message);
     setCopied(true);
-    showToast('Estimate details copied to clipboard!', 'success');
+    showToast('Estimate summary copied to clipboard!', 'success');
     setTimeout(() => setCopied(false), 2500);
   };
 
   if (!isEstimateModalOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 md:p-6 animate-in fade-in duration-200">
       
-      {/* Modal Dialog Card */}
-      <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-slate-200">
+      {/* Modal Dialog Box */}
+      <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-slate-100">
         
         {/* ==================================================================== */}
-        {/* HEADER BAR (Theme Dark Blue + Cyan Accent) */}
+        {/* HEADER: Clean, Premium Navy Header */}
         {/* ==================================================================== */}
         <div 
-          className="px-5 py-4 sm:px-6 sm:py-4.5 text-white flex items-center justify-between shrink-0 shadow-sm"
+          className="px-5 py-3.5 sm:px-7 sm:py-4.5 text-white flex items-center justify-between shrink-0 shadow-sm"
           style={{ background: 'linear-gradient(135deg, #062B5C 0%, #083875 100%)' }}
         >
           <div className="flex items-center gap-3">
@@ -303,610 +346,726 @@ export const InstantEstimateModal: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Instant Estimate Calculator
+                  Instant Estimate & Pricing
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#16B95A] text-white">
+                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#16B95A] text-white">
                   Real-time Rates
                 </span>
               </div>
-              <p className="text-xs text-[#BFD3EA]">
-                Calculate your estimated price before sending your files via WhatsApp
+              <p className="text-xs text-[#BFD3EA] hidden sm:block">
+                Choose your options for an instant price, then send directly via WhatsApp
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={closeEstimateModal}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/20"
-            aria-label="Close modal"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Basket Button Toggle (if items > 0) */}
+            {estimateList.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setViewMode(prev => prev === 'basket' ? 'configure' : 'basket')}
+                className="px-3 py-1.5 rounded-xl bg-[#0D6EFD] hover:bg-[#0B5ED7] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>{estimateList.length} {estimateList.length === 1 ? 'Item' : 'Items'}</span>
+                <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[10px]">
+                  {formatCurrency(grandCalculation.estimatedTotal)}
+                </span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={closeEstimateModal}
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/20"
+              aria-label="Close calculator"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* ==================================================================== */}
-        {/* MODAL BODY (Two-Column Layout on Tablet/Desktop) */}
+        {/* BODY CONTAINER */}
         {/* ==================================================================== */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/70">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            
-            {/* ------------------------------------------------------------------ */}
-            {/* LEFT COLUMN: Service Selection & Real-Time Option Configuration */}
-            {/* ------------------------------------------------------------------ */}
-            <div className="lg:col-span-7 space-y-4">
-              
-              {/* Category Pills & Search */}
-              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Step 1: Choose Service
-                  </span>
-                  {estimateCategories.length > 0 && (
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      {filteredServices.length} service(s) available
-                    </span>
-                  )}
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-6 bg-slate-50">
+          
+          {/* BASKET VIEW (When user clicks on Basket mode with multiple items) */}
+          {viewMode === 'basket' && estimateList.length > 0 ? (
+            <div className="max-w-2xl mx-auto space-y-4">
+              <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Your Estimate Order List</h3>
+                  <p className="text-xs text-slate-500">Review your configured services before sending</p>
                 </div>
-
-                {/* Category Pills Scrollable */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategoryId('all')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                      selectedCategoryId === 'all'
-                        ? 'bg-[#0B4F9C] text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    All Services
-                  </button>
-                  {estimateCategories.map(cat => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategoryId(cat.id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                        selectedCategoryId === cat.id
-                          ? 'bg-[#0B4F9C] text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Service Cards Selector */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 max-h-48 overflow-y-auto pr-1">
-                  {filteredServices.map(srv => {
-                    const isSelected = activeServiceId === srv.id;
-                    return (
-                      <button
-                        key={srv.id}
-                        type="button"
-                        onClick={() => setActiveServiceId(srv.id)}
-                        className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
-                          isSelected
-                            ? 'border-[#0D6EFD] bg-blue-50/70 shadow-xs ring-2 ring-[#0D6EFD]/20'
-                            : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                        }`}
-                      >
-                        <div>
-                          <div className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#0B4F9C]' : 'text-slate-800'}`}>
-                            {srv.name}
-                          </div>
-                          <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">
-                            {srv.description}
-                          </div>
-                        </div>
-                        <div className="mt-2 text-[11px] font-extrabold text-[#0B4F9C]">
-                          From LKR {srv.basePrice.toFixed(2)}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('configure')}
+                  className="px-3.5 py-1.5 rounded-xl bg-blue-50 text-[#0B4F9C] hover:bg-blue-100 text-xs font-bold flex items-center gap-1 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add More Services</span>
+                </button>
               </div>
 
-              {/* Step 2: Service Configuration Controls */}
-              {currentService && (
-                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Step 2: Configure & Options
-                    </span>
-                    <span className="text-xs font-bold text-[#0B4F9C] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                      {currentService.name}
-                    </span>
-                  </div>
-
-                  {/* Quantity & Copies Row */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Quantity ({currentService.unit}s)
-                      </label>
-                      <div className="flex items-center">
-                        <button
-                          type="button"
-                          onClick={() => setQuantity(prev => Math.max(currentService.minQuantity || 1, prev - 1))}
-                          className="w-9 h-9 rounded-l-lg bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center cursor-pointer"
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          min={currentService.minQuantity || 1}
-                          max={currentService.maxQuantity || 99999}
-                          value={quantity}
-                          onChange={(e) => setQuantity(Math.max(currentService.minQuantity || 1, parseInt(e.target.value) || 1))}
-                          className="w-full h-9 border-y border-slate-300 text-center font-bold text-slate-900 text-sm focus:outline-none focus:ring-1 focus:ring-[#0D6EFD]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setQuantity(prev => prev + 1)}
-                          className="w-9 h-9 rounded-r-lg bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center cursor-pointer"
-                        >
-                          +
-                        </button>
+              <div className="space-y-2.5">
+                {estimateList.map((item, idx) => (
+                  <div 
+                    key={item.id || idx}
+                    className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start justify-between gap-3 hover:border-slate-300 transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#0B4F9C] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                        {idx + 1}
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Copies (Sets)
-                      </label>
-                      <div className="flex items-center">
-                        <button
-                          type="button"
-                          onClick={() => setCopies(prev => Math.max(1, prev - 1))}
-                          className="w-9 h-9 rounded-l-lg bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center cursor-pointer"
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          min={1}
-                          max={999}
-                          value={copies}
-                          onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-full h-9 border-y border-slate-300 text-center font-bold text-slate-900 text-sm focus:outline-none focus:ring-1 focus:ring-[#0D6EFD]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setCopies(prev => prev + 1)}
-                          className="w-9 h-9 rounded-r-lg bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center cursor-pointer"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Paper / Material Size Selector */}
-                  {currentService.supportedOptions?.hasSizesOption && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-xs font-semibold text-slate-700">
-                          Document / Paper Size
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setIsCustomSize(!isCustomSize)}
-                          className="text-[11px] font-bold text-[#0D6EFD] hover:underline cursor-pointer"
-                        >
-                          {isCustomSize ? 'Choose Standard Size' : 'Custom Dimensions (mm/in)'}
-                        </button>
-                      </div>
-
-                      {!isCustomSize ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                          {availableSizes.map(size => {
-                            const isSelected = selectedSizeId === size.id;
-                            return (
-                              <button
-                                key={size.id}
-                                type="button"
-                                onClick={() => setSelectedSizeId(size.id)}
-                                className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-blue-50 border-[#0D6EFD] text-[#0B4F9C] font-bold shadow-xs'
-                                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                                }`}
-                              >
-                                <div className="text-xs font-bold">{size.name}</div>
-                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                  {size.widthMm}×{size.heightMm}mm
-                                </div>
-                              </button>
-                            );
-                          })}
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">{item.serviceName}</h4>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-slate-600">
+                          <span className="font-semibold text-[#0B4F9C]">{item.quantity} {item.unit}s</span>
+                          {item.copies > 1 && <span className="text-slate-400">× {item.copies} copies</span>}
+                          {item.selectedSize && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedSize.name}</span>}
+                          {item.selectedOptions.color && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.color}</span>}
+                          {item.selectedOptions.sides && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.sides}</span>}
+                          {item.selectedOptions.thickness && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.thickness}</span>}
+                          {item.selectedOptions.bindingType && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.bindingType}</span>}
                         </div>
-                      ) : (
-                        /* Custom Dimensions Panel */
-                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                          <div className="text-[11px] font-bold text-slate-700">Custom Dimensions</div>
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <span className="text-[10px] text-slate-500 block mb-0.5">Width:</span>
-                              <input
-                                type="number"
-                                min={10}
-                                value={customWidth}
-                                onChange={(e) => setCustomWidth(parseFloat(e.target.value) || 0)}
-                                className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-slate-800"
-                              />
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-500 block mb-0.5">Height:</span>
-                              <input
-                                type="number"
-                                min={10}
-                                value={customHeight}
-                                onChange={(e) => setCustomHeight(parseFloat(e.target.value) || 0)}
-                                className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-bold text-slate-800"
-                              />
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-500 block mb-0.5">Unit:</span>
-                              <select
-                                value={customUnit}
-                                onChange={(e) => setCustomUnit(e.target.value as UnitOfLength)}
-                                className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-xs font-semibold text-slate-800"
-                              >
-                                <option value="mm">mm (Millimeters)</option>
-                                <option value="cm">cm (Centimeters)</option>
-                                <option value="in">in (Inches)</option>
-                              </select>
-                            </div>
+                        {item.selectedOptions.notes && (
+                          <div className="text-[11px] text-amber-700 mt-1 italic">
+                            Note: {item.selectedOptions.notes}
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Print Color & Print Sides Toggles */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    {/* Color Toggle */}
-                    {currentService.supportedOptions?.hasColorOption && (
-                      <div className="border border-slate-200 rounded-lg p-2.5 bg-slate-50">
-                        <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                          Colour Output
-                        </label>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setIsColor(false)}
-                            className={`py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                              !isColor
-                                ? 'bg-slate-800 text-white shadow-xs'
-                                : 'bg-white text-slate-600 border border-slate-200'
-                            }`}
-                          >
-                            B&W (Mono)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsColor(true)}
-                            className={`py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                              isColor
-                                ? 'bg-[#0B4F9C] text-white shadow-xs'
-                                : 'bg-white text-slate-600 border border-slate-200'
-                            }`}
-                          >
-                            Full Colour
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Single vs Double-Sided */}
-                    {currentService.supportedOptions?.hasSidesOption && (
-                      <div className="border border-slate-200 rounded-lg p-2.5 bg-slate-50">
-                        <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                          Print Sides
-                        </label>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setIsDoubleSided(false)}
-                            className={`py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                              !isDoubleSided
-                                ? 'bg-[#0B4F9C] text-white shadow-xs'
-                                : 'bg-white text-slate-600 border border-slate-200'
-                            }`}
-                          >
-                            Single Sided
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setIsDoubleSided(true)}
-                            className={`py-1.5 px-2 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                              isDoubleSided
-                                ? 'bg-[#0B4F9C] text-white shadow-xs'
-                                : 'bg-white text-slate-600 border border-slate-200'
-                            }`}
-                          >
-                            Double Sided
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Lamination Thickness Selector */}
-                  {currentService.supportedOptions?.hasThicknessOption && (
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                        Pouch Thickness / Gauge
-                      </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                        {['80 micron', '100 micron', '125 micron', '150 micron', '200 micron'].map(th => (
-                          <button
-                            key={th}
-                            type="button"
-                            onClick={() => setSelectedThickness(th)}
-                            className={`py-1.5 px-2 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
-                              selectedThickness === th
-                                ? 'bg-blue-50 border-[#0D6EFD] text-[#0B4F9C] font-bold'
-                                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                            }`}
-                          >
-                            {th}
-                          </button>
-                        ))}
+                        )}
                       </div>
                     </div>
-                  )}
 
-                  {/* Binding Type Selector */}
-                  {currentService.supportedOptions?.hasBindingOption && (
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                        Binding Style & Material
-                      </label>
-                      <select
-                        value={selectedBinding}
-                        onChange={(e) => setSelectedBinding(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium text-slate-800 focus:ring-2 focus:ring-[#0D6EFD] focus:outline-none cursor-pointer"
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-sm font-extrabold text-[#0B4F9C]">
+                        {formatCurrency(item.itemTotal)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFromList(idx)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Remove item"
                       >
-                        <option value="Plastic Comb Binding (Standard)">Plastic Comb Binding (Standard Clear Cover)</option>
-                        <option value="Wire-O Metal Binding">Wire-O Metal Ring Binding</option>
-                        <option value="Heavy Duty Spine Ring (150+ pgs)">Heavy Duty Ring (150+ pages)</option>
-                        <option value="Project Soft Tape Binding">Project Soft Spine Tape</option>
-                        <option value="Hardcover Book Binding">Hardcover Gold Foil / Embossed</option>
-                      </select>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                  )}
-
-                  {/* Custom Notes */}
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Special Instructions or Paper Grammage (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g., 100gsm art paper, punch 2 holes, urgent order..."
-                      value={customNotes}
-                      onChange={(e) => setCustomNotes(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#0D6EFD]"
-                    />
                   </div>
+                ))}
+              </div>
 
-                  {/* Add To Multi-Item Estimate List Button */}
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={handleAddToList}
-                      className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 text-[#38BDF8]" />
-                      <span>Add This Item to Estimate List (Multi-service)</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ------------------------------------------------------------------ */}
-            {/* RIGHT COLUMN: Real-Time Summary, Multi-Item Basket & WhatsApp Order */}
-            {/* ------------------------------------------------------------------ */}
-            <div className="lg:col-span-5 space-y-4">
-              
-              {/* Basket Card */}
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-md space-y-4">
+              {/* Total & Action Card */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-[#0B4F9C]" />
-                    <h3 className="font-bold text-slate-800 text-sm sm:text-base">
-                      Estimate Summary
-                    </h3>
-                  </div>
-                  {estimateList.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleClearAll}
-                      className="text-[11px] text-red-500 hover:text-red-700 font-semibold cursor-pointer"
-                    >
-                      Clear List
-                    </button>
-                  )}
+                  <span className="text-sm font-bold text-slate-700">Estimated Grand Total:</span>
+                  <span className="text-2xl font-black text-[#0B4F9C]">
+                    {formatCurrency(grandCalculation.estimatedTotal)}
+                  </span>
                 </div>
 
-                {/* Optional Customer Name Input */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                    Your Name (Optional - for WhatsApp quote):
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Your Name (Optional - for WhatsApp greeting):
                   </label>
                   <input
                     type="text"
                     placeholder="Enter your name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#0D6EFD]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0D6EFD]"
                   />
                 </div>
 
-                {/* Items List in Basket or Active Preview */}
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                  {estimateList.length === 0 ? (
-                    /* Showing Active Item Preview */
-                    currentCalculated && currentConfiguredItem && (
-                      <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-100 space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <span className="text-[10px] font-bold text-[#0D6EFD] uppercase tracking-wider">
-                              Active Configuration
-                            </span>
-                            <h4 className="text-xs font-bold text-slate-800">
-                              {currentConfiguredItem.serviceName}
-                            </h4>
-                          </div>
-                          <span className="font-extrabold text-[#0B4F9C] text-sm">
-                            LKR {currentCalculated.total.toFixed(2)}
-                          </span>
-                        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppSend}
+                    className="w-full py-3 px-4 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-transform active:scale-[0.98]"
+                    style={{ backgroundColor: '#16B95A' }}
+                  >
+                    <MessageCircle className="w-5 h-5 fill-white text-white" />
+                    <span>Send Order via WhatsApp</span>
+                  </button>
 
-                        {/* Breakdown pills */}
-                        <div className="flex flex-wrap gap-1 text-[10px] text-slate-600">
-                          <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
-                            Qty: {currentCalculated.quantity} {currentConfiguredItem.unit}s
-                          </span>
-                          {currentConfiguredItem.selectedSize && (
-                            <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
-                              Size: {currentConfiguredItem.selectedSize.name}
-                            </span>
-                          )}
-                          {currentConfiguredItem.selectedOptions.color && (
-                            <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
-                              {currentConfiguredItem.selectedOptions.color}
-                            </span>
-                          )}
-                          {currentConfiguredItem.selectedOptions.sides && (
-                            <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
-                              {currentConfiguredItem.selectedOptions.sides}
-                            </span>
-                          )}
-                        </div>
+                  <button
+                    type="button"
+                    onClick={handleCopySummary}
+                    className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border border-slate-200 transition-colors"
+                  >
+                    {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-500" />}
+                    <span>{copied ? 'Copied to Clipboard!' : 'Copy Summary'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
 
-                        <div className="text-[10px] text-slate-500 pt-1 border-t border-blue-100/60 flex items-center justify-between">
-                          <span>Unit rate: LKR {currentCalculated.calculatedUnitPrice.toFixed(2)} / {currentConfiguredItem.unit}</span>
-                          <span className="text-blue-600 font-medium">Auto-calculating</span>
-                        </div>
-                      </div>
-                    )
-                  ) : (
-                    /* Render Added Items */
-                    estimateList.map((item, idx) => (
-                      <div 
-                        key={item.id || idx}
-                        className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2"
+            /* STANDARD CONFIGURATOR VIEW: 2-Column Responsive Layout */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              
+              {/* ------------------------------------------------------------------ */}
+              {/* LEFT COLUMN: Guided Service Selection & Easy Options */}
+              {/* ------------------------------------------------------------------ */}
+              <div className="lg:col-span-7 space-y-4">
+                
+                {/* STEP 1: SERVICE CATEGORY & SERVICE PICKER */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-[#0B4F9C] text-white flex items-center justify-center text-xs font-black">
+                        1
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900">
+                        Choose Your Service
+                      </h3>
+                    </div>
+
+                    {/* Quick Search */}
+                    <div className="relative w-full sm:w-48">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search service..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-8 pr-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#0D6EFD]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Horizontal Category Chips */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategoryId('all')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                        selectedCategoryId === 'all'
+                          ? 'bg-[#0B4F9C] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>All Services</span>
+                    </button>
+
+                    {estimateCategories.filter(c => c.active).map(cat => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategoryId(cat.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                          selectedCategoryId === cat.id
+                            ? 'bg-[#0B4F9C] text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-slate-800 truncate">
-                            {idx + 1}. {item.serviceName}
-                          </div>
-                          <div className="text-[11px] text-slate-500">
-                            {item.quantity} {item.unit}s · {item.selectedSize?.name || 'Standard'} {item.selectedOptions.color ? `· ${item.selectedOptions.color}` : ''} {item.selectedOptions.sides ? `· ${item.selectedOptions.sides}` : ''}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs font-bold text-[#0B4F9C]">
-                            LKR {item.itemTotal.toFixed(2)}
-                          </span>
+                        {getCategoryIcon(cat.icon)}
+                        <span>{cat.name}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Service Cards Grid */}
+                  {filteredServices.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                      No services match your search.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 sm:max-h-56 overflow-y-auto pr-1">
+                      {filteredServices.map(srv => {
+                        const isSelected = activeServiceId === srv.id;
+                        return (
                           <button
+                            key={srv.id}
                             type="button"
-                            onClick={() => handleRemoveFromList(idx)}
-                            className="text-slate-400 hover:text-red-500 p-1 cursor-pointer"
-                            title="Remove item"
+                            onClick={() => setActiveServiceId(srv.id)}
+                            className={`p-3 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between relative group ${
+                              isSelected
+                                ? 'border-[#0D6EFD] bg-blue-50/70 shadow-xs ring-2 ring-[#0D6EFD]/20 text-[#0B4F9C]'
+                                : 'border-slate-200 bg-white hover:bg-slate-50/90 text-slate-700'
+                            }`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <div>
+                              <div className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#0B4F9C]' : 'text-slate-900'}`}>
+                                {srv.name}
+                              </div>
+                              <div className="text-[10px] text-slate-500 mt-1 line-clamp-1">
+                                {srv.description}
+                              </div>
+                            </div>
+                            <div className="mt-2.5 flex items-center justify-between pt-1 border-t border-slate-100/60">
+                              <span className="text-[11px] font-extrabold text-[#0B4F9C]">
+                                {formatCurrency(srv.basePrice)}
+                              </span>
+                              <span className="text-[10px] text-slate-400">/{srv.unit}</span>
+                            </div>
                           </button>
-                        </div>
-                      </div>
-                    ))
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 
-                {/* Grand Total Price Block */}
-                <div 
-                  className="rounded-xl p-4 text-white space-y-2"
-                  style={{ background: 'linear-gradient(135deg, #061B3A 0%, #082C5C 100%)' }}
-                >
-                  <div className="flex items-center justify-between text-xs text-blue-200">
-                    <span>Total Services / Items:</span>
-                    <span>{grandCalculation.itemCount} item(s)</span>
+                {/* STEP 2: CUSTOMER-FRIENDLY CONFIGURATION */}
+                {currentService && (
+                  <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4.5">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-[#0B4F9C] text-white flex items-center justify-center text-xs font-black">
+                          2
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-900">
+                          Customize Options & Quantity
+                        </h3>
+                      </div>
+                      <span className="text-xs font-bold text-[#0B4F9C] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                        {currentService.name}
+                      </span>
+                    </div>
+
+                    {/* Quantity Section with Quick Preset Buttons */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700">
+                          Number of {currentService.unit}s:
+                        </label>
+                        <span className="text-[11px] text-slate-500 font-medium">
+                          Min: {currentService.minQuantity || 1} {currentService.unit}
+                        </span>
+                      </div>
+
+                      {/* Stepper + Input */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center w-36 sm:w-44 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setQuantity(prev => Math.max(currentService.minQuantity || 1, prev - 1))}
+                            className="w-10 h-10 rounded-l-xl bg-slate-100 border border-slate-300 hover:bg-slate-200 active:bg-slate-300 text-slate-800 font-bold text-base flex items-center justify-center transition-colors cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            min={currentService.minQuantity || 1}
+                            max={currentService.maxQuantity || 99999}
+                            value={quantity}
+                            onChange={(e) => setQuantity(Math.max(currentService.minQuantity || 1, parseInt(e.target.value) || 1))}
+                            className="w-full h-10 border-y border-slate-300 text-center font-black text-slate-900 text-sm focus:outline-none focus:ring-1 focus:ring-[#0D6EFD] bg-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setQuantity(prev => prev + 1)}
+                            className="w-10 h-10 rounded-r-xl bg-slate-100 border border-slate-300 hover:bg-slate-200 active:bg-slate-300 text-slate-800 font-bold text-base flex items-center justify-center transition-colors cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Quick Presets Pills */}
+                        <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+                          {quantityPresets.map(preset => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => setQuantity(preset)}
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                                quantity === preset
+                                  ? 'bg-[#0B4F9C] text-white shadow-xs'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                            >
+                              {preset}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Paper / Material Size Selection */}
+                    {currentService.supportedOptions?.hasSizesOption && (
+                      <div className="space-y-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-slate-700">
+                            Paper / Document Size:
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setIsCustomSize(!isCustomSize)}
+                            className="text-[11px] font-bold text-[#0D6EFD] hover:underline cursor-pointer"
+                          >
+                            {isCustomSize ? '← Standard Sizes' : 'Custom Dimensions'}
+                          </button>
+                        </div>
+
+                        {!isCustomSize ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {availableSizes.slice(0, 8).map(size => {
+                              const isSelected = selectedSizeId === size.id;
+                              return (
+                                <button
+                                  key={size.id}
+                                  type="button"
+                                  onClick={() => setSelectedSizeId(size.id)}
+                                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-blue-50 border-[#0D6EFD] text-[#0B4F9C] font-bold shadow-xs'
+                                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <div className="text-xs font-bold">{size.name}</div>
+                                  <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                                    {size.widthMm}×{size.heightMm} mm
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                            <span className="text-[11px] font-bold text-slate-700 block">Custom Measurements:</span>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <span className="text-[10px] text-slate-500 block mb-1">Width</span>
+                                <input
+                                  type="number"
+                                  min={10}
+                                  value={customWidth}
+                                  onChange={(e) => setCustomWidth(parseFloat(e.target.value) || 0)}
+                                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900"
+                                />
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 block mb-1">Height</span>
+                                <input
+                                  type="number"
+                                  min={10}
+                                  value={customHeight}
+                                  onChange={(e) => setCustomHeight(parseFloat(e.target.value) || 0)}
+                                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-900"
+                                />
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 block mb-1">Unit</span>
+                                <select
+                                  value={customUnit}
+                                  onChange={(e) => setCustomUnit(e.target.value as UnitOfLength)}
+                                  className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-900"
+                                >
+                                  <option value="mm">mm (Millimeters)</option>
+                                  <option value="cm">cm (Centimeters)</option>
+                                  <option value="in">in (Inches)</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Visual Color Mode & Print Sides Toggles */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+                      {/* Color Choice */}
+                      {currentService.supportedOptions?.hasColorOption && (
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 block">
+                            Print Colour:
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setIsColor(false)}
+                              className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                !isColor
+                                  ? 'bg-slate-900 text-white border-slate-900 shadow-xs font-bold'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 font-medium'
+                              }`}
+                            >
+                              <span className="w-2.5 h-2.5 rounded-full bg-white border border-slate-400 shrink-0" />
+                              <span className="text-xs">B&W (Mono)</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setIsColor(true)}
+                              className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                isColor
+                                  ? 'bg-[#0B4F9C] text-white border-[#0B4F9C] shadow-xs font-bold'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 font-medium'
+                              }`}
+                            >
+                              <Palette className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                              <span className="text-xs">Full Colour</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sides Choice */}
+                      {currentService.supportedOptions?.hasSidesOption && (
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 block">
+                            Print Sides:
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setIsDoubleSided(false)}
+                              className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                !isDoubleSided
+                                  ? 'bg-[#0B4F9C] text-white border-[#0B4F9C] shadow-xs font-bold'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 font-medium'
+                              }`}
+                            >
+                              <FileText className="w-3.5 h-3.5 shrink-0" />
+                              <span className="text-xs">1-Sided</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setIsDoubleSided(true)}
+                              className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                                isDoubleSided
+                                  ? 'bg-[#0B4F9C] text-white border-[#0B4F9C] shadow-xs font-bold'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 font-medium'
+                              }`}
+                            >
+                              <Layers className="w-3.5 h-3.5 shrink-0" />
+                              <span className="text-xs">2-Sided</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Lamination Thickness (if supported) */}
+                    {currentService.supportedOptions?.hasThicknessOption && (
+                      <div className="space-y-1.5 pt-1 border-t border-slate-100">
+                        <label className="text-xs font-bold text-slate-700 block">
+                          Pouch Thickness:
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                          {['80 micron', '100 micron', '125 micron', '150 micron'].map(th => (
+                            <button
+                              key={th}
+                              type="button"
+                              onClick={() => setSelectedThickness(th)}
+                              className={`py-2 px-2.5 rounded-xl text-xs font-semibold border text-center transition-all cursor-pointer ${
+                                selectedThickness === th
+                                  ? 'bg-blue-50 border-[#0D6EFD] text-[#0B4F9C] font-bold shadow-xs'
+                                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              {th}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Binding Style (if supported) */}
+                    {currentService.supportedOptions?.hasBindingOption && (
+                      <div className="space-y-1.5 pt-1 border-t border-slate-100">
+                        <label className="text-xs font-bold text-slate-700 block">
+                          Binding Type:
+                        </label>
+                        <select
+                          value={selectedBinding}
+                          onChange={(e) => setSelectedBinding(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-[#0D6EFD] focus:outline-none cursor-pointer"
+                        >
+                          <option value="Plastic Comb Binding (Standard)">Plastic Comb Binding (Standard Clear Cover)</option>
+                          <option value="Wire-O Metal Binding">Wire-O Metal Ring Binding</option>
+                          <option value="Heavy Duty Spine Ring (150+ pgs)">Heavy Duty Ring (150+ pages)</option>
+                          <option value="Project Soft Tape Binding">Project Soft Spine Tape</option>
+                          <option value="Hardcover Book Binding">Hardcover Gold Foil / Embossed</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Special Instructions */}
+                    <div className="pt-1 border-t border-slate-100">
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Special Instructions (Optional):
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 100gsm paper, punch 2 holes, urgent order..."
+                        value={customNotes}
+                        onChange={(e) => setCustomNotes(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#0D6EFD]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ------------------------------------------------------------------ */}
+              {/* RIGHT COLUMN: Real-Time Live Price & Direct WhatsApp CTA */}
+              {/* ------------------------------------------------------------------ */}
+              <div className="lg:col-span-5 space-y-4">
+                
+                {/* Real-Time Live Price Card */}
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Calculator className="w-4 h-4 text-[#0B4F9C]" />
+                      <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                        Estimated Cost
+                      </h3>
+                    </div>
+                    {currentCalculated && (
+                      <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        {formatCurrency(currentCalculated.calculatedUnitPrice)} / {currentService?.unit}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex items-baseline justify-between border-t border-white/10 pt-2">
-                    <span className="text-sm font-semibold text-slate-200">
-                      Estimated Grand Total:
-                    </span>
-                    <div className="text-right">
-                      <div className="text-2xl sm:text-3xl font-extrabold text-[#38BDF8]">
-                        LKR {grandCalculation.estimatedTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {/* Dynamic Calculation Details */}
+                  {currentCalculated && currentConfiguredItem && (
+                    <div className="space-y-3">
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                          <span>{currentConfiguredItem.serviceName}</span>
+                          <span className="text-[#0B4F9C]">{formatCurrency(currentCalculated.total)}</span>
+                        </div>
+
+                        <div className="text-[11px] text-slate-500 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span>Quantity:</span>
+                            <span className="font-semibold text-slate-700">{currentCalculated.quantity} {currentConfiguredItem.unit}s</span>
+                          </div>
+                          {currentConfiguredItem.selectedSize && (
+                            <div className="flex items-center justify-between">
+                              <span>Size:</span>
+                              <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedSize.name}</span>
+                            </div>
+                          )}
+                          {currentConfiguredItem.selectedOptions.color && (
+                            <div className="flex items-center justify-between">
+                              <span>Color:</span>
+                              <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.color}</span>
+                            </div>
+                          )}
+                          {currentConfiguredItem.selectedOptions.sides && (
+                            <div className="flex items-center justify-between">
+                              <span>Sides:</span>
+                              <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.sides}</span>
+                            </div>
+                          )}
+                          {currentConfiguredItem.selectedOptions.thickness && (
+                            <div className="flex items-center justify-between">
+                              <span>Thickness:</span>
+                              <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.thickness}</span>
+                            </div>
+                          )}
+                          {currentConfiguredItem.selectedOptions.bindingType && (
+                            <div className="flex items-center justify-between">
+                              <span>Binding:</span>
+                              <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.bindingType}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Grand Estimated Total Box */}
+                      <div 
+                        className="rounded-2xl p-4.5 text-white space-y-1 shadow-sm"
+                        style={{ background: 'linear-gradient(135deg, #061B3A 0%, #082C5C 100%)' }}
+                      >
+                        <span className="text-xs font-semibold text-[#BFD3EA] block">
+                          Estimated Total:
+                        </span>
+                        <div className="text-3xl sm:text-4xl font-black text-[#38BDF8] tracking-tight">
+                          {formatCurrency(currentCalculated.total)}
+                        </div>
+                        <span className="text-[10px] text-slate-300 block pt-1">
+                          Inclusive of standard 80gsm paper & laser toner
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add to Multi-Service Order button */}
+                  <button
+                    type="button"
+                    onClick={handleAddToList}
+                    className="w-full py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-slate-200"
+                  >
+                    <Plus className="w-4 h-4 text-[#0B4F9C]" />
+                    <span>+ Add Another Service (Multi-Item Order)</span>
+                  </button>
+
+                  {/* Customer Name Input */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Your Name (Optional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Mohamed / Kasun"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0D6EFD]"
+                    />
+                  </div>
+
+                  {/* Primary WhatsApp Action CTA */}
+                  <div className="space-y-2 pt-1">
+                    <button
+                      type="button"
+                      id="send-estimate-whatsapp-btn"
+                      onClick={handleWhatsAppSend}
+                      className="w-full py-3.5 px-4 rounded-xl text-white text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-all shadow-md active:scale-[0.98] cursor-pointer"
+                      style={{ backgroundColor: '#16B95A' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#12A94F')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#16B95A')}
+                    >
+                      <MessageCircle className="w-5 h-5 fill-white text-white shrink-0" />
+                      <span>Send Order via WhatsApp</span>
+                    </button>
+
+                    {/* Copy Text */}
+                    <button
+                      type="button"
+                      onClick={handleCopySummary}
+                      className="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-slate-200"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600 font-bold">Copied to Clipboard!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Copy Estimate Text</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Friendly Guarantee Notice */}
+                  <div className="bg-amber-50/90 border border-amber-200/90 rounded-xl p-2.5 text-[11px] text-amber-900 flex items-start gap-2">
+                    <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Instant Estimate:</span> Final amount is confirmed in WhatsApp once your exact file and page count are verified.
                     </div>
                   </div>
                 </div>
 
-                {/* Disclaimers & Notes */}
-                <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-2.5 text-[11px] text-amber-900 flex items-start gap-2">
-                  <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Disclaimer:</span> This is an instant preliminary estimate. Final invoice amount is confirmed upon review of your exact PDF/Word files and paper requirements.
+                {/* Shop Support Footer Card */}
+                <div className="bg-slate-100/90 rounded-2xl p-3 text-center text-xs text-slate-600 border border-slate-200/60">
+                  <div className="font-semibold">Need bulk discounts for 250+ pages?</div>
+                  <div className="font-bold text-[#0B4F9C] mt-0.5">
+                    Direct Hotline: {settings.whatsappNumber || '076 859 7800'}
                   </div>
                 </div>
 
-                {/* Action Buttons: WhatsApp and Copy */}
-                <div className="space-y-2 pt-1">
-                  {/* WhatsApp Direct CTA */}
-                  <button
-                    type="button"
-                    id="send-estimate-whatsapp-btn"
-                    onClick={handleWhatsAppSend}
-                    className="w-full py-3.5 px-4 rounded-xl text-white text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-all active-press cursor-pointer shadow-md"
-                    style={{ backgroundColor: '#16B95A' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#12A94F')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#16B95A')}
-                  >
-                    <MessageCircle className="w-5 h-5 fill-white text-white shrink-0" />
-                    <span>Send Estimate via WhatsApp</span>
-                  </button>
-
-                  {/* Copy Summary Button */}
-                  <button
-                    type="button"
-                    onClick={handleCopySummary}
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer border border-slate-200"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4 text-[#16B95A]" />
-                        <span className="text-[#16B95A]">Copied to Clipboard!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 text-slate-500" />
-                        <span>Copy Formatted Estimate Text</span>
-                      </>
-                    )}
-                  </button>
-                </div>
               </div>
 
-              {/* Shop Helpline Box */}
-              <div className="bg-slate-100 rounded-xl p-3 text-center text-xs text-slate-600">
-                <span>Need bulk discounts (500+ pages) or custom binding?</span>
-                <div className="font-bold text-[#0B4F9C] mt-0.5">
-                  Call / WhatsApp: {settings.whatsappNumber || '076 859 7800'}
-                </div>
-              </div>
             </div>
+          )}
 
-          </div>
         </div>
 
       </div>

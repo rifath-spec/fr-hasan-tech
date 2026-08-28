@@ -60,7 +60,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="w-full bg-[#F8FAFC]">
-      {/* 2.2 HERO SECTION with Technology Gradient & Decorative Elements */}
+      {/* 2.2 HERO SECTION with Technology Gradient */}
       <section 
         id="hero-section"
         className="relative overflow-hidden text-white rounded-b-[20px] sm:rounded-b-[28px] shadow-lg transition-all"
@@ -69,47 +69,6 @@ export const HomePage: React.FC = () => {
           boxShadow: '0 12px 30px -10px rgba(6, 27, 58, 0.4)'
         }}
       >
-        {/* Subtle Technology Decorative Background: Circuit traces, nodes & digital grid */}
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-          {/* Right-side Soft Radial Cyan/Blue Glow */}
-          <div 
-            className="absolute top-1/2 -translate-y-1/2 -right-16 sm:right-0 w-[550px] sm:w-[750px] h-[550px] sm:h-[750px] pointer-events-none"
-            style={{
-              background: 'radial-gradient(circle, rgba(25,167,232,0.20) 0%, rgba(25,167,232,0) 65%)'
-            }}
-          />
-
-          {/* Left subtle ambient glow */}
-          <div 
-            className="absolute -top-32 -left-32 w-96 h-96 pointer-events-none opacity-40"
-            style={{
-              background: 'radial-gradient(circle, rgba(13,110,253,0.15) 0%, rgba(13,110,253,0) 70%)'
-            }}
-          />
-
-          {/* Subtle Digital Grid */}
-          <div 
-            className="absolute inset-0 opacity-[0.06]"
-            style={{
-              backgroundImage: `linear-gradient(to right, #FFFFFF 1px, transparent 1px), linear-gradient(to bottom, #FFFFFF 1px, transparent 1px)`,
-              backgroundSize: '40px 40px'
-            }}
-          />
-
-          {/* Technology Circuit Trace Lines & Nodes SVG */}
-          <svg className="absolute inset-0 w-full h-full opacity-[0.09]" preserveAspectRatio="none" viewBox="0 0 1440 600">
-            <path d="M 0 80 L 320 80 L 380 140 L 750 140 L 800 90 L 1150 90 L 1220 160 L 1440 160" fill="none" stroke="#38BDF8" strokeWidth="1.5" strokeDasharray="6 6" />
-            <circle cx="380" cy="140" r="4" fill="#38BDF8" />
-            <circle cx="800" cy="90" r="4" fill="#38BDF8" />
-            <circle cx="1220" cy="160" r="4" fill="#38BDF8" />
-
-            <path d="M 100 480 L 450 480 L 520 410 L 900 410 L 960 470 L 1440 470" fill="none" stroke="#38BDF8" strokeWidth="1.5" />
-            <circle cx="450" cy="480" r="3.5" fill="#38BDF8" />
-            <circle cx="520" cy="410" r="3.5" fill="#38BDF8" />
-            <circle cx="960" cy="470" r="3.5" fill="#38BDF8" />
-          </svg>
-        </div>
-
         {/* Hero Main Content Container */}
         <div className="relative z-10 w-full max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-6 pb-8 sm:py-12 lg:py-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 xl:gap-14 items-center">
@@ -279,29 +238,6 @@ export const HomePage: React.FC = () => {
                   
                   {/* Subtle vignette scrim */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#071932]/75 via-transparent to-black/25 pointer-events-none rounded-xl" />
-
-                  {/* Top Overlays: Status Badge + Express Services */}
-                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                    {/* Top-Left: Store Open & Active with green dot */}
-                    <span 
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-bold shadow-md"
-                      style={{
-                        backgroundColor: 'rgba(7, 25, 50, 0.88)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
-                      }}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-[#16B95A] animate-pulse" />
-                      <span>Store Open & Active</span>
-                    </span>
-
-                    {/* Top-Right: Express Services */}
-                    <span 
-                      className="inline-flex items-center px-3 py-1.5 rounded-full text-white text-xs font-bold shadow-md"
-                      style={{ backgroundColor: '#FF9D1C' }}
-                    >
-                      Express Services
-                    </span>
-                  </div>
 
                   {/* Bottom Translucent Information Bar */}
                   <div 

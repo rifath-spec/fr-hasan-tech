@@ -24,7 +24,7 @@ import {
   INITIAL_ESTIMATE_SIZES
 } from '../data/initialData';
 import { SupabaseService } from '../services/supabaseService';
-import { isSupabaseConfigured, getSupabaseConfig } from '../lib/supabase';
+import { isSupabaseConfigured, getSupabaseConfig, getActiveCredentials, reinitializeSupabase } from '../lib/supabase';
 
 interface AppContextType {
   // Navigation
@@ -43,6 +43,8 @@ interface AppContextType {
   isLoadingData: boolean;
   refreshFromSupabase: () => Promise<void>;
   seedSupabaseDatabase: () => Promise<{ ok: boolean; message: string }>;
+  updateSupabaseCredentials: (url: string, key: string) => Promise<{ ok: boolean; message: string; tables?: Record<string, number> }>;
+  clearSupabaseCredentials: () => Promise<void>;
   
   // Data State
   settings: ShopSettings;
@@ -147,7 +149,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Supabase connection & loading state
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
-  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(isSupabaseConfigured);
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(getActiveCredentials().isConfigured);
 
   // Core Data States (Direct Supabase data storage, no local storage arrays)
   const [settings, setSettings] = useState<ShopSettings>(INITIAL_SETTINGS);
@@ -224,7 +226,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Fetch all initial data from Supabase backend on load
   const loadDataFromSupabase = useCallback(async () => {
-    if (!isSupabaseConfigured) {
+    if (!getActiveCredentials().isConfigured) {
       setIsLoadingData(false);
       return;
     }
@@ -321,7 +323,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.saveSettings(updated);
       if (res.ok) {
         showToast("Settings saved to Supabase successfully!", "success");
@@ -340,7 +342,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setPackages(INITIAL_PACKAGES);
     setTransactions(INITIAL_TRANSACTIONS);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.seedInitialDataToSupabase({
         settings: INITIAL_SETTINGS,
         services: INITIAL_SERVICES,
@@ -361,7 +363,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setPackages([]);
     setTransactions([]);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.clearAllCatalogData();
       showToast(res.message, res.ok ? "success" : "error");
       return res;
@@ -374,7 +376,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const clearServices = async () => {
     setServices([]);
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.clearServicesTable();
       showToast(res.message, res.ok ? "success" : "error");
     } else {
@@ -384,7 +386,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const clearPackages = async () => {
     setPackages([]);
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.clearPackagesTable();
       showToast(res.message, res.ok ? "success" : "error");
     } else {
@@ -394,7 +396,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const clearSims = async () => {
     setSims([]);
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.clearSimsTable();
       showToast(res.message, res.ok ? "success" : "error");
     } else {
@@ -404,7 +406,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const clearTransactions = async () => {
     setTransactions([]);
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.clearTransactionsTable();
       showToast(res.message, res.ok ? "success" : "error");
     } else {
@@ -413,7 +415,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const seedSupabaseDatabase = async () => {
-    if (!isSupabaseConfigured) {
+    if (!getActiveCredentials().isConfigured) {
       return { ok: false, message: 'Supabase credentials are not configured in environment' };
     }
     const res = await SupabaseService.seedInitialDataToSupabase({
@@ -429,6 +431,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return res;
   };
 
+  const updateSupabaseCredentials = async (url: string, key: string): Promise<{ ok: boolean; message: string; tables?: Record<string, number> }> => {
+    try {
+      reinitializeSupabase(url, key);
+      const testRes = await SupabaseService.testConnection();
+      if (testRes.ok) {
+        setIsSupabaseConnected(true);
+        await loadDataFromSupabase();
+        showToast("Supabase connected & verified successfully!", "success");
+      } else {
+        setIsSupabaseConnected(false);
+        showToast(`Supabase connection failed: ${testRes.message}`, "error");
+      }
+      return testRes;
+    } catch (err: any) {
+      setIsSupabaseConnected(false);
+      const msg = err?.message || "Failed to initialize Supabase client";
+      showToast(msg, "error");
+      return { ok: false, message: msg };
+    }
+  };
+
+  const clearSupabaseCredentials = async () => {
+    reinitializeSupabase("", "");
+    setIsSupabaseConnected(false);
+    showToast("Custom Supabase credentials cleared. Using local fallback.", "info");
+  };
+
   // 2. Services CRUD with Supabase
   const addService = async (service: Omit<ServiceItem, 'id'>) => {
     const tempId = `serv-${Date.now()}`;
@@ -437,7 +466,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Optimistic UI update
     setServices(prev => [newService, ...prev]);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.createService(service);
       if (res.ok && res.data) {
         setServices(prev => prev.map(s => s.id === tempId ? res.data! : s));
@@ -454,7 +483,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateService = async (id: string, updated: Partial<ServiceItem>) => {
     setServices(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.updateService(id, updated);
       if (res.ok) {
         showToast("Service updated in Supabase", "success");
@@ -470,7 +499,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const target = services.find(s => s.id === id);
     setServices(prev => prev.filter(s => s.id !== id));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.deleteService(id);
       if (res.ok) {
         showToast(`Service "${target?.name || ''}" deleted from Supabase`, "info");
@@ -489,7 +518,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setSims(prev => [newSim, ...prev]);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.createSIM(sim);
       if (res.ok && res.data) {
         setSims(prev => prev.map(s => s.id === tempId ? res.data! : s));
@@ -506,7 +535,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateSIM = async (id: string, updated: Partial<SIMCard>) => {
     setSims(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.updateSIM(id, updated);
       if (res.ok) {
         showToast("SIM details updated in Supabase", "success");
@@ -521,7 +550,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteSIM = async (id: string) => {
     setSims(prev => prev.filter(s => s.id !== id));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.deleteSIM(id);
       if (res.ok) {
         showToast("SIM card removed from Supabase", "info");
@@ -540,7 +569,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setPackages(prev => [...prev, newPkg]);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.createPackage(pkg);
       if (res.ok && res.data) {
         setPackages(prev => prev.map(p => p.id === tempId ? res.data! : p));
@@ -557,7 +586,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updatePackage = async (id: string, updated: Partial<MobilePackage>) => {
     setPackages(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.updatePackage(id, updated);
       if (res.ok) {
         showToast("Package updated in Supabase", "success");
@@ -572,7 +601,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deletePackage = async (id: string) => {
     setPackages(prev => prev.filter(p => p.id !== id));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.deletePackage(id);
       if (res.ok) {
         showToast("Package deleted from Supabase", "info");
@@ -588,7 +617,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const withOrder = reordered.map((p, idx) => ({ ...p, displayOrder: idx + 1 }));
     setPackages(withOrder);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.reorderPackages(withOrder);
       if (res.ok) {
         showToast("Package order synced with Supabase", "success");
@@ -622,7 +651,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     }
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.createTransaction(tx);
       if (res.ok && res.data) {
         setTransactions(prev => prev.map(t => t.id === tempId ? res.data! : t));
@@ -651,7 +680,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateTransaction = async (id: string, updated: Partial<POSTransaction>) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updated, updatedAt: new Date().toISOString() } : t));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.updateTransaction(id, updated);
       if (res.ok) {
         showToast("Transaction updated in Supabase", "success");
@@ -666,7 +695,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteTransaction = async (id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.deleteTransaction(id);
       if (res.ok) {
         showToast("Transaction deleted from Supabase", "info");
@@ -693,7 +722,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setEstimateServices(prev => [...prev, newService]);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.createEstimateService(service);
       if (res.ok && res.data) {
         setEstimateServices(prev => prev.map(s => s.id === tempId ? res.data! : s));
@@ -710,7 +739,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateEstimateService = async (id: string, updated: Partial<EstimateService>) => {
     setEstimateServices(prev => prev.map(s => s.id === id ? { ...s, ...updated, updatedAt: new Date().toISOString() } : s));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.updateEstimateService(id, updated);
       if (res.ok) {
         showToast("Estimate service updated in Supabase", "success");
@@ -725,7 +754,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteEstimateService = async (id: string) => {
     setEstimateServices(prev => prev.filter(s => s.id !== id));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.deleteEstimateService(id);
       if (res.ok) {
         showToast("Service deleted from Estimate Calculator", "info");
@@ -748,7 +777,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setEstimateCategories(prev => [...prev, newCategory]);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.createEstimateCategory(category);
       if (res.ok && res.data) {
         setEstimateCategories(prev => prev.map(c => c.id === tempId ? res.data! : c));
@@ -762,7 +791,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateEstimateCategory = async (id: string, updated: Partial<EstimateCategory>) => {
     setEstimateCategories(prev => prev.map(c => c.id === id ? { ...c, ...updated, updatedAt: new Date().toISOString() } : c));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       await SupabaseService.updateEstimateCategory(id, updated);
     }
     showToast("Category updated", "success");
@@ -771,7 +800,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteEstimateCategory = async (id: string) => {
     setEstimateCategories(prev => prev.filter(c => c.id !== id));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       await SupabaseService.deleteEstimateCategory(id);
     }
     showToast("Category deleted", "info");
@@ -788,7 +817,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setEstimateSizes(prev => [...prev, newSize]);
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.createEstimateSize(size);
       if (res.ok && res.data) {
         setEstimateSizes(prev => prev.map(s => s.id === tempId ? res.data! : s));
@@ -802,7 +831,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateEstimateSize = async (id: string, updated: Partial<EstimateSize>) => {
     setEstimateSizes(prev => prev.map(s => s.id === id ? { ...s, ...updated, updatedAt: new Date().toISOString() } : s));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       await SupabaseService.updateEstimateSize(id, updated);
     }
     showToast("Size updated", "success");
@@ -811,14 +840,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteEstimateSize = async (id: string) => {
     setEstimateSizes(prev => prev.filter(s => s.id !== id));
 
-    if (isSupabaseConfigured) {
+    if (getActiveCredentials().isConfigured) {
       await SupabaseService.deleteEstimateSize(id);
     }
     showToast("Size deleted", "info");
   };
 
   const seedEstimateDatabase = async () => {
-    if (!isSupabaseConfigured) {
+    if (!getActiveCredentials().isConfigured) {
       return { ok: false, message: 'Supabase credentials are not configured in environment' };
     }
     const res = await SupabaseService.seedEstimateData({
@@ -860,6 +889,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     isLoadingData,
     refreshFromSupabase: loadDataFromSupabase,
     seedSupabaseDatabase,
+    updateSupabaseCredentials,
+    clearSupabaseCredentials,
     settings,
     updateSettings,
     resetToInitialData,

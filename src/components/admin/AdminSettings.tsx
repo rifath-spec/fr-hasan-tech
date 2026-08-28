@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Store, 
@@ -18,14 +18,18 @@ import {
   RefreshCw,
   ExternalLink,
   Table,
-  Trash2
+  Trash2,
+  Eye,
+  EyeOff,
+  Link,
+  Sparkles
 } from 'lucide-react';
 import { ShopSettings } from '../../types';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { FRHasanLogo } from '../common/FRHasanLogo';
 import { SUPABASE_SQL_SCHEMA } from '../../data/supabaseSqlScript';
 import { SupabaseService } from '../../services/supabaseService';
-import { isSupabaseConfigured, getSupabaseConfig } from '../../lib/supabase';
+import { getSupabaseConfig, getActiveCredentials } from '../../lib/supabase';
 
 export const AdminSettings: React.FC = () => {
   const { 
@@ -40,7 +44,8 @@ export const AdminSettings: React.FC = () => {
     clearSims,
     clearTransactions,
     seedSupabaseDatabase,
-    refreshFromSupabase,
+    updateSupabaseCredentials,
+    clearSupabaseCredentials,
     isSupabaseConnected,
     showToast
   } = useApp();
@@ -48,6 +53,14 @@ export const AdminSettings: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'shop' | 'branding' | 'pos' | 'security' | 'supabase' | 'data'>('shop');
   const [formData, setFormData] = useState<ShopSettings>({ ...settings });
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Supabase Interactive Credentials State
+  const initialCreds = getActiveCredentials();
+  const [supabaseUrlInput, setSupabaseUrlInput] = useState<string>(initialCreds.url);
+  const [supabaseKeyInput, setSupabaseKeyInput] = useState<string>(initialCreds.key);
+  const [showKeySecret, setShowKeySecret] = useState<boolean>(false);
+  const [isConnectingSupabase, setIsConnectingSupabase] = useState<boolean>(false);
 
   // Supabase Testing State
   const [isTestingConn, setIsTestingConn] = useState(false);
@@ -69,11 +82,23 @@ export const AdminSettings: React.FC = () => {
   const [showClearPackagesConfirm, setShowClearPackagesConfirm] = useState(false);
   const [showClearSimsConfirm, setShowClearSimsConfirm] = useState(false);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await updateSettings(formData);
-    setShowSaveSuccess(true);
-    setTimeout(() => setShowSaveSuccess(false), 3000);
+  // Keep form data in sync when settings change externally
+  useEffect(() => {
+    setFormData({ ...settings });
+  }, [settings]);
+
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      await updateSettings(formData);
+      setShowSaveSuccess(true);
+      setTimeout(() => setShowSaveSuccess(false), 3500);
+    } catch (err: any) {
+      showToast(err?.message || "Failed to save settings", "error");
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   const handleFileUpload = (field: 'logo' | 'hero' | 'ceo', file: File) => {
@@ -86,14 +111,27 @@ export const AdminSettings: React.FC = () => {
         setFormData(prev => ({
           ...prev,
           heroBackgroundUrl: result,
-          heroContent: { ...prev.heroContent, backgroundImageUrl: result }
+          heroContent: {
+            title: prev.heroContent?.title || '',
+            tagline: prev.heroContent?.tagline || '',
+            description: prev.heroContent?.description || '',
+            backgroundImageUrl: result
+          }
         }));
       } else if (field === 'ceo') {
         setFormData(prev => ({
           ...prev,
-          aboutContent: { ...prev.aboutContent, ceoPhoto: result }
+          aboutContent: {
+            title: prev.aboutContent?.title || '',
+            subtitle: prev.aboutContent?.subtitle || '',
+            story: prev.aboutContent?.story || '',
+            mission: prev.aboutContent?.mission || '',
+            ...(prev.aboutContent || {}),
+            ceoPhoto: result
+          }
         }));
       }
+      showToast(`${field.toUpperCase()} image updated! Click 'Save Configuration' to persist.`, "info");
     };
     reader.readAsDataURL(file);
   };
@@ -126,6 +164,33 @@ export const AdminSettings: React.FC = () => {
     } catch {
       showToast("Unable to copy to clipboard automatically", "warning");
     }
+  };
+
+  const handleSaveSupabaseCredentials = async () => {
+    setIsConnectingSupabase(true);
+    setTestResult(null);
+    try {
+      const trimmedUrl = supabaseUrlInput.trim();
+      const trimmedKey = supabaseKeyInput.trim();
+
+      if (!trimmedUrl || !trimmedKey) {
+        showToast("Please enter both Supabase URL and Anon Key", "error");
+        return;
+      }
+
+      const res = await updateSupabaseCredentials(trimmedUrl, trimmedKey);
+      setTestResult(res);
+    } finally {
+      setIsConnectingSupabase(false);
+    }
+  };
+
+  const handleResetSupabaseCredentials = async () => {
+    await clearSupabaseCredentials();
+    const creds = getActiveCredentials();
+    setSupabaseUrlInput(creds.url);
+    setSupabaseKeyInput(creds.key);
+    setTestResult(null);
   };
 
   const handleTestConnection = async () => {
@@ -231,11 +296,11 @@ export const AdminSettings: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
         <div>
           <h2 className="text-xl font-bold text-gray-900">System & Shop Settings</h2>
-          <p className="text-xs text-gray-500">Configure business information, logo, hero visuals, POS parameters, receipt templates, and Supabase database backend</p>
+          <p className="text-xs text-gray-500">Configure business information, branding visuals, POS parameters, receipt templates, and Supabase database backend</p>
         </div>
 
         {showSaveSuccess && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200 animate-in fade-in">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Settings saved successfully!</span>
           </div>
@@ -245,6 +310,7 @@ export const AdminSettings: React.FC = () => {
       {/* Tabs / Section Selector */}
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-gray-200/70 p-1.5 rounded-xl">
         <button
+          type="button"
           onClick={() => setActiveSection('shop')}
           className={`py-2.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
             activeSection === 'shop' ? 'bg-white text-[#1E5AA8] shadow-xs' : 'text-gray-600 hover:text-gray-900'
@@ -255,6 +321,7 @@ export const AdminSettings: React.FC = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('branding')}
           className={`py-2.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
             activeSection === 'branding' ? 'bg-white text-[#1E5AA8] shadow-xs' : 'text-gray-600 hover:text-gray-900'
@@ -265,6 +332,7 @@ export const AdminSettings: React.FC = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('pos')}
           className={`py-2.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
             activeSection === 'pos' ? 'bg-white text-[#1E5AA8] shadow-xs' : 'text-gray-600 hover:text-gray-900'
@@ -275,6 +343,7 @@ export const AdminSettings: React.FC = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('supabase')}
           className={`py-2.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors relative ${
             activeSection === 'supabase' ? 'bg-white text-[#1E5AA8] shadow-xs' : 'text-gray-600 hover:text-gray-900'
@@ -282,12 +351,13 @@ export const AdminSettings: React.FC = () => {
         >
           <Server className="w-3.5 h-3.5" />
           <span>Supabase DB</span>
-          {isSupabaseConfigured && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5" />
+          {isSupabaseConnected && (
+            <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-1.5 right-1.5 ring-2 ring-white" />
           )}
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('security')}
           className={`py-2.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
             activeSection === 'security' ? 'bg-white text-[#1E5AA8] shadow-xs' : 'text-gray-600 hover:text-gray-900'
@@ -298,26 +368,30 @@ export const AdminSettings: React.FC = () => {
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveSection('data')}
           className={`py-2.5 px-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
             activeSection === 'data' ? 'bg-white text-[#1E5AA8] shadow-xs' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
           <Database className="w-3.5 h-3.5" />
-          <span>Backup</span>
+          <span>Backup & Reset</span>
         </button>
       </div>
 
-      {/* Main Settings Form */}
-      <form onSubmit={handleSave} className="bg-white rounded-xl border border-gray-200 shadow-soft-sm p-6 space-y-6">
+      {/* Main Container */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-soft-sm p-6 space-y-6">
         
         {/* SECTION 1: SHOP INFORMATION */}
         {activeSection === 'shop' && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Store className="w-4 h-4 text-[#1E5AA8]" />
-              <span>Public Storefront Details</span>
-            </h3>
+          <form onSubmit={handleSave} className="space-y-5">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <Store className="w-4 h-4 text-[#1E5AA8]" />
+                <span>Public Storefront Details</span>
+              </h3>
+              <span className="text-[11px] text-gray-400">Updates live public contact cards & footer</span>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -399,7 +473,9 @@ export const AdminSettings: React.FC = () => {
                   className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">WhatsApp Group Invite Link</label>
                 <input
@@ -410,9 +486,7 @@ export const AdminSettings: React.FC = () => {
                   className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-1">Operating Hours Summary *</label>
                 <input
@@ -426,9 +500,11 @@ export const AdminSettings: React.FC = () => {
                   className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Google Maps Link</label>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Google Maps Direct Link</label>
                 <input
                   type="text"
                   value={formData.googleMapsUrl || ''}
@@ -437,59 +513,75 @@ export const AdminSettings: React.FC = () => {
                   className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
                 />
               </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Embedded Map URL / Iframe Src</label>
+                <input
+                  type="text"
+                  value={formData.mapEmbedUrl || ''}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    const match = val.match(/src=["']([^"']+)["']/);
+                    if (match && match[1]) {
+                      val = match[1];
+                    }
+                    setFormData({ ...formData, mapEmbedUrl: val });
+                  }}
+                  placeholder="https://www.google.com/maps/embed?..."
+                  className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-gray-700 block mb-1">Embedded Map URL / Iframe Src</label>
-              <input
-                type="text"
-                value={formData.mapEmbedUrl || ''}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  const match = val.match(/src=["']([^"']+)["']/);
-                  if (match && match[1]) {
-                    val = match[1];
-                  }
-                  setFormData({ ...formData, mapEmbedUrl: val });
-                }}
-                placeholder="https://www.google.com/maps/embed?pb=..."
-                className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
-              />
-              <p className="text-[11px] text-gray-500 mt-1">Paste the Google Maps embed iframe code or embed URL directly.</p>
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={isSavingSettings}
+                className="px-6 py-2.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-md flex items-center gap-2 shadow-soft-sm active-press transition-colors disabled:opacity-50"
+              >
+                <Save className={`w-4 h-4 ${isSavingSettings ? 'animate-spin' : ''}`} />
+                <span>{isSavingSettings ? 'Saving...' : 'Save Store Details'}</span>
+              </button>
             </div>
-          </div>
+          </form>
         )}
 
-        {/* SECTION: BRANDING & MEDIA */}
+        {/* SECTION 2: BRANDING & MEDIA */}
         {activeSection === 'branding' && (
-          <div className="space-y-6">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 border-b border-gray-100 flex items-center gap-2">
-              <ImageIcon className="w-4 h-4 text-[#1E5AA8]" />
-              <span>Official Brand Assets & Visual Media</span>
-            </h3>
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-[#1E5AA8]" />
+                <span>Visual Brand, Hero Backdrop & Leadership Media</span>
+              </h3>
+            </div>
 
-            {/* 1. Logo Configuration */}
+            {/* 1. Official Store Logo */}
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 space-y-4">
               <div className="flex flex-col sm:flex-row items-center gap-5">
-                <div className="w-28 h-28 shrink-0 bg-white p-2 rounded-2xl border border-slate-200 shadow-soft-sm flex items-center justify-center">
-                  <FRHasanLogo 
-                    size="xl" 
-                    variant="badge" 
-                    customSrc={formData.logoUrl} 
-                    className="w-24 h-24"
-                  />
+                <div className="w-24 h-24 shrink-0 bg-white rounded-xl border border-slate-200 p-2 flex items-center justify-center shadow-soft-xs">
+                  {formData.logoUrl && formData.logoUrl !== '/fr-hasan-logo.svg' ? (
+                    <img 
+                      src={formData.logoUrl} 
+                      alt="Store Logo" 
+                      className="max-h-full max-w-full object-contain" 
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <FRHasanLogo className="w-full h-full" />
+                  )}
                 </div>
 
                 <div className="flex-1 space-y-2 w-full">
-                  <span className="font-bold text-sm text-slate-900 block">Official Shop Logo</span>
+                  <span className="font-bold text-sm text-slate-900 block">Official Shop Logo / Badge</span>
                   <p className="text-xs text-slate-500">
-                    Displayed on the public navigation bar, mobile menu, thermal receipt headers, and footer.
+                    Displayed across header navigation, customer receipts, and digital share cards.
                   </p>
 
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <label className="px-3.5 py-2 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-lg cursor-pointer flex items-center gap-1.5 transition-colors">
                       <Upload className="w-3.5 h-3.5" />
-                      <span>Upload New Logo</span>
+                      <span>Upload Custom Logo</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -590,10 +682,17 @@ export const AdminSettings: React.FC = () => {
                     <input
                       type="url"
                       value={formData.aboutContent?.ceoPhoto || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        aboutContent: { ...formData.aboutContent, ceoPhoto: e.target.value }
-                      })}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        aboutContent: {
+                          title: prev.aboutContent?.title || '',
+                          subtitle: prev.aboutContent?.subtitle || '',
+                          story: prev.aboutContent?.story || '',
+                          mission: prev.aboutContent?.mission || '',
+                          ...(prev.aboutContent || {}),
+                          ceoPhoto: e.target.value
+                        }
+                      }))}
                       placeholder="https://res.cloudinary.com/..."
                       className="w-full p-2 bg-white border border-gray-300 rounded-md text-xs text-gray-900 focus:border-[#1E5AA8] outline-none font-mono"
                     />
@@ -604,10 +703,17 @@ export const AdminSettings: React.FC = () => {
                     <input
                       type="text"
                       value={formData.aboutContent?.ceoName || 'FR Hasan'}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        aboutContent: { ...formData.aboutContent, ceoName: e.target.value }
-                      })}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        aboutContent: {
+                          title: prev.aboutContent?.title || '',
+                          subtitle: prev.aboutContent?.subtitle || '',
+                          story: prev.aboutContent?.story || '',
+                          mission: prev.aboutContent?.mission || '',
+                          ...(prev.aboutContent || {}),
+                          ceoName: e.target.value
+                        }
+                      }))}
                       className="w-full p-2 bg-white border border-gray-300 rounded-md text-xs text-gray-900 focus:border-[#1E5AA8] outline-none"
                     />
                   </div>
@@ -617,10 +723,17 @@ export const AdminSettings: React.FC = () => {
                     <input
                       type="text"
                       value={formData.aboutContent?.ceoQuote || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        aboutContent: { ...formData.aboutContent, ceoQuote: e.target.value }
-                      })}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        aboutContent: {
+                          title: prev.aboutContent?.title || '',
+                          subtitle: prev.aboutContent?.subtitle || '',
+                          story: prev.aboutContent?.story || '',
+                          mission: prev.aboutContent?.mission || '',
+                          ...(prev.aboutContent || {}),
+                          ceoQuote: e.target.value
+                        }
+                      }))}
                       className="w-full p-2 bg-white border border-gray-300 rounded-md text-xs text-gray-900 focus:border-[#1E5AA8] outline-none"
                     />
                   </div>
@@ -628,16 +741,28 @@ export const AdminSettings: React.FC = () => {
               </div>
             </div>
 
-          </div>
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={isSavingSettings}
+                className="px-6 py-2.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-md flex items-center gap-2 shadow-soft-sm active-press transition-colors disabled:opacity-50"
+              >
+                <Save className={`w-4 h-4 ${isSavingSettings ? 'animate-spin' : ''}`} />
+                <span>{isSavingSettings ? 'Saving...' : 'Save Media & Branding'}</span>
+              </button>
+            </div>
+          </form>
         )}
 
-        {/* SECTION 2: POS & RECEIPT */}
+        {/* SECTION 3: POS & RECEIPT */}
         {activeSection === 'pos' && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-[#1E5AA8]" />
-              <span>Point of Sale & Thermal Slip Settings</span>
-            </h3>
+          <form onSubmit={handleSave} className="space-y-5">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-[#1E5AA8]" />
+                <span>Point of Sale & Thermal Slip Settings</span>
+              </h3>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -649,6 +774,7 @@ export const AdminSettings: React.FC = () => {
                     ...formData,
                     posSettings: { ...formData.posSettings, currencySymbol: e.target.value }
                   })}
+                  placeholder="Rs. or LKR"
                   className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
                 />
               </div>
@@ -659,6 +785,7 @@ export const AdminSettings: React.FC = () => {
                   type="number"
                   min="0"
                   max="100"
+                  step="0.1"
                   value={formData.posSettings.taxRate}
                   onChange={(e) => setFormData({
                     ...formData,
@@ -678,6 +805,7 @@ export const AdminSettings: React.FC = () => {
                   ...formData,
                   posSettings: { ...formData.posSettings, receiptHeader: e.target.value }
                 })}
+                placeholder="FR.HASAN TECH - Complete Communication Hub"
                 className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
               />
             </div>
@@ -691,20 +819,32 @@ export const AdminSettings: React.FC = () => {
                   ...formData,
                   posSettings: { ...formData.posSettings, receiptFooter: e.target.value }
                 })}
+                placeholder="Thank you for your business! Visit again."
                 className="w-full p-2.5 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:border-[#1E5AA8] outline-none"
               />
             </div>
-          </div>
+
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={isSavingSettings}
+                className="px-6 py-2.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-md flex items-center gap-2 shadow-soft-sm active-press transition-colors disabled:opacity-50"
+              >
+                <Save className={`w-4 h-4 ${isSavingSettings ? 'animate-spin' : ''}`} />
+                <span>{isSavingSettings ? 'Saving...' : 'Save POS Settings'}</span>
+              </button>
+            </div>
+          </form>
         )}
 
-        {/* SECTION: SUPABASE BACKEND & SQL SETUP */}
+        {/* SECTION 4: SUPABASE BACKEND & SQL SETUP */}
         {activeSection === 'supabase' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
               <div>
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
                   <Server className="w-4 h-4 text-[#1E5AA8]" />
-                  <span>Supabase PostgreSQL Connectivity</span>
+                  <span>Supabase PostgreSQL Database Configuration</span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Direct database synchronization for services catalog, SIM inventory, reload plans, and POS ledger.
@@ -713,48 +853,86 @@ export const AdminSettings: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                  config.isConfigured 
+                  isSupabaseConnected 
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
                     : 'bg-amber-100 text-amber-800 border border-amber-300'
                 }`}>
-                  <span className={`w-2 h-2 rounded-full ${config.isConfigured ? 'bg-emerald-600' : 'bg-amber-600'}`} />
-                  <span>{config.isConfigured ? 'Supabase Configured' : 'Credentials Missing in .env'}</span>
+                  <span className={`w-2 h-2 rounded-full ${isSupabaseConnected ? 'bg-emerald-600 animate-pulse' : 'bg-amber-600'}`} />
+                  <span>{isSupabaseConnected ? 'Connected to PostgreSQL' : 'Local Fallback Mode'}</span>
                 </span>
               </div>
             </div>
 
-            {/* Connection Credentials Card */}
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <span className="font-bold text-slate-700 block mb-1">VITE_SUPABASE_URL</span>
-                  <div className="p-2.5 bg-white border border-slate-200 rounded-lg font-mono text-slate-800 truncate select-all">
-                    {config.url || 'Not configured in .env'}
-                  </div>
-                </div>
-                <div>
-                  <span className="font-bold text-slate-700 block mb-1">VITE_SUPABASE_ANON_KEY (Anon Public Key)</span>
-                  <div className="p-2.5 bg-white border border-slate-200 rounded-lg font-mono text-slate-800 truncate">
-                    {config.maskedKey}
-                  </div>
-                </div>
+            {/* Interactive Connection Credentials Card */}
+            <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <Link className="w-3.5 h-3.5 text-[#1E5AA8]" />
+                  <span>API Connection Credentials</span>
+                </span>
+                {config.isCustomStored && (
+                  <span className="text-[11px] bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded">
+                    Saved in Browser Storage
+                  </span>
+                )}
               </div>
 
-              {/* API Key Security Tip */}
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-[11px] leading-relaxed">
-                <span className="font-bold block text-amber-950 mb-0.5">⚠️ Important: Use the "anon public" key, not a Secret Key</span>
-                <span>
-                  Supabase blocks secret keys in web browsers. In your Supabase Dashboard, go to <strong>Project Settings &gt; API &gt; Project API keys</strong> and copy the <strong>anon public</strong> key (a long JWT string starting with <code>eyJhbGci...</code>).
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Supabase Project URL (VITE_SUPABASE_URL) *
+                  </label>
+                  <input
+                    type="url"
+                    value={supabaseUrlInput}
+                    onChange={(e) => setSupabaseUrlInput(e.target.value)}
+                    placeholder="https://tvcuhvtoegvfrsfihgfh.supabase.co"
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:border-[#1E5AA8] outline-none"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">Your project URL from Supabase Dashboard</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Supabase Anon Key (VITE_SUPABASE_ANON_KEY) *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showKeySecret ? 'text' : 'password'}
+                      value={supabaseKeyInput}
+                      onChange={(e) => setSupabaseKeyInput(e.target.value)}
+                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      className="w-full p-2.5 pr-10 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:border-[#1E5AA8] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowKeySecret(!showKeySecret)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                    >
+                      {showKeySecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-slate-500 mt-1 block">Use the `anon public` key (JWT or publishable string)</span>
+                </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2 pt-2">
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={handleSaveSupabaseCredentials}
+                  disabled={isConnectingSupabase}
+                  className="px-4 py-2.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-soft-xs transition-colors disabled:opacity-50 active-press"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${isConnectingSupabase ? 'animate-spin' : ''}`} />
+                  <span>{isConnectingSupabase ? 'Verifying & Saving...' : 'Save & Connect Database'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleTestConnection}
                   disabled={isTestingConn}
-                  className="px-4 py-2 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-soft-xs transition-colors disabled:opacity-50"
+                  className="px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isTestingConn ? 'animate-spin' : ''}`} />
                   <span>{isTestingConn ? 'Testing Query...' : 'Test Connection & Tables'}</span>
@@ -764,19 +942,29 @@ export const AdminSettings: React.FC = () => {
                   type="button"
                   onClick={handleSeedDatabase}
                   disabled={isSeeding}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-soft-xs transition-colors disabled:opacity-50"
+                  className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-soft-xs transition-colors disabled:opacity-50"
                 >
                   <Table className={`w-3.5 h-3.5 ${isSeeding ? 'animate-spin' : ''}`} />
                   <span>{isSeeding ? 'Seeding Tables...' : 'Seed / Sync Catalog to Supabase'}</span>
                 </button>
 
+                {config.isCustomStored && (
+                  <button
+                    type="button"
+                    onClick={handleResetSupabaseCredentials}
+                    className="px-3 py-2 text-slate-500 hover:text-red-600 text-xs font-medium transition-colors ml-auto"
+                  >
+                    Reset to Defaults
+                  </button>
+                )}
+
                 <a
                   href="https://supabase.com/dashboard"
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
                 >
-                  <span>Open Supabase Dashboard</span>
+                  <span>Supabase Dashboard</span>
                   <ExternalLink className="w-3 h-3 text-slate-500" />
                 </a>
               </div>
@@ -831,7 +1019,7 @@ export const AdminSettings: React.FC = () => {
           </div>
         )}
 
-        {/* SECTION 3: SECURITY & ADMIN */}
+        {/* SECTION 5: SECURITY & ADMIN */}
         {activeSection === 'security' && (
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 border-b border-gray-100 flex items-center gap-2">
@@ -863,7 +1051,7 @@ export const AdminSettings: React.FC = () => {
           </div>
         )}
 
-        {/* SECTION 4: DATA MANAGEMENT & BACKUP */}
+        {/* SECTION 6: DATA MANAGEMENT & BACKUP */}
         {activeSection === 'data' && (
           <div className="space-y-6">
             <div>
@@ -994,20 +1182,7 @@ export const AdminSettings: React.FC = () => {
           </div>
         )}
 
-        {/* Save Bar */}
-        {activeSection !== 'data' && activeSection !== 'supabase' && (
-          <div className="pt-4 border-t border-gray-100 flex items-center justify-end">
-            <button
-              type="submit"
-              className="px-6 py-2.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-sm font-bold rounded-md flex items-center gap-2 shadow-soft-sm active-press transition-colors"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Configuration</span>
-            </button>
-          </div>
-        )}
-
-      </form>
+      </div>
 
       {/* Change Password Modal */}
       {showPasswordModal && (
