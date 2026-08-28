@@ -162,15 +162,8 @@ export const ServicesListPage: React.FC = () => {
   const handleSelectCategory = (cat: string) => {
     setSelectedCategory(cat);
     setSearchQuery('');
-    try {
-      const newUrl = cat === 'All' ? '/services' : `/services?category=${encodeURIComponent(cat)}`;
-      if (typeof window !== 'undefined') {
-        window.history.pushState(null, '', newUrl);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    } catch {
-      // ignore
-    }
+    const newUrl = cat === 'All' ? '/services' : `/services?category=${encodeURIComponent(cat)}`;
+    navigate(newUrl);
   };
 
   // WhatsApp chat opener

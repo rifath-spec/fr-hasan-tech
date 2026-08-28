@@ -126,13 +126,13 @@
   background: #94A3B8;
 }
 
-/* Marquee Ticker Animation */
+/* Marquee Ticker Animation with GPU acceleration and performance containment */
 @keyframes marquee-scroll {
   0% {
-    transform: translateX(0%);
+    transform: translate3d(0%, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
@@ -140,10 +140,18 @@
   display: flex;
   width: max-content;
   animation: marquee-scroll 35s linear infinite;
-  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .animate-marquee-infinite:hover,
 .group:hover .animate-marquee-infinite {
   animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-infinite {
+    animation-duration: 90s;
+  }
 }

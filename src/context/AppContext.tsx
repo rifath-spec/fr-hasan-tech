@@ -175,16 +175,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isEstimateModalOpen, setIsEstimateModalOpen] = useState<boolean>(false);
   const [selectedEstimateCategory, setSelectedEstimateCategory] = useState<string | null>(null);
 
-  const openEstimateModal = (initialCategoryId?: string) => {
+  const openEstimateModal = useCallback((initialCategoryId?: string) => {
     if (initialCategoryId) {
       setSelectedEstimateCategory(initialCategoryId);
     }
     setIsEstimateModalOpen(true);
-  };
+  }, []);
 
-  const closeEstimateModal = () => {
+  const closeEstimateModal = useCallback(() => {
     setIsEstimateModalOpen(false);
-  };
+  }, []);
 
   // Toasts State
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -201,9 +201,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, 3500);
   }, []);
 
-  const dismissToast = (id: string) => {
+  const dismissToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
-  };
+  }, []);
 
   // Sync browser back/forward history navigation cleanly
   useEffect(() => {
@@ -219,11 +219,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigate = (path: string) => {
+  const navigate = useCallback((path: string) => {
     try {
       const cleanPath = path.startsWith('/') ? path : `/${path}`;
       if (typeof window !== 'undefined') {
-        if (window.location.pathname !== cleanPath) {
+        const currentFull = (window.location.pathname + window.location.search) || '/';
+        if (currentFull !== cleanPath) {
           window.history.pushState(null, '', cleanPath);
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -232,16 +233,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch {
       setCurrentPath(path);
     }
-  };
+  }, []);
+
+  // Fetch data guard refs to prevent infinite / rapid refetching on mobile tab switches or window focus
+  const isFetchingRef = React.useRef(false);
+  const lastFetchTimeRef = React.useRef(0);
 
   // Fetch all initial data from Supabase backend on load
-  const loadDataFromSupabase = useCallback(async () => {
+  const loadDataFromSupabase = useCallback(async (force = false) => {
     if (!getActiveCredentials().isConfigured) {
       setIsLoadingData(false);
       return;
     }
 
+    const now = Date.now();
+    // Throttle to at most once every 4 seconds unless forced
+    if (!force && (isFetchingRef.current || (now - lastFetchTimeRef.current < 4000))) {
+      return;
+    }
+
     try {
+      isFetchingRef.current = true;
+      lastFetchTimeRef.current = now;
       setIsLoadingData(true);
 
       const [
@@ -295,6 +308,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setIsSupabaseConnected(false);
     } finally {
       setIsLoadingData(false);
+      isFetchingRef.current = false;
     }
   }, []);
 

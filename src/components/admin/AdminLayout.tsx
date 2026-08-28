@@ -50,9 +50,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle })
     };
   }, [mobileSidebarOpen]);
 
-  // If not logged in, redirect to login
+  // Safe redirect if not authenticated
+  useEffect(() => {
+    if (!isAdminAuthenticated) {
+      navigate('/admin/login');
+    }
+  }, [isAdminAuthenticated, navigate]);
+
   if (!isAdminAuthenticated) {
-    navigate('/admin/login');
     return null;
   }
 
