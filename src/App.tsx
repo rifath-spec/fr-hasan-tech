@@ -235,7 +235,7 @@ const AppRouter: React.FC = () => {
       );
     }
 
-    if (currentPath === '/services') {
+    if (currentPath === '/services' || currentPath.startsWith('/services?') || currentPath.startsWith('/services/category/')) {
       return (
         <PublicLayout>
           <ServicesListPage />
@@ -244,7 +244,7 @@ const AppRouter: React.FC = () => {
     }
 
     if (currentPath.startsWith('/services/')) {
-      const slug = currentPath.replace('/services/', '');
+      const slug = currentPath.replace('/services/', '').split('?')[0];
       return (
         <PublicLayout>
           <ServiceDetailPage slug={slug} />

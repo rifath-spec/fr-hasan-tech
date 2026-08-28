@@ -209,20 +209,30 @@ export const AdminServices: React.FC = () => {
       {/* Filter and Search Bar */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-soft-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
-          {['All', ...dynamicCategories].map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                categoryFilter === cat
-                  ? 'bg-[#1E5AA8] text-white shadow-xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {cat !== 'All' && getCategoryBadgeIcon(cat)}
-              <span>{cat}</span>
-            </button>
-          ))}
+          {['All', ...dynamicCategories].map(cat => {
+            const count = cat === 'All' 
+              ? services.length 
+              : services.filter(s => s.category === cat).length;
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                  categoryFilter === cat
+                    ? 'bg-[#1E5AA8] text-white shadow-xs'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {cat !== 'All' && getCategoryBadgeIcon(cat)}
+                <span>{cat}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  categoryFilter === cat ? 'bg-white/25 text-white' : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="relative w-full sm:w-64">

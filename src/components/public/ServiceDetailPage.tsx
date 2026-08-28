@@ -654,6 +654,71 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
 
         </div>
 
+        {/* Related Services in Same Category Section */}
+        {services.filter(s => s.isPublished && s.category === service.category && s.id !== service.id).length > 0 && (
+          <div className="mt-12 pt-8 border-t border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <span className="text-xs font-bold text-[#1E5AA8] uppercase tracking-wider block mb-1">
+                  More From This Category
+                </span>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  Other {service.category} Services
+                </h3>
+              </div>
+
+              <button
+                onClick={() => navigate(`/services?category=${encodeURIComponent(service.category)}`)}
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#1E5AA8] hover:text-[#164785] transition-colors self-start sm:self-auto cursor-pointer"
+              >
+                <span>View All {service.category} Services</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {services
+                .filter(s => s.isPublished && s.category === service.category && s.id !== service.id)
+                .slice(0, 4)
+                .map((rel) => (
+                  <div
+                    key={rel.id}
+                    onClick={() => navigate(`/services/${rel.slug}`)}
+                    className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-md transition-all p-4 cursor-pointer flex flex-col justify-between group"
+                  >
+                    <div>
+                      {rel.image && (
+                        <div className="h-32 w-full rounded-xl overflow-hidden mb-3 bg-slate-900">
+                          <img
+                            src={rel.image}
+                            alt={rel.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                      <h4 className="font-bold text-slate-900 text-sm group-hover:text-[#1E5AA8] transition-colors line-clamp-1">
+                        {rel.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                        {rel.shortDescription || rel.fullDescription}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#1E5AA8]">{rel.priceInfo}</span>
+                      <span className="text-xs font-bold text-slate-500 group-hover:text-[#1E5AA8] flex items-center gap-1">
+                        <span>Details</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -23,7 +23,17 @@ import {
   INITIAL_ESTIMATE_SERVICES,
   INITIAL_ESTIMATE_SIZES
 } from '../data/initialData';
-import { SupabaseService } from '../services/supabaseService';
+import { 
+  SupabaseService,
+  mapServiceFromDB,
+  mapSIMFromDB,
+  mapPackageFromDB,
+  mapTransactionFromDB,
+  mapSettingsFromDB,
+  mapEstimateCategoryFromDB,
+  mapEstimateServiceFromDB,
+  mapEstimateSizeFromDB
+} from '../services/supabaseService';
 import { supabase, isSupabaseConfigured, getSupabaseConfig, getActiveCredentials, reinitializeSupabase } from '../lib/supabase';
 
 interface AppContextType {
@@ -126,7 +136,7 @@ const getInitialPath = (): string => {
           return cleanPath;
         }
       }
-      return window.location.pathname || '/';
+      return (window.location.pathname + window.location.search) || '/';
     }
   } catch {
     // fallback
@@ -199,7 +209,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     const handlePopState = () => {
       try {
-        const path = window.location.pathname || '/';
+        const path = (window.location.pathname + window.location.search) || '/';
         setCurrentPath(path);
       } catch {
         // Safe fallback
@@ -305,15 +315,197 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       if (getActiveCredentials().isConfigured) {
         channel = supabase
-          .channel('fr-hasan-public-realtime-sync')
+          .channel('fr-hasan-realtime-catalog-sync')
+          // A. Services table real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'services' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newServ = mapServiceFromDB(payload.new);
+                setServices(prev => {
+                  if (prev.some(s => s.id === newServ.id)) {
+                    return prev.map(s => s.id === newServ.id ? newServ : s);
+                  }
+                  return [newServ, ...prev];
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedServ = mapServiceFromDB(payload.new);
+                setServices(prev => prev.map(s => s.id === updatedServ.id ? updatedServ : s));
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setServices(prev => prev.filter(s => s.id !== deletedId));
+              }
+            }
+          )
+          // B. Shop Settings real-time changes (Shop Name, hero, contact, opening hours, etc.)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'shop_settings' },
+            (payload) => {
+              if (payload.new) {
+                const updatedSettings = mapSettingsFromDB(payload.new);
+                setSettings(updatedSettings);
+              }
+            }
+          )
+          // C. SIM Cards table real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'sim_cards' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newSim = mapSIMFromDB(payload.new);
+                setSims(prev => {
+                  if (prev.some(s => s.id === newSim.id)) {
+                    return prev.map(s => s.id === newSim.id ? newSim : s);
+                  }
+                  return [newSim, ...prev];
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedSim = mapSIMFromDB(payload.new);
+                setSims(prev => prev.map(s => s.id === updatedSim.id ? updatedSim : s));
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setSims(prev => prev.filter(s => s.id !== deletedId));
+              }
+            }
+          )
+          // D. Mobile Packages table real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'mobile_packages' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newPkg = mapPackageFromDB(payload.new);
+                setPackages(prev => {
+                  if (prev.some(p => p.id === newPkg.id)) {
+                    return prev.map(p => p.id === newPkg.id ? newPkg : p);
+                  }
+                  return [...prev, newPkg].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedPkg = mapPackageFromDB(payload.new);
+                setPackages(prev => 
+                  prev.map(p => p.id === updatedPkg.id ? updatedPkg : p)
+                      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+                );
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setPackages(prev => prev.filter(p => p.id !== deletedId));
+              }
+            }
+          )
+          // E. POS Transactions table real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'pos_transactions' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newTx = mapTransactionFromDB(payload.new);
+                setTransactions(prev => {
+                  if (prev.some(t => t.id === newTx.id)) {
+                    return prev.map(t => t.id === newTx.id ? newTx : t);
+                  }
+                  return [newTx, ...prev];
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedTx = mapTransactionFromDB(payload.new);
+                setTransactions(prev => prev.map(t => t.id === updatedTx.id ? updatedTx : t));
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setTransactions(prev => prev.filter(t => t.id !== deletedId));
+              }
+            }
+          )
+          // F. Estimate Categories real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'estimate_categories' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newCat = mapEstimateCategoryFromDB(payload.new);
+                setEstimateCategories(prev => {
+                  if (prev.some(c => c.id === newCat.id)) {
+                    return prev.map(c => c.id === newCat.id ? newCat : c);
+                  }
+                  return [...prev, newCat].sort((a, b) => a.sortOrder - b.sortOrder);
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedCat = mapEstimateCategoryFromDB(payload.new);
+                setEstimateCategories(prev => 
+                  prev.map(c => c.id === updatedCat.id ? updatedCat : c)
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                );
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setEstimateCategories(prev => prev.filter(c => c.id !== deletedId));
+              }
+            }
+          )
+          // G. Estimate Services real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'estimate_services' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newServ = mapEstimateServiceFromDB(payload.new);
+                setEstimateServices(prev => {
+                  if (prev.some(s => s.id === newServ.id)) {
+                    return prev.map(s => s.id === newServ.id ? newServ : s);
+                  }
+                  return [...prev, newServ].sort((a, b) => a.sortOrder - b.sortOrder);
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedServ = mapEstimateServiceFromDB(payload.new);
+                setEstimateServices(prev => 
+                  prev.map(s => s.id === updatedServ.id ? updatedServ : s)
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                );
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setEstimateServices(prev => prev.filter(s => s.id !== deletedId));
+              }
+            }
+          )
+          // H. Estimate Sizes real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'estimate_sizes' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newSize = mapEstimateSizeFromDB(payload.new);
+                setEstimateSizes(prev => {
+                  if (prev.some(s => s.id === newSize.id)) {
+                    return prev.map(s => s.id === newSize.id ? newSize : s);
+                  }
+                  return [...prev, newSize].sort((a, b) => a.sortOrder - b.sortOrder);
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedSize = mapEstimateSizeFromDB(payload.new);
+                setEstimateSizes(prev => 
+                  prev.map(s => s.id === updatedSize.id ? updatedSize : s)
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                );
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setEstimateSizes(prev => prev.filter(s => s.id !== deletedId));
+              }
+            }
+          )
+          // I. Catch-all for schema or general mutations
           .on(
             'postgres_changes',
             { event: '*', schema: 'public' },
             () => {
-              loadDataFromSupabase();
+              // Safety catch-all to ensure complete sync
             }
           )
-          .subscribe();
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              setIsSupabaseConnected(true);
+            }
+          });
       }
     } catch (e) {
       console.warn('Could not initialize Supabase Realtime channel:', e);

@@ -50,10 +50,10 @@ export const PublicHeader: React.FC = () => {
   ];
 
   const serviceLinks = [
-    { label: 'Photocopy (B&W / Color)', path: '/services/photocopy', icon: Copy, badge: 'From LKR 5' },
-    { label: 'Laser & Photo Printing', path: '/services/printing', icon: Printer, badge: 'HD Color' },
-    { label: 'SIM Cards & eSIMs', path: '/services/sims', icon: Smartphone, badge: 'Instant Reg' },
-    { label: 'Packages & Reloads', path: '/services/packages', icon: Package, badge: 'All Telcos' },
+    { label: 'Photocopy (B&W / Color)', path: '/services?category=Photocopy', icon: Copy, badge: 'From LKR 5' },
+    { label: 'Laser & Photo Printing', path: '/services?category=Printing', icon: Printer, badge: 'HD Color' },
+    { label: 'SIM Cards & eSIMs', path: '/services?category=SIM Cards', icon: Smartphone, badge: 'Instant Reg' },
+    { label: 'Packages & Reloads', path: '/services?category=Packages', icon: Package, badge: 'All Telcos' },
   ];
 
   const handleWhatsAppClick = () => {
