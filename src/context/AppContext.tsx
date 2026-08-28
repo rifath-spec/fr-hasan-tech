@@ -161,17 +161,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(getActiveCredentials().isConfigured);
 
-  // Core Data States (Direct Supabase data storage, no local storage arrays)
+  // Core Data States (Synchronized directly with Supabase PostgreSQL backend)
   const [settings, setSettings] = useState<ShopSettings>(INITIAL_SETTINGS);
-  const [services, setServices] = useState<ServiceItem[]>(INITIAL_SERVICES);
-  const [sims, setSims] = useState<SIMCard[]>(INITIAL_SIMS);
-  const [packages, setPackages] = useState<MobilePackage[]>(INITIAL_PACKAGES);
-  const [transactions, setTransactions] = useState<POSTransaction[]>(INITIAL_TRANSACTIONS);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [sims, setSims] = useState<SIMCard[]>([]);
+  const [packages, setPackages] = useState<MobilePackage[]>([]);
+  const [transactions, setTransactions] = useState<POSTransaction[]>([]);
 
-  // Estimate Calculator States
-  const [estimateCategories, setEstimateCategories] = useState<EstimateCategory[]>(INITIAL_ESTIMATE_CATEGORIES);
-  const [estimateServices, setEstimateServices] = useState<EstimateService[]>(INITIAL_ESTIMATE_SERVICES);
-  const [estimateSizes, setEstimateSizes] = useState<EstimateSize[]>(INITIAL_ESTIMATE_SIZES);
+  // Estimate Calculator States (Synchronized with Supabase)
+  const [estimateCategories, setEstimateCategories] = useState<EstimateCategory[]>([]);
+  const [estimateServices, setEstimateServices] = useState<EstimateService[]>([]);
+  const [estimateSizes, setEstimateSizes] = useState<EstimateSize[]>([]);
   const [isEstimateModalOpen, setIsEstimateModalOpen] = useState<boolean>(false);
   const [selectedEstimateCategory, setSelectedEstimateCategory] = useState<string | null>(null);
 
@@ -1027,29 +1027,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const res = await SupabaseService.createEstimateCategory(category);
       if (res.ok && res.data) {
         setEstimateCategories(prev => prev.map(c => c.id === tempId ? res.data! : c));
-        showToast(`Category "${category.name}" added`, "success");
+        showToast(`Category "${category.name}" added to Supabase`, "success");
+        return;
+      } else {
+        showToast(`Supabase error: ${res.error || 'Failed to create category'}`, "error");
         return;
       }
     }
-    showToast(`Category "${category.name}" added locally`, "info");
+    showToast(`Category "${category.name}" added locally (Supabase not configured)`, "warning");
   };
 
   const updateEstimateCategory = async (id: string, updated: Partial<EstimateCategory>) => {
     setEstimateCategories(prev => prev.map(c => c.id === id ? { ...c, ...updated, updatedAt: new Date().toISOString() } : c));
 
     if (getActiveCredentials().isConfigured) {
-      await SupabaseService.updateEstimateCategory(id, updated);
+      const res = await SupabaseService.updateEstimateCategory(id, updated);
+      if (res.ok) {
+        showToast("Category updated in Supabase", "success");
+      } else {
+        showToast(`Supabase update error: ${res.error || 'Failed to update category'}`, "error");
+      }
+    } else {
+      showToast("Category updated locally", "info");
     }
-    showToast("Category updated", "success");
   };
 
   const deleteEstimateCategory = async (id: string) => {
     setEstimateCategories(prev => prev.filter(c => c.id !== id));
 
     if (getActiveCredentials().isConfigured) {
-      await SupabaseService.deleteEstimateCategory(id);
+      const res = await SupabaseService.deleteEstimateCategory(id);
+      if (res.ok) {
+        showToast("Category deleted from Supabase", "info");
+      } else {
+        showToast(`Supabase delete error: ${res.error || 'Failed to delete category'}`, "error");
+      }
+    } else {
+      showToast("Category deleted locally", "info");
     }
-    showToast("Category deleted", "info");
   };
 
   const addEstimateSize = async (size: Omit<EstimateSize, 'id'>) => {
@@ -1067,29 +1082,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const res = await SupabaseService.createEstimateSize(size);
       if (res.ok && res.data) {
         setEstimateSizes(prev => prev.map(s => s.id === tempId ? res.data! : s));
-        showToast(`Size "${size.name}" added to standard sizes`, "success");
+        showToast(`Size "${size.name}" added to Supabase standard sizes`, "success");
+        return;
+      } else {
+        showToast(`Supabase error: ${res.error || 'Failed to create size'}`, "error");
         return;
       }
     }
-    showToast(`Size "${size.name}" added locally`, "info");
+    showToast(`Size "${size.name}" added locally (Supabase not configured)`, "warning");
   };
 
   const updateEstimateSize = async (id: string, updated: Partial<EstimateSize>) => {
     setEstimateSizes(prev => prev.map(s => s.id === id ? { ...s, ...updated, updatedAt: new Date().toISOString() } : s));
 
     if (getActiveCredentials().isConfigured) {
-      await SupabaseService.updateEstimateSize(id, updated);
+      const res = await SupabaseService.updateEstimateSize(id, updated);
+      if (res.ok) {
+        showToast("Size updated in Supabase", "success");
+      } else {
+        showToast(`Supabase update error: ${res.error || 'Failed to update size'}`, "error");
+      }
+    } else {
+      showToast("Size updated locally", "info");
     }
-    showToast("Size updated", "success");
   };
 
   const deleteEstimateSize = async (id: string) => {
     setEstimateSizes(prev => prev.filter(s => s.id !== id));
 
     if (getActiveCredentials().isConfigured) {
-      await SupabaseService.deleteEstimateSize(id);
+      const res = await SupabaseService.deleteEstimateSize(id);
+      if (res.ok) {
+        showToast("Size deleted from Supabase", "info");
+      } else {
+        showToast(`Supabase delete error: ${res.error || 'Failed to delete size'}`, "error");
+      }
+    } else {
+      showToast("Size deleted locally", "info");
     }
-    showToast("Size deleted", "info");
   };
 
   const seedEstimateDatabase = async () => {

@@ -834,6 +834,7 @@ export const SupabaseService = {
       return { ok: true, data: mapEstimateCategoryFromDB(data) };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error inserting estimate category into Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -853,6 +854,7 @@ export const SupabaseService = {
       return { ok: true };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error updating estimate category in Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -871,6 +873,7 @@ export const SupabaseService = {
       return { ok: true };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error deleting estimate category from Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -887,7 +890,8 @@ export const SupabaseService = {
 
       if (error || !data) return null;
       return data.map(mapEstimateSizeFromDB);
-    } catch {
+    } catch (err) {
+      console.error('Error loading estimate sizes from Supabase:', err);
       return null;
     }
   },
@@ -909,6 +913,7 @@ export const SupabaseService = {
       return { ok: true, data: mapEstimateSizeFromDB(data) };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error inserting estimate size into Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -928,6 +933,7 @@ export const SupabaseService = {
       return { ok: true };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error updating estimate size in Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -946,6 +952,7 @@ export const SupabaseService = {
       return { ok: true };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error deleting estimate size from Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -962,7 +969,8 @@ export const SupabaseService = {
 
       if (error || !data) return null;
       return data.map(mapEstimateServiceFromDB);
-    } catch {
+    } catch (err) {
+      console.error('Error loading estimate services from Supabase:', err);
       return null;
     }
   },
@@ -984,6 +992,7 @@ export const SupabaseService = {
       return { ok: true, data: mapEstimateServiceFromDB(data) };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error inserting estimate service into Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -1003,6 +1012,7 @@ export const SupabaseService = {
       return { ok: true };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error updating estimate service in Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -1021,6 +1031,7 @@ export const SupabaseService = {
       return { ok: true };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
+      console.error('Error deleting estimate service from Supabase:', err);
       return { ok: false, error: msg };
     }
   },

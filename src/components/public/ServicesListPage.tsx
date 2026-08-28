@@ -44,7 +44,7 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
 };
 
 export const ServicesListPage: React.FC = () => {
-  const { currentPath, navigate, services, settings, sims, packages, openEstimateModal } = useApp();
+  const { currentPath, navigate, services, settings, sims, packages, openEstimateModal, isLoadingData } = useApp();
 
   // Parse category from URL query or path if present (e.g. /services?category=Photocopy)
   const getCategoryFromUrl = (): string => {
@@ -94,11 +94,6 @@ export const ServicesListPage: React.FC = () => {
         catSet.add(s.category.trim());
       }
     });
-
-    // If no services in DB, supply defaults
-    if (catSet.size === 0) {
-      ['Photocopy', 'Printing', 'SIM Cards', 'Packages'].forEach(c => catSet.add(c));
-    }
 
     return Array.from(catSet);
   }, [publishedServices]);
@@ -397,7 +392,20 @@ export const ServicesListPage: React.FC = () => {
               </span>
             </div>
 
-            {categories.length === 0 ? (
+            {isLoadingData && categories.length === 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+                {[1, 2, 3, 4].map(n => (
+                  <div key={n} className="bg-white rounded-2xl border border-slate-200 p-4 h-80 flex flex-col justify-between shadow-soft-xs">
+                    <div className="w-full h-48 bg-slate-200 rounded-xl mb-4" />
+                    <div className="space-y-2">
+                      <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                      <div className="h-3 bg-slate-100 rounded-md w-1/2" />
+                    </div>
+                    <div className="h-9 bg-slate-100 rounded-xl mt-4" />
+                  </div>
+                ))}
+              </div>
+            ) : categories.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-soft-sm">
                 <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="text-lg font-bold text-slate-800">No Categories Added Yet</h3>
@@ -550,7 +558,21 @@ export const ServicesListPage: React.FC = () => {
             </div>
 
             {/* List of Related Services Grid */}
-            {servicesInSelectedCategory.length === 0 ? (
+            {isLoadingData && servicesInSelectedCategory.length === 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+                {[1, 2, 3, 4].map(n => (
+                  <div key={n} className="bg-white rounded-2xl border border-slate-200 p-4 h-96 flex flex-col justify-between shadow-soft-xs">
+                    <div className="w-full h-48 bg-slate-200 rounded-xl mb-4" />
+                    <div className="space-y-2">
+                      <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                      <div className="h-3 bg-slate-100 rounded-md w-full" />
+                      <div className="h-3 bg-slate-100 rounded-md w-2/3" />
+                    </div>
+                    <div className="h-10 bg-slate-100 rounded-xl mt-4" />
+                  </div>
+                ))}
+              </div>
+            ) : servicesInSelectedCategory.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-soft-sm">
                 <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="text-lg font-bold text-slate-800">No Services Found</h3>

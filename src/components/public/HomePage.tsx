@@ -30,7 +30,7 @@ import { ShareLocationModal } from '../common/ShareLocationModal';
 import { openWhatsAppChat } from '../../utils/whatsapp';
 
 export const HomePage: React.FC = () => {
-  const { navigate, settings, services, openEstimateModal } = useApp();
+  const { navigate, settings, services, openEstimateModal, isLoadingData } = useApp();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const ceoName = settings.aboutContent.ceoName || 'FR Hasan';
@@ -73,14 +73,6 @@ export const HomePage: React.FC = () => {
       }
       map[cat].push(s);
     });
-
-    // If no published services yet, supply standard presets
-    if (catOrder.length === 0) {
-      ['Photocopy', 'Printing', 'SIM Cards', 'Packages'].forEach(c => {
-        map[c] = [];
-        catOrder.push(c);
-      });
-    }
 
     return catOrder.map(catName => {
       const items = map[catName] || [];
@@ -428,7 +420,20 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Main Categories Bento Grid */}
-          {mainCategories.length === 0 ? (
+          {isLoadingData && mainCategories.length === 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7 animate-pulse">
+              {[1, 2, 3, 4].map(n => (
+                <div key={n} className="bg-white rounded-2xl border border-slate-200 p-4 h-80 flex flex-col justify-between shadow-soft-xs">
+                  <div className="w-full h-44 bg-slate-200 rounded-xl mb-4" />
+                  <div className="space-y-2">
+                    <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                    <div className="h-3 bg-slate-100 rounded-md w-1/2" />
+                  </div>
+                  <div className="h-9 bg-slate-100 rounded-xl mt-4" />
+                </div>
+              ))}
+            </div>
+          ) : mainCategories.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200/90 p-10 sm:p-14 text-center max-w-xl mx-auto shadow-soft-sm">
               <div className="w-14 h-14 bg-blue-50 text-[#1E5AA8] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
                 <Printer className="w-7 h-7" />
