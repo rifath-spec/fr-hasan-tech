@@ -4,7 +4,11 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const STORAGE_KEY_URL = 'fr_hasan_supabase_url';
 const STORAGE_KEY_KEY = 'fr_hasan_supabase_anon_key';
 
-// Read credentials with fallback: LocalStorage > Vite Env > Empty
+// Built-in Supabase Project Credentials (guarantees all devices, public visitors & phones connect immediately)
+export const DEFAULT_SUPABASE_URL = 'https://tvcuhvtoegvfrsfihgfh.supabase.co';
+export const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_wc3JbT489MbJQnkDyAlwZw_YuAgvTT2';
+
+// Read credentials with fallback: LocalStorage > Vite Env > Built-in Default
 export const getActiveCredentials = () => {
   let storedUrl = '';
   let storedKey = '';
@@ -22,12 +26,12 @@ export const getActiveCredentials = () => {
   const envUrl = String(metaEnv.VITE_SUPABASE_URL || '').trim();
   const envKey = String(metaEnv.VITE_SUPABASE_ANON_KEY || '').trim();
 
-  const finalUrl = (storedUrl || envUrl)
+  const finalUrl = (storedUrl || envUrl || DEFAULT_SUPABASE_URL)
     .replace(/^['"]|['"]$/g, '')
     .replace(/\/+$/, '')
     .trim();
 
-  const finalKey = (storedKey || envKey)
+  const finalKey = (storedKey || envKey || DEFAULT_SUPABASE_ANON_KEY)
     .replace(/^['"]|['"]$/g, '')
     .trim();
 

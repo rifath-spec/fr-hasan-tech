@@ -293,6 +293,73 @@ CREATE POLICY "Public estimate sizes access" ON public.estimate_sizes FOR ALL US
 DROP POLICY IF EXISTS "Public estimate services access" ON public.estimate_services;
 CREATE POLICY "Public estimate services access" ON public.estimate_services FOR ALL USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Public estimate service options access" ON public.estimate_service_options;
-CREATE POLICY "Public estimate service options access" ON public.estimate_service_options FOR ALL USING (true) WITH CHECK (true);
+-- 6. ENABLE REALTIME BROADCASTING FOR ALL TABLES
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'shop_settings'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.shop_settings;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'services'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.services;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'sim_cards'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.sim_cards;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'mobile_packages'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.mobile_packages;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'pos_transactions'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.pos_transactions;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'estimate_categories'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.estimate_categories;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'estimate_sizes'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.estimate_sizes;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'estimate_services'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.estimate_services;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'estimate_service_options'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.estimate_service_options;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL; -- Continue if publication is already configured
+END $$;
 `;

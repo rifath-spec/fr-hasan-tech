@@ -24,7 +24,7 @@ import {
   INITIAL_ESTIMATE_SIZES
 } from '../data/initialData';
 import { SupabaseService } from '../services/supabaseService';
-import { isSupabaseConfigured, getSupabaseConfig, getActiveCredentials, reinitializeSupabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, getSupabaseConfig, getActiveCredentials, reinitializeSupabase } from '../lib/supabase';
 
 interface AppContextType {
   // Navigation
@@ -290,6 +290,46 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     loadDataFromSupabase();
+
+    // 1. Re-sync immediately when tab/window becomes active or focused
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadDataFromSupabase();
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+
+    // 2. Setup Supabase Realtime subscription for instant multi-device synchronization
+    let channel: any = null;
+    try {
+      if (getActiveCredentials().isConfigured) {
+        channel = supabase
+          .channel('fr-hasan-public-realtime-sync')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public' },
+            () => {
+              loadDataFromSupabase();
+            }
+          )
+          .subscribe();
+      }
+    } catch (e) {
+      console.warn('Could not initialize Supabase Realtime channel:', e);
+    }
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch {
+          // ignore
+        }
+      }
+    };
   }, [loadDataFromSupabase]);
 
   // Auth methods
