@@ -37,7 +37,9 @@ import {
   calculateEstimateSummary, 
   generateEstimateWhatsAppText, 
   convertLength,
-  formatCurrency
+  formatCurrency,
+  getUnifiedEstimateServices,
+  getUnifiedEstimateCategories
 } from '../../services/estimateCalculator';
 import { openWhatsAppChat } from '../../utils/whatsapp';
 
@@ -48,9 +50,20 @@ export const InstantEstimateModal: React.FC = () => {
     estimateCategories, 
     estimateServices, 
     estimateSizes,
+    services,
     settings,
-    showToast 
+    showToast,
+    selectedEstimateCategory
   } = useApp();
+
+  // Combine database catalog services and estimate services dynamically
+  const allCategories = useMemo(() => {
+    return getUnifiedEstimateCategories(estimateCategories, services);
+  }, [estimateCategories, services]);
+
+  const allServices = useMemo(() => {
+    return getUnifiedEstimateServices(estimateServices, services);
+  }, [estimateServices, services]);
 
   // Active filter state
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
@@ -58,6 +71,47 @@ export const InstantEstimateModal: React.FC = () => {
 
   // Currently selected service to configure
   const [activeServiceId, setActiveServiceId] = useState<string>('');
+
+  // Synchronize category or direct service target when opened
+  useEffect(() => {
+    if (isEstimateModalOpen && selectedEstimateCategory) {
+      const target = selectedEstimateCategory.trim().toLowerCase();
+      
+      // 1. Check if target matches a service id, slug, or name from database
+      const matchingService = allServices.find(s => 
+        s.id.toLowerCase() === target ||
+        (s.name || '').toLowerCase() === target ||
+        (s.name || '').toLowerCase().includes(target)
+      );
+
+      if (matchingService) {
+        setActiveServiceId(matchingService.id);
+        setSelectedCategoryId(matchingService.categoryId || 'all');
+        const srvName = (matchingService.name || '').toLowerCase();
+        const isCol = srvName.includes('colour') || srvName.includes('color');
+        setIsColor(isCol);
+        return;
+      }
+
+      // 2. Check if target matches a category id or name
+      const matchingCat = allCategories.find(c => 
+        c.id.toLowerCase() === target ||
+        (c.name || '').toLowerCase() === target ||
+        (c.name || '').toLowerCase().includes(target)
+      );
+
+      if (matchingCat) {
+        setSelectedCategoryId(matchingCat.id);
+        const firstInCat = allServices.find(s => s.active && s.categoryId === matchingCat.id);
+        if (firstInCat) {
+          setActiveServiceId(firstInCat.id);
+        }
+        return;
+      }
+
+      setSelectedCategoryId(selectedEstimateCategory);
+    }
+  }, [isEstimateModalOpen, selectedEstimateCategory, allServices, allCategories]);
 
   // Service configuration inputs
   const [quantity, setQuantity] = useState<number>(1);
@@ -85,61 +139,71 @@ export const InstantEstimateModal: React.FC = () => {
 
   // Active service helper
   const currentService = useMemo(() => {
-    return estimateServices.find(s => s.id === activeServiceId) || null;
-  }, [estimateServices, activeServiceId]);
+    return (allServices || []).find(s => s.id === activeServiceId) || (allServices || [])[0] || null;
+  }, [allServices, activeServiceId]);
 
   // Set default active service when modal opens or services load
   useEffect(() => {
-    if (estimateServices.length > 0 && (!activeServiceId || !estimateServices.some(s => s.id === activeServiceId))) {
-      const activeList = estimateServices.filter(s => s.active);
-      const defaultService = activeList.find(s => s.categoryId === 'cat-photocopy' || s.categoryId === 'cat-printing') || activeList[0];
-      if (defaultService) {
-        setActiveServiceId(defaultService.id);
-        const isCol = defaultService.name.toLowerCase().includes('colour') || defaultService.name.toLowerCase().includes('color');
-        setIsColor(isCol);
+    if (allServices && allServices.length > 0) {
+      const activeList = allServices.filter(s => s.active);
+      if (!activeServiceId || !allServices.some(s => s.id === activeServiceId)) {
+        const defaultService = (selectedCategoryId !== 'all' 
+          ? activeList.find(s => s.categoryId === selectedCategoryId) 
+          : null) || activeList.find(s => s.categoryId === 'cat-photocopy' || s.categoryId === 'cat-printing') || activeList[0];
+        
+        if (defaultService) {
+          setActiveServiceId(defaultService.id);
+          const srvName = (defaultService.name || '').toLowerCase();
+          const isCol = srvName.includes('colour') || srvName.includes('color');
+          setIsColor(isCol);
+        }
       }
     }
-  }, [estimateServices, activeServiceId, isEstimateModalOpen]);
+  }, [allServices, activeServiceId, isEstimateModalOpen, selectedCategoryId]);
 
   // Handle service switch defaults
   useEffect(() => {
     if (currentService) {
       setQuantity(Math.max(currentService.minQuantity || 1, 1));
-      if (currentService.name.toLowerCase().includes('colour') || currentService.name.toLowerCase().includes('color')) {
+      const srvName = (currentService.name || '').toLowerCase();
+      if (srvName.includes('colour') || srvName.includes('color')) {
         setIsColor(true);
       }
     }
   }, [currentService?.id]);
 
-  // Filtered Services List
+  // Filtered Services List (Lists all services dynamically from database)
   const filteredServices = useMemo(() => {
-    return estimateServices.filter(service => {
-      if (!service.active) return false;
+    const list = Array.isArray(allServices) ? allServices : [];
+    return list.filter(service => {
+      if (!service || !service.active) return false;
       const matchCat = selectedCategoryId === 'all' || service.categoryId === selectedCategoryId;
-      const matchQuery = !searchQuery.trim() || 
-        service.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        service.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const q = (searchQuery || '').trim().toLowerCase();
+      const matchQuery = !q || 
+        (service.name || '').toLowerCase().includes(q) || 
+        (service.description || '').toLowerCase().includes(q);
       return matchCat && matchQuery;
     });
-  }, [estimateServices, selectedCategoryId, searchQuery]);
+  }, [allServices, selectedCategoryId, searchQuery]);
 
   // Available Sizes for current service
   const availableSizes = useMemo(() => {
-    if (!currentService) return estimateSizes;
+    const sizes = Array.isArray(estimateSizes) ? estimateSizes : [];
+    if (!currentService) return sizes;
     if (currentService.allowedSizeIds && currentService.allowedSizeIds.length > 0) {
-      return estimateSizes.filter(s => currentService.allowedSizeIds?.includes(s.id));
+      return sizes.filter(s => currentService.allowedSizeIds?.includes(s.id));
     }
-    return estimateSizes.filter(s => s.active);
+    return sizes.filter(s => s.active);
   }, [estimateSizes, currentService]);
 
   // Current Size Object
   const currentSize: EstimateSize | null = useMemo(() => {
     if (isCustomSize) {
-      const widthMm = convertLength(customWidth, customUnit, 'mm');
-      const heightMm = convertLength(customHeight, customUnit, 'mm');
+      const widthMm = convertLength(customWidth || 210, customUnit || 'mm', 'mm');
+      const heightMm = convertLength(customHeight || 297, customUnit || 'mm', 'mm');
       return {
         id: 'custom-size',
-        name: `Custom (${customWidth} × ${customHeight} ${customUnit})`,
+        name: `Custom (${customWidth || 210} × ${customHeight || 297} ${customUnit || 'mm'})`,
         code: 'CUSTOM',
         sizeGroup: 'CUSTOM',
         widthMm,
@@ -151,7 +215,8 @@ export const InstantEstimateModal: React.FC = () => {
         isCustom: true
       };
     }
-    return estimateSizes.find(s => s.id === selectedSizeId) || estimateSizes.find(s => s.code === 'A4') || null;
+    const sizes = Array.isArray(estimateSizes) ? estimateSizes : [];
+    return sizes.find(s => s.id === selectedSizeId) || sizes.find(s => s.code === 'A4') || sizes[0] || null;
   }, [estimateSizes, selectedSizeId, isCustomSize, customWidth, customHeight, customUnit]);
 
   // Live calculation for active configured item
@@ -423,13 +488,13 @@ export const InstantEstimateModal: React.FC = () => {
                         <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-slate-600">
                           <span className="font-semibold text-[#0B4F9C]">{item.quantity} {item.unit}s</span>
                           {item.copies > 1 && <span className="text-slate-400">× {item.copies} copies</span>}
-                          {item.selectedSize && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedSize.name}</span>}
-                          {item.selectedOptions.color && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.color}</span>}
-                          {item.selectedOptions.sides && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.sides}</span>}
-                          {item.selectedOptions.thickness && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.thickness}</span>}
-                          {item.selectedOptions.bindingType && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.bindingType}</span>}
+                          {item.selectedSize?.name && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedSize.name}</span>}
+                          {item.selectedOptions?.color && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.color}</span>}
+                          {item.selectedOptions?.sides && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.sides}</span>}
+                          {item.selectedOptions?.thickness && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.thickness}</span>}
+                          {item.selectedOptions?.bindingType && <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">{item.selectedOptions.bindingType}</span>}
                         </div>
-                        {item.selectedOptions.notes && (
+                        {item.selectedOptions?.notes && (
                           <div className="text-[11px] text-amber-700 mt-1 italic">
                             Note: {item.selectedOptions.notes}
                           </div>
@@ -548,7 +613,7 @@ export const InstantEstimateModal: React.FC = () => {
                       <span>All Services</span>
                     </button>
 
-                    {estimateCategories.filter(c => c.active).map(cat => (
+                    {allCategories.filter(c => c.active).map(cat => (
                       <button
                         key={cat.id}
                         type="button"
@@ -586,10 +651,10 @@ export const InstantEstimateModal: React.FC = () => {
                             }`}
                           >
                             <div>
-                              <div className={`text-xs font-bold leading-tight ${isSelected ? 'text-[#0B4F9C]' : 'text-slate-900'}`}>
+                              <div className={`text-xs font-bold leading-tight line-clamp-1 ${isSelected ? 'text-[#0B4F9C]' : 'text-slate-900'}`}>
                                 {srv.name}
                               </div>
-                              <div className="text-[10px] text-slate-500 mt-1 line-clamp-1">
+                              <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
                                 {srv.description}
                               </div>
                             </div>
@@ -934,31 +999,31 @@ export const InstantEstimateModal: React.FC = () => {
                             <span>Quantity:</span>
                             <span className="font-semibold text-slate-700">{currentCalculated.quantity} {currentConfiguredItem.unit}s</span>
                           </div>
-                          {currentConfiguredItem.selectedSize && (
+                          {currentConfiguredItem.selectedSize?.name && (
                             <div className="flex items-center justify-between">
                               <span>Size:</span>
                               <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedSize.name}</span>
                             </div>
                           )}
-                          {currentConfiguredItem.selectedOptions.color && (
+                          {currentConfiguredItem.selectedOptions?.color && (
                             <div className="flex items-center justify-between">
                               <span>Color:</span>
                               <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.color}</span>
                             </div>
                           )}
-                          {currentConfiguredItem.selectedOptions.sides && (
+                          {currentConfiguredItem.selectedOptions?.sides && (
                             <div className="flex items-center justify-between">
                               <span>Sides:</span>
                               <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.sides}</span>
                             </div>
                           )}
-                          {currentConfiguredItem.selectedOptions.thickness && (
+                          {currentConfiguredItem.selectedOptions?.thickness && (
                             <div className="flex items-center justify-between">
                               <span>Thickness:</span>
                               <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.thickness}</span>
                             </div>
                           )}
-                          {currentConfiguredItem.selectedOptions.bindingType && (
+                          {currentConfiguredItem.selectedOptions?.bindingType && (
                             <div className="flex items-center justify-between">
                               <span>Binding:</span>
                               <span className="font-semibold text-slate-700">{currentConfiguredItem.selectedOptions.bindingType}</span>

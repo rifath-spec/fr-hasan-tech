@@ -169,9 +169,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [transactions, setTransactions] = useState<POSTransaction[]>([]);
 
   // Estimate Calculator States (Synchronized with Supabase)
-  const [estimateCategories, setEstimateCategories] = useState<EstimateCategory[]>([]);
-  const [estimateServices, setEstimateServices] = useState<EstimateService[]>([]);
-  const [estimateSizes, setEstimateSizes] = useState<EstimateSize[]>([]);
+  const [estimateCategories, setEstimateCategories] = useState<EstimateCategory[]>(INITIAL_ESTIMATE_CATEGORIES);
+  const [estimateServices, setEstimateServices] = useState<EstimateService[]>(INITIAL_ESTIMATE_SERVICES);
+  const [estimateSizes, setEstimateSizes] = useState<EstimateSize[]>(INITIAL_ESTIMATE_SIZES);
   const [isEstimateModalOpen, setIsEstimateModalOpen] = useState<boolean>(false);
   const [selectedEstimateCategory, setSelectedEstimateCategory] = useState<string | null>(null);
 
@@ -587,6 +587,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setSims(INITIAL_SIMS);
     setPackages(INITIAL_PACKAGES);
     setTransactions(INITIAL_TRANSACTIONS);
+    setEstimateCategories(INITIAL_ESTIMATE_CATEGORIES);
+    setEstimateServices(INITIAL_ESTIMATE_SERVICES);
+    setEstimateSizes(INITIAL_ESTIMATE_SIZES);
 
     if (getActiveCredentials().isConfigured) {
       const res = await SupabaseService.seedInitialDataToSupabase({
@@ -595,6 +598,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         sims: INITIAL_SIMS,
         packages: INITIAL_PACKAGES,
         transactions: INITIAL_TRANSACTIONS,
+      });
+      await SupabaseService.seedEstimateData({
+        categories: INITIAL_ESTIMATE_CATEGORIES,
+        services: INITIAL_ESTIMATE_SERVICES,
+        sizes: INITIAL_ESTIMATE_SIZES,
       });
       showToast(res.message, res.ok ? "success" : "warning");
     } else {

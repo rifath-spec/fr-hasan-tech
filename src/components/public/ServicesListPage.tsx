@@ -658,22 +658,32 @@ export const ServicesListPage: React.FC = () => {
 
                     {/* Action buttons */}
                     <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 space-y-2 mt-auto">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEstimateModal(service.name)}
+                          className="w-full py-2 px-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer min-h-[38px]"
+                          title="Calculate instant estimate for this service"
+                        >
+                          <Calculator className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span className="truncate">Estimate</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => handleWhatsAppInquiry(service.name, service.category)}
-                          className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer min-h-[38px]"
+                          className="w-full py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer min-h-[38px]"
                         >
                           <MessageCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>WhatsApp</span>
+                          <span className="truncate">WhatsApp</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => navigate(`/services/${service.slug}`)}
-                          className="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0D6EFD] border border-blue-200/80 font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer min-h-[38px]"
+                          className="w-full py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0D6EFD] border border-blue-200/80 font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer min-h-[38px]"
                         >
-                          <span>Details</span>
+                          <span className="truncate">Details</span>
                           <ArrowRight className="w-3 h-3 shrink-0" />
                         </button>
                       </div>
