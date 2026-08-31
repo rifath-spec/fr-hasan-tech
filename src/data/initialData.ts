@@ -94,7 +94,485 @@ export const INITIAL_SETTINGS: ShopSettings = {
   }
 };
 
-export const INITIAL_SERVICES: ServiceItem[] = [];
+export const INITIAL_SERVICES: ServiceItem[] = [
+  {
+    id: 'serv-win-install',
+    slug: 'windows-installation',
+    name: 'Windows Installation',
+    category: 'Computer Services',
+    icon: 'Laptop',
+    shortDescription: 'Clean OS installation, driver setup, and performance configuration for desktop PC and laptops.',
+    fullDescription: 'Professional Windows installation service for computers and laptops, including system setup and basic configuration.',
+    description: 'Professional Windows installation service for computers and laptops, including system setup and basic configuration.',
+    priceInfo: 'Starting from LKR 1,500',
+    singlePrice: 1500,
+    unit: 'System',
+    image: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=1200&q=80',
+    featured: true,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 1,
+    availableServicesList: [
+      'Windows 10 & Windows 11 Fresh Installation',
+      'Motherboard, GPU & Network Driver Setup',
+      'Essential Productivity Software Configuration',
+      'Security & Antivirus Configuration',
+      'Data Backup & Migration Assistance',
+      'System Speed & Storage Optimization'
+    ],
+    importantNotes: [
+      'Please back up critical files before full drive formatting.',
+      'Genuine activation licenses can be configured upon customer request.'
+    ],
+    seoTitle: 'Professional Windows Installation & Laptop Setup | FR.HASAN TECH',
+    seoDescription: 'Expert Windows 10 & 11 operating system installation, driver configuration, and laptop setup services in Thampalagamam.',
+    seoKeywords: ['Windows installation', 'laptop repair', 'OS setup', 'computer services', 'Thampalagamam', 'Sri Lanka']
+  },
+  {
+    id: 'serv-office-install',
+    slug: 'microsoft-office-installation',
+    name: 'Microsoft Office Installation',
+    category: 'Computer Services',
+    icon: 'FileText',
+    shortDescription: 'Word, Excel, PowerPoint, and Outlook office productivity suite setup and configuration.',
+    fullDescription: 'Microsoft Office installation and basic setup service for computers and laptops.',
+    description: 'Microsoft Office installation and basic setup service for computers and laptops.',
+    priceInfo: 'LKR 1,000',
+    singlePrice: 1000,
+    unit: 'PC / Laptop',
+    image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
+    featured: false,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 2,
+    availableServicesList: [
+      'Word, Excel, PowerPoint, and Outlook Setup',
+      'Font & Language Proofing Tools Configuration',
+      'Cloud & Local Document Storage Setup',
+      'Basic Workflow & Formatting Setup'
+    ],
+    importantNotes: [
+      'Installation and setup assistance only; official license keys are entered by administrator/client.',
+      'Configured for optimal stability and smooth performance.'
+    ],
+    seoTitle: 'Microsoft Office Installation & Setup | FR.HASAN TECH',
+    seoDescription: 'Professional Microsoft Office configuration and productivity tools setup for desktop and laptops.',
+    seoKeywords: ['Microsoft Office installation', 'Office suite setup', 'Word Excel PowerPoint', 'computer setup']
+  },
+  {
+    id: 'serv-cv-creation',
+    slug: 'cv-creation',
+    name: 'CV Creation',
+    category: 'Design & Documentation',
+    icon: 'FileCheck',
+    shortDescription: 'High-impact resume and CV writing & layout designed to help you stand out to employers.',
+    fullDescription: 'Professional CV & resume creation service tailored for corporate, technical, academic, and overseas career profiles.',
+    description: 'Professional CV & resume creation service tailored for corporate, technical, academic, and overseas career profiles.',
+    priceInfo: 'From LKR 350',
+    singlePrice: 350,
+    image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1200&q=80',
+    featured: true,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 3,
+    packages: [
+      {
+        id: 'cv-pkg-plus',
+        name: 'Plus',
+        price: 350,
+        currency: 'LKR',
+        description: 'Standard single-page professional resume layout with modern typography and clean formatting.',
+        active: true
+      },
+      {
+        id: 'cv-pkg-premium',
+        name: 'Premium',
+        price: 600,
+        currency: 'LKR',
+        description: 'Comprehensive multi-page tailored resume design with cover letter template and editable source format.',
+        active: true
+      },
+      {
+        id: 'cv-pkg-pro',
+        name: 'Pro',
+        price: 1000,
+        currency: 'LKR',
+        description: 'Executive multi-format CV design, ATS-optimized formatting, custom portfolio summary, and priority revisions.',
+        active: true
+      }
+    ],
+    availableServicesList: [
+      'Modern & Executive CV Layouts',
+      'ATS-Friendly Formatting & Styling',
+      'Professional Cover Letter Drafting',
+      'Bilingual Support (Tamil / English)',
+      'Print-Ready PDF & Editable Source Files'
+    ],
+    importantNotes: [
+      'Provide accurate employment history, education, and contact details for fast turnaround.',
+      'Includes up to 2 complimentary revision rounds.'
+    ],
+    seoTitle: 'Professional CV & Resume Creation Service | FR.HASAN TECH',
+    seoDescription: 'Create a professional CV with our affordable CV design service. Choose from Plus (LKR 350), Premium (LKR 600), and Pro (LKR 1,000) packages.',
+    seoKeywords: ['CV creation', 'resume design', 'professional CV Sri Lanka', 'job application', 'ATS resume']
+  },
+  {
+    id: 'serv-cert-design',
+    slug: 'certificate-design',
+    name: 'Certificate Design',
+    category: 'Design & Documentation',
+    icon: 'Award',
+    shortDescription: 'Custom appreciation, achievement, and workshop certificate templates tailored for your organization.',
+    fullDescription: 'High-quality custom certificate design for academic institutions, sports events, workshops, and corporate awards.',
+    description: 'High-quality custom certificate design for academic institutions, sports events, workshops, and corporate awards.',
+    priceInfo: 'From LKR 200',
+    singlePrice: 200,
+    image: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80',
+    featured: false,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 4,
+    packages: [
+      {
+        id: 'cert-pkg-plus',
+        name: 'Plus',
+        price: 200,
+        currency: 'LKR',
+        description: 'Single custom certificate template design with standard border and typography.',
+        active: true
+      },
+      {
+        id: 'cert-pkg-premium',
+        name: 'Premium',
+        price: 450,
+        currency: 'LKR',
+        description: 'Advanced multi-tier certificate design with custom emblem, signatures layout, and gold/silver accents.',
+        active: true
+      },
+      {
+        id: 'cert-pkg-pro',
+        name: 'Pro',
+        price: 750,
+        currency: 'LKR',
+        description: 'Bespoke commemorative certificate suite with bulk recipient name merging and high-resolution print-ready vectors.',
+        active: true
+      }
+    ],
+    availableServicesList: [
+      'Sports & Academic Award Certificates',
+      'Corporate Recognition & Achievement Templates',
+      'Bulk Recipient Name Merging',
+      'High-Resolution Vector Printing Layouts',
+      'Gold/Silver Border & Official Seal Styling'
+    ],
+    importantNotes: [
+      'Vector logos and signatory details should be provided in high resolution.',
+      'Bulk name data can be accepted via Excel or WhatsApp text.'
+    ],
+    seoTitle: 'Custom Certificate Design & Printing | FR.HASAN TECH',
+    seoDescription: 'High quality custom certificate design for schools, sports, and corporate events with Plus, Premium, and Pro tiers.',
+    seoKeywords: ['certificate design', 'award certificates', 'sports certificates', 'event printing']
+  },
+  {
+    id: 'serv-inv-cards',
+    slug: 'invitation-cards',
+    name: 'Invitation Cards',
+    category: 'Printing & Design',
+    icon: 'Mail',
+    shortDescription: 'Custom wedding and cultural celebration cards designed to make your special moments memorable.',
+    fullDescription: 'Elegant and bespoke invitation card design and printing for weddings, cultural festivals, parties, and corporate ceremonies.',
+    description: 'Elegant and bespoke invitation card design and printing for weddings, cultural festivals, parties, and corporate ceremonies.',
+    priceInfo: 'From LKR 500',
+    singlePrice: 500,
+    image: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80',
+    featured: true,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 5,
+    packages: [
+      {
+        id: 'inv-pkg-wedding',
+        name: 'Wedding Invitation',
+        price: 500,
+        currency: 'LKR',
+        description: 'Bespoke floral and contemporary wedding invitation card design.',
+        active: true
+      },
+      {
+        id: 'inv-pkg-cultural',
+        name: 'Cultural Invitation',
+        price: 1000,
+        currency: 'LKR',
+        description: 'Traditional and cultural ceremonies, temple functions, and festival invitation design.',
+        active: true
+      }
+    ],
+    availableServicesList: [
+      'Wedding Invitations (Floral, Vintage & Modern)',
+      'Temple & Cultural Ceremony Event Cards',
+      'Birthday, Anniversary & Party Invitations',
+      'Envelope Design & Matching Custom Inserts',
+      'Digital E-Invitations & High-Res Print Copies'
+    ],
+    importantNotes: [
+      'Preview drafts are sent via WhatsApp for review before final bulk production.',
+      'Paper cardstock upgrades (e.g. metallic, matte linen) available on request.'
+    ],
+    seoTitle: 'Wedding & Cultural Invitation Card Design | FR.HASAN TECH',
+    seoDescription: 'Custom invitation cards for weddings, cultural ceremonies, and corporate events with high-definition digital printing.',
+    seoKeywords: ['invitation cards', 'wedding card design', 'cultural invitation', 'invitation printing Sri Lanka']
+  },
+  {
+    id: 'serv-vis-cards',
+    slug: 'visiting-cards',
+    name: 'Visiting Cards',
+    category: 'Printing & Design',
+    icon: 'CreditCard',
+    shortDescription: 'Make a lasting first impression with sharp, high-grade business and visiting cards.',
+    fullDescription: 'Premium visiting & business card design and crisp high-speed digital printing with single/double-sided options.',
+    description: 'Premium visiting & business card design and crisp high-speed digital printing with single/double-sided options.',
+    priceInfo: 'From LKR 500',
+    singlePrice: 500,
+    image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
+    featured: true,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 6,
+    packages: [
+      {
+        id: 'vc-pkg-plus',
+        name: 'Plus',
+        price: 500,
+        currency: 'LKR',
+        description: 'Single-sided standard matte 300gsm visiting cards design & print pack.',
+        active: true
+      },
+      {
+        id: 'vc-pkg-premium',
+        name: 'Premium',
+        price: 750,
+        currency: 'LKR',
+        description: 'Double-sided glossy / soft-touch laminated business cards with sharp color fidelity.',
+        active: true
+      },
+      {
+        id: 'vc-pkg-pro',
+        name: 'Pro',
+        price: 1000,
+        currency: 'LKR',
+        description: 'Executive luxury card pack with rounded corners, premium textured cardstock, and bespoke styling.',
+        active: true
+      }
+    ],
+    availableServicesList: [
+      'Single & Double-Sided Precision Layouts',
+      'Matte, Gloss, and Soft-Touch Protective Coating',
+      'Executive Textured & Heavyweight Cardstocks',
+      'QR Code & Social Links Integration',
+      'Fast Turnaround Printing & Reprints'
+    ],
+    importantNotes: [
+      'Standard pack sizes available from 50 to 500+ cards upon request.',
+      'Corporate bulk discounts applied for team orders.'
+    ],
+    seoTitle: 'Premium Visiting Cards & Business Cards | FR.HASAN TECH',
+    seoDescription: 'Visiting cards design and printing with Plus (LKR 500), Premium (LKR 750), and Pro (LKR 1,000) packages. Matte, gloss, and executive finishes.',
+    seoKeywords: ['visiting cards', 'business card printing', 'business cards Sri Lanka', 'visiting card design']
+  },
+  {
+    id: 'serv-a3-print',
+    slug: 'a3-colour-printing',
+    name: 'A3 Colour Printing',
+    category: 'Printing',
+    icon: 'Printer',
+    shortDescription: 'Large-format vivid color prints on premium paper sheets and studio photo paper.',
+    fullDescription: 'High-definition vibrant A3 colour printing for posters, blueprints, architectural drawings, photo collages, and presentation sheets.',
+    description: 'High-definition vibrant A3 colour printing for posters, blueprints, architectural drawings, photo collages, and presentation sheets.',
+    priceInfo: 'From LKR 100',
+    singlePrice: 100,
+    image: 'https://images.unsplash.com/photo-1562654501-a0ccc0fc3fb1?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1562654501-a0ccc0fc3fb1?auto=format&fit=crop&w=1200&q=80',
+    featured: false,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 7,
+    packages: [
+      {
+        id: 'a3-pkg-normal',
+        name: 'A3 Normal Sheet',
+        price: 100,
+        currency: 'LKR',
+        description: 'Standard 80gsm A3 paper full-colour laser printing.',
+        active: true
+      },
+      {
+        id: 'a3-pkg-photo',
+        name: 'A3 Photo Print',
+        price: 500,
+        currency: 'LKR',
+        description: 'Ultra-high-gloss 230gsm photo paper archival studio color print.',
+        active: true
+      }
+    ],
+    availableServicesList: [
+      'A3 Full-Color Presentation & Project Sheets',
+      'Architectural & Engineering Drawings',
+      'High-Gloss Studio Photo Enlargements',
+      'Event Posters & Notice Announcements',
+      'Protective A3 Lamination Available'
+    ],
+    importantNotes: [
+      'For maximum photographic clarity, submit files at 300 DPI.',
+      'Laser toner provides water-resistant and smudge-free results.'
+    ],
+    seoTitle: 'High-Definition A3 Colour Printing | FR.HASAN TECH',
+    seoDescription: 'Vibrant A3 colour printing for architectural plans, posters, and studio photo prints on premium paper stocks.',
+    seoKeywords: ['A3 color printing', 'poster printing', 'photo print A3', 'laser printing Sri Lanka']
+  },
+  {
+    id: 'serv-photocopy-1',
+    slug: 'photocopy-services',
+    name: 'Photocopy Services',
+    category: 'Photocopy',
+    icon: 'Copy',
+    shortDescription: 'High-speed black & white and crisp colour laser photocopying for all document sizes.',
+    fullDescription: 'High-speed black & white and colour photocopying in A4, Legal, and A3 formats with double-sided and book copy capabilities.',
+    description: 'High-speed black & white and colour photocopying in A4, Legal, and A3 formats with double-sided and book copy capabilities.',
+    priceInfo: 'From LKR 5 / page',
+    singlePrice: 5,
+    unit: 'page',
+    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+    featured: false,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 8,
+    availableServicesList: [
+      'A4 Single / Double-Sided B&W Copy',
+      'Legal Size Document Photocopying',
+      'Vibrant Full-Colour Laser Copies',
+      'Book & Certificate ID Duplication',
+      'Bulk Student & Corporate Rates'
+    ],
+    importantNotes: [
+      'Special discounted bulk pricing applies for orders exceeding 100 pages.'
+    ],
+    seoTitle: 'Fast Laser Photocopy Services | FR.HASAN TECH',
+    seoDescription: 'Fast, high-quality B&W and color photocopying in A4, Legal, and A3 sizes with student and corporate rates.',
+    seoKeywords: ['photocopy', 'laser copy', 'black and white photocopy', 'color photocopy', 'Thampalagamam']
+  },
+  {
+    id: 'serv-printing-1',
+    slug: 'document-printing',
+    name: 'Document Printing',
+    category: 'Printing',
+    icon: 'Printer',
+    shortDescription: 'Sharp digital document printing directly from WhatsApp, USB drives, email, or Google Drive.',
+    fullDescription: 'Digital laser document printing for assignments, official forms, legal briefs, e-tickets, and exam papers.',
+    description: 'Digital laser document printing for assignments, official forms, legal briefs, e-tickets, and exam papers.',
+    priceInfo: 'From LKR 10 / page',
+    singlePrice: 10,
+    unit: 'page',
+    image: 'https://images.unsplash.com/photo-1589330694653-dad6bc01cf0f?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1589330694653-dad6bc01cf0f?auto=format&fit=crop&w=1200&q=80',
+    featured: false,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 9,
+    availableServicesList: [
+      'Direct WhatsApp & Email Document Printing',
+      'A4 Black & White High-Speed Laser Prints',
+      'Full-Colour Report & Thesis Printing',
+      'Official Application & Form Printing',
+      'Instant Online Exam Slip & Ticket Printouts'
+    ],
+    importantNotes: [
+      'Documents can be forwarded directly via WhatsApp for instant print and pickup.'
+    ],
+    seoTitle: 'Laser Document Printing & Printout Service | FR.HASAN TECH',
+    seoDescription: 'Print assignments, documents, reports, and tickets from WhatsApp, USB, or Email instantly with crisp laser clarity.',
+    seoKeywords: ['document printing', 'printout service', 'laser print', 'WhatsApp print', 'Thampalagamam']
+  },
+  {
+    id: 'serv-sim-1',
+    slug: 'sim-cards',
+    name: 'SIM Card Solutions',
+    category: 'SIM Cards',
+    icon: 'Smartphone',
+    shortDescription: 'Official Dialog, Mobitel, Hutch, and Airtel 4G/5G SIM card registration and replacements.',
+    fullDescription: 'Authorized telecom partner providing instant biometric NIC SIM registration, e-SIM setup, ownership transfers, and tourist SIMs.',
+    description: 'Authorized telecom partner providing instant biometric NIC SIM registration, e-SIM setup, ownership transfers, and tourist SIMs.',
+    priceInfo: 'Official Telco Rates',
+    singlePrice: 200,
+    unit: 'SIM',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80',
+    featured: true,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 10,
+    availableServicesList: [
+      'New 4G / 5G Prepaid SIM Activation',
+      'Dialog, Mobitel, Hutch & Airtel Provider Cards',
+      'Instant NIC Biometric SIM Registration',
+      'Micro, Nano & Standard Triple-Cut SIMs',
+      'Tourist SIM Cards & Special Data SIMs'
+    ],
+    importantNotes: [
+      'Original National Identity Card (NIC), Passport, or Driving License is mandatory for activation.'
+    ],
+    seoTitle: 'Official SIM Cards & 4G/5G Activation | FR.HASAN TECH',
+    seoDescription: 'Authorized Dialog, Mobitel, Hutch, and Airtel SIM cards in Thampalagamam with instant registration.',
+    seoKeywords: ['SIM cards', 'Dialog SIM', 'Mobitel SIM', 'Hutch SIM', 'Airtel SIM', 'SIM registration']
+  },
+  {
+    id: 'serv-pkg-1',
+    slug: 'packages',
+    name: 'Mobile & Broadband Packages',
+    category: 'Packages',
+    icon: 'Package',
+    shortDescription: 'Explore, activate, and reload high-speed unlimited internet bundles, social packs, and router plans.',
+    fullDescription: 'Explore and activate high-speed data bundles, unlimited YouTube/TikTok/Social media packs, voice combos, and home Wi-Fi broadband plans.',
+    description: 'Explore and activate high-speed data bundles, unlimited YouTube/TikTok/Social media packs, voice combos, and home Wi-Fi broadband plans.',
+    priceInfo: 'Official Network Rates',
+    image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1200&q=80',
+    featured: false,
+    active: true,
+    status: 'Active',
+    isPublished: true,
+    sortOrder: 11,
+    availableServicesList: [
+      'Anytime & Night-Time 4G/5G Data Add-ons',
+      'Unlimited Social Media & Streaming Packs',
+      'Unlimited Voice & Any-Net Call Plans',
+      'Home Broadband 4G Wi-Fi Router Packages',
+      'Instant Over-The-Air Digital Bill Reloads'
+    ],
+    importantNotes: [
+      'Instant activation upon phone number confirmation.'
+    ],
+    seoTitle: 'Mobile Data & Broadband Router Packages | FR.HASAN TECH',
+    seoDescription: 'Compare and activate the best Dialog, Mobitel, Hutch, and Airtel data bundles, social packs, and router plans.',
+    seoKeywords: ['data packages', 'broadband packages', 'unlimited data Sri Lanka', 'Dialog packages', 'Mobitel packages']
+  }
+];
 
 export const INITIAL_SIMS: SIMCard[] = [];
 

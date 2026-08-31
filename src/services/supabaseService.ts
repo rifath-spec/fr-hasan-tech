@@ -117,37 +117,112 @@ export const mapEstimateServiceToDB = (item: Partial<EstimateService>) => ({
   sort_order: item.sortOrder !== undefined ? Number(item.sortOrder) : 0,
 });
 
-export const mapServiceFromDB = (row: any): ServiceItem => ({
-  id: String(row.id),
-  slug: row.slug || '',
-  name: row.name || '',
-  category: row.category || 'Printing',
-  icon: row.icon || 'Printer',
-  shortDescription: row.short_description || '',
-  fullDescription: row.full_description || '',
-  priceInfo: row.price_info || '',
-  image: row.image || undefined,
-  availableServicesList: Array.isArray(row.available_services_list) ? row.available_services_list : [],
-  importantNotes: Array.isArray(row.important_notes) ? row.important_notes : [],
-  status: row.status || 'Active',
-  isPublished: row.is_published ?? true,
-});
+export const mapServiceFromDB = (row: any): ServiceItem => {
+  let packagesList = [];
+  if (Array.isArray(row.packages)) {
+    packagesList = row.packages;
+  } else if (typeof row.packages === 'string') {
+    try {
+      packagesList = JSON.parse(row.packages);
+    } catch {
+      packagesList = [];
+    }
+  }
 
-export const mapServiceToDB = (item: Partial<ServiceItem>) => ({
-  ...(item.id ? { id: item.id } : {}),
-  ...(item.slug !== undefined ? { slug: item.slug } : {}),
-  ...(item.name !== undefined ? { name: item.name } : {}),
-  ...(item.category !== undefined ? { category: item.category } : {}),
-  icon: item.icon || 'Printer',
-  short_description: item.shortDescription || '',
-  full_description: item.fullDescription || '',
-  price_info: item.priceInfo || '',
-  image: item.image || null,
-  available_services_list: Array.isArray(item.availableServicesList) ? item.availableServicesList : [],
-  important_notes: Array.isArray(item.importantNotes) ? item.importantNotes : [],
-  status: item.status || 'Active',
-  is_published: item.isPublished !== undefined ? item.isPublished : true,
-});
+  let galleryList = [];
+  if (Array.isArray(row.gallery_images)) {
+    galleryList = row.gallery_images;
+  } else if (typeof row.gallery_images === 'string') {
+    try {
+      galleryList = JSON.parse(row.gallery_images);
+    } catch {
+      galleryList = [];
+    }
+  }
+
+  let keywordsList: string[] = [];
+  if (Array.isArray(row.seo_keywords)) {
+    keywordsList = row.seo_keywords;
+  } else if (typeof row.seo_keywords === 'string') {
+    try {
+      const parsed = JSON.parse(row.seo_keywords);
+      if (Array.isArray(parsed)) keywordsList = parsed;
+      else keywordsList = row.seo_keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+    } catch {
+      keywordsList = row.seo_keywords.split(',').map((k: string) => k.trim()).filter(Boolean);
+    }
+  }
+
+  const isActive = row.active !== undefined 
+    ? Boolean(row.active) 
+    : (row.status !== 'Inactive' && (row.is_published ?? true));
+
+  return {
+    id: String(row.id),
+    slug: row.slug || '',
+    name: row.name || '',
+    category: row.category || 'Printing',
+    icon: row.icon || 'Printer',
+    shortDescription: row.short_description || row.shortDescription || '',
+    fullDescription: row.full_description || row.description || row.fullDescription || '',
+    description: row.full_description || row.description || row.fullDescription || '',
+    priceInfo: row.price_info || row.priceInfo || '',
+    singlePrice: row.single_price !== undefined && row.single_price !== null ? Number(row.single_price) : undefined,
+    unit: row.unit || undefined,
+    image: row.image || row.image_url || row.imageUrl || undefined,
+    imageUrl: row.image_url || row.image || row.imageUrl || undefined,
+    galleryImages: galleryList,
+    featured: row.featured === true || row.is_featured === true,
+    active: isActive,
+    status: row.status || (isActive ? 'Active' : 'Inactive'),
+    isPublished: row.is_published ?? isActive,
+    sortOrder: Number(row.sort_order ?? row.sortOrder ?? 0),
+    packages: packagesList,
+    availableServicesList: Array.isArray(row.available_services_list) ? row.available_services_list : [],
+    importantNotes: Array.isArray(row.important_notes) ? row.important_notes : [],
+    seoTitle: row.seo_title || row.seoTitle || undefined,
+    seoDescription: row.seo_description || row.seoDescription || undefined,
+    seoKeywords: keywordsList,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+export const mapServiceToDB = (item: Partial<ServiceItem>) => {
+  const payload: Record<string, any> = {};
+  if (item.id) payload.id = item.id;
+  if (item.slug !== undefined) payload.slug = item.slug;
+  if (item.name !== undefined) payload.name = item.name;
+  if (item.category !== undefined) payload.category = item.category;
+  if (item.icon !== undefined) payload.icon = item.icon;
+  if (item.shortDescription !== undefined) payload.short_description = item.shortDescription;
+  if (item.fullDescription !== undefined || item.description !== undefined) {
+    payload.full_description = item.fullDescription || item.description || '';
+  }
+  if (item.priceInfo !== undefined) payload.price_info = item.priceInfo;
+  if (item.image !== undefined || item.imageUrl !== undefined) {
+    payload.image = item.image || item.imageUrl || null;
+  }
+  if (item.availableServicesList !== undefined) {
+    payload.available_services_list = Array.isArray(item.availableServicesList) ? item.availableServicesList : [];
+  }
+  if (item.importantNotes !== undefined) {
+    payload.important_notes = Array.isArray(item.importantNotes) ? item.importantNotes : [];
+  }
+  if (item.status !== undefined) payload.status = item.status;
+  if (item.isPublished !== undefined) payload.is_published = item.isPublished;
+  if (item.active !== undefined) payload.active = item.active;
+  if (item.featured !== undefined) payload.featured = item.featured;
+  if (item.sortOrder !== undefined) payload.sort_order = item.sortOrder;
+  if (item.singlePrice !== undefined) payload.single_price = item.singlePrice;
+  if (item.unit !== undefined) payload.unit = item.unit;
+  if (item.packages !== undefined) payload.packages = item.packages;
+  if (item.galleryImages !== undefined) payload.gallery_images = item.galleryImages;
+  if (item.seoTitle !== undefined) payload.seo_title = item.seoTitle;
+  if (item.seoDescription !== undefined) payload.seo_description = item.seoDescription;
+  if (item.seoKeywords !== undefined) payload.seo_keywords = item.seoKeywords;
+  return payload;
+};
 
 export const mapSIMFromDB = (row: any): SIMCard => ({
   id: String(row.id),
@@ -491,11 +566,36 @@ export const SupabaseService = {
     try {
       const id = service.id || `serv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const payload = mapServiceToDB({ ...service, id });
-      const { data, error } = await supabase
+      
+      let { data, error } = await supabase
         .from('services')
         .insert(payload)
         .select()
         .single();
+
+      // If failed due to a missing column in an older table schema, fallback to core fields
+      if (error && (error.message?.includes('column') || error.code === '42703')) {
+        const corePayload = {
+          id,
+          slug: payload.slug || `service-${Date.now()}`,
+          name: payload.name || '',
+          category: payload.category || 'Printing',
+          icon: payload.icon || 'Printer',
+          short_description: payload.short_description || '',
+          full_description: payload.full_description || '',
+          price_info: payload.price_info || '',
+          image: payload.image || null,
+          available_services_list: payload.available_services_list || [],
+          important_notes: payload.important_notes || [],
+          status: payload.status || 'Active',
+          is_published: payload.is_published ?? true,
+        };
+        const retryRes = await supabase.from('services').insert(corePayload).select().single();
+        if (!retryRes.error && retryRes.data) {
+          return { ok: true, data: { ...mapServiceFromDB(retryRes.data), ...service, id } };
+        }
+        error = retryRes.error || error;
+      }
 
       if (error || !data) throw error;
       return { ok: true, data: mapServiceFromDB(data) };
@@ -512,10 +612,33 @@ export const SupabaseService = {
     }
     try {
       const payload = mapServiceToDB(updates);
-      const { error } = await supabase
+      let { error } = await supabase
         .from('services')
         .update(payload)
         .eq('id', id);
+
+      // If failed due to a missing column in an older table schema, fallback to core fields
+      if (error && (error.message?.includes('column') || error.code === '42703')) {
+        const corePayload: Record<string, any> = {};
+        if (payload.slug !== undefined) corePayload.slug = payload.slug;
+        if (payload.name !== undefined) corePayload.name = payload.name;
+        if (payload.category !== undefined) corePayload.category = payload.category;
+        if (payload.icon !== undefined) corePayload.icon = payload.icon;
+        if (payload.short_description !== undefined) corePayload.short_description = payload.short_description;
+        if (payload.full_description !== undefined) corePayload.full_description = payload.full_description;
+        if (payload.price_info !== undefined) corePayload.price_info = payload.price_info;
+        if (payload.image !== undefined) corePayload.image = payload.image;
+        if (payload.available_services_list !== undefined) corePayload.available_services_list = payload.available_services_list;
+        if (payload.important_notes !== undefined) corePayload.important_notes = payload.important_notes;
+        if (payload.status !== undefined) corePayload.status = payload.status;
+        if (payload.is_published !== undefined) corePayload.is_published = payload.is_published;
+
+        const retryRes = await supabase.from('services').update(corePayload).eq('id', id);
+        if (!retryRes.error) {
+          return { ok: true };
+        }
+        error = retryRes.error || error;
+      }
 
       if (error) throw error;
       return { ok: true };

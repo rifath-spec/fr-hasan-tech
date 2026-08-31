@@ -281,7 +281,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setSettings(dbSettings);
       }
       if (dbServices !== null) {
-        setServices(dbServices);
+        if (dbServices.length === 0) {
+          setServices(INITIAL_SERVICES);
+          if (getActiveCredentials().isConfigured) {
+            INITIAL_SERVICES.forEach(s => {
+              SupabaseService.createService(s);
+            });
+          }
+        } else {
+          // Keep existing services and non-destructively merge any missing default services
+          const existingSlugs = new Set(dbServices.map(s => s.slug));
+          const missingDefaults = INITIAL_SERVICES.filter(s => !existingSlugs.has(s.slug));
+          if (missingDefaults.length > 0) {
+            const merged = [...dbServices, ...missingDefaults];
+            setServices(merged);
+            if (getActiveCredentials().isConfigured) {
+              missingDefaults.forEach(s => {
+                SupabaseService.createService(s);
+              });
+            }
+          } else {
+            setServices(dbServices);
+          }
+        }
       }
       if (dbSims !== null) {
         setSims(dbSims);

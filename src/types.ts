@@ -18,6 +18,16 @@ export type TransactionType = 'sale' | 'expense';
 
 export type PaymentMethod = 'Cash' | 'Card' | 'Bank Transfer' | 'Other';
 
+export interface ServicePackage {
+  id?: string;
+  name: string; // e.g. "Plus", "Premium", "Pro", "Wedding Invitation"
+  price: number;
+  currency?: string; // Default "LKR"
+  description?: string;
+  features?: string[];
+  active?: boolean;
+}
+
 export interface ServiceItem {
   id: string;
   slug: string;
@@ -26,12 +36,26 @@ export interface ServiceItem {
   icon: string;
   shortDescription: string;
   fullDescription: string;
+  description?: string;
   priceInfo: string;
-  availableServicesList: string[];
-  importantNotes: string[];
+  singlePrice?: number;
+  unit?: string;
+  image?: string;
+  imageUrl?: string;
+  galleryImages?: string[];
+  featured?: boolean;
+  active?: boolean;
   status: 'Active' | 'Inactive';
   isPublished: boolean;
-  image?: string;
+  sortOrder?: number;
+  packages?: ServicePackage[];
+  availableServicesList: string[];
+  importantNotes: string[];
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SIMCard {
