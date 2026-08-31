@@ -314,19 +314,19 @@ export const ServicesListPage: React.FC = () => {
         {/* ========================================================================= */}
         {/* INTERACTIVE CATEGORY TABS & SEARCH BAR */}
         {/* ========================================================================= */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-soft-sm mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-soft-sm mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 w-full min-w-0">
           
           {/* Horizontal Category Switcher Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto min-w-0 pb-2 md:pb-0">
             <button
               onClick={() => handleSelectCategory('All')}
-              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap min-h-[40px] flex items-center gap-2 cursor-pointer ${
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap min-h-[40px] flex items-center gap-2 cursor-pointer shrink-0 ${
                 selectedCategory === 'All'
                   ? 'bg-[#1E5AA8] text-white shadow-soft-sm ring-2 ring-blue-500/20'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              <Grid className="w-3.5 h-3.5" />
+              <Grid className="w-3.5 h-3.5 shrink-0" />
               <span>All Categories ({categories.length})</span>
             </button>
 
@@ -337,13 +337,13 @@ export const ServicesListPage: React.FC = () => {
                 <button
                   key={cat}
                   onClick={() => handleSelectCategory(cat)}
-                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap min-h-[40px] flex items-center gap-2 cursor-pointer ${
+                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap min-h-[40px] flex items-center gap-2 cursor-pointer shrink-0 ${
                     isSelected
                       ? 'bg-[#1E5AA8] text-white shadow-soft-sm ring-2 ring-blue-500/20'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
                   }`}
                 >
-                  {getCategoryIcon(cat, `w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-slate-600'}`)}
+                  {getCategoryIcon(cat, `w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-slate-600'}`)}
                   <span>{cat}</span>
                   <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
                     isSelected ? 'bg-white/20 text-white' : 'bg-slate-200/80 text-slate-600'
@@ -356,14 +356,14 @@ export const ServicesListPage: React.FC = () => {
           </div>
 
           {/* Search Field */}
-          <div className="relative w-full md:w-80 shrink-0">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="relative w-full md:w-80 shrink-0 min-w-0">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder={selectedCategory === 'All' ? "Search across all services..." : `Search in ${selectedCategory}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#1E5AA8] focus:ring-2 focus:ring-[#1E5AA8]/15 outline-none transition-all"
+              className="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#1E5AA8] focus:ring-2 focus:ring-[#1E5AA8]/15 outline-none transition-all"
             />
             {searchQuery && (
               <button
@@ -380,7 +380,7 @@ export const ServicesListPage: React.FC = () => {
         {/* VIEW 1: MAIN CATEGORIES SHOWCASE GRID (When "All" is active) */}
         {/* ========================================================================= */}
         {isShowingAllCategoriesView && (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full min-w-0">
             
             <div className="flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -393,7 +393,7 @@ export const ServicesListPage: React.FC = () => {
             </div>
 
             {isLoadingData && categories.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 animate-pulse w-full">
                 {[1, 2, 3, 4].map(n => (
                   <div key={n} className="bg-white rounded-2xl border border-slate-200 p-4 h-80 flex flex-col justify-between shadow-soft-xs">
                     <div className="w-full h-48 bg-slate-200 rounded-xl mb-4" />
@@ -412,23 +412,21 @@ export const ServicesListPage: React.FC = () => {
                 <p className="text-sm text-slate-500 mt-1">Admin can create categories and add services from the dashboard.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 w-full">
                 {categories.map((catName) => {
                   const items = categoryGroups[catName] || [];
                   const banner = getCategoryBanner(catName, items);
                   const startingPrice = getStartingPrice(items);
 
                   return (
-                    <motion.div
+                    <div
                       key={catName}
-                      whileHover={{ y: -4 }}
-                      transition={{ duration: 0.2 }}
                       onClick={() => handleSelectCategory(catName)}
-                      className="group cursor-pointer bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg transition-all overflow-hidden flex flex-col justify-between"
+                      className="group cursor-pointer bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col h-full w-full min-w-0"
                     >
-                      <div>
+                      <div className="flex-1 flex flex-col">
                         {/* Visual Banner */}
-                        <div className="h-48 w-full relative overflow-hidden bg-slate-950">
+                        <div className="h-48 w-full relative overflow-hidden bg-slate-950 shrink-0">
                           <img
                             src={banner}
                             alt={catName}
@@ -463,10 +461,12 @@ export const ServicesListPage: React.FC = () => {
                         </div>
 
                         {/* Card Body */}
-                        <div className="p-5">
+                        <div className="p-4 sm:p-5 flex-1 flex flex-col">
                           {/* Price Tag Indicator */}
-                          <div className="inline-block px-2.5 py-1 rounded-lg bg-blue-50 text-[#1E5AA8] font-bold text-xs border border-blue-100/80 mb-3">
-                            {startingPrice}
+                          <div>
+                            <div className="inline-block px-2.5 py-1 rounded-lg bg-blue-50 text-[#1E5AA8] font-bold text-xs border border-blue-100/80 mb-3">
+                              {startingPrice}
+                            </div>
                           </div>
 
                           {/* Related Sub-Services Checklist */}
@@ -496,16 +496,16 @@ export const ServicesListPage: React.FC = () => {
                       </div>
 
                       {/* Card Footer Button */}
-                      <div className="px-5 pb-5 pt-3 border-t border-slate-100 mt-auto">
+                      <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 mt-auto">
                         <button
                           type="button"
                           className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-[#0D6EFD] bg-blue-50 group-hover:bg-[#1E5AA8] group-hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-soft-xs"
                         >
                           <span>Explore All {items.length} {catName} Services</span>
-                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 shrink-0" />
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
@@ -518,12 +518,12 @@ export const ServicesListPage: React.FC = () => {
         {/* VIEW 2: CATEGORY VIEW / ALL RELATED SERVICES UNDER SELECTED CATEGORY */}
         {/* ========================================================================= */}
         {!isShowingAllCategoriesView && (
-          <div className="space-y-8">
+          <div className="space-y-8 w-full min-w-0">
             
             {/* Category Header Banner */}
-            <div className="bg-gradient-to-r from-[#062B5C] via-[#0A4385] to-[#1E5AA8] rounded-2xl p-6 sm:p-8 text-white shadow-soft-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-2xl">
-                <div className="flex items-center gap-2">
+            <div className="bg-gradient-to-r from-[#062B5C] via-[#0A4385] to-[#1E5AA8] rounded-2xl p-5 sm:p-6 md:p-8 text-white shadow-soft-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5 sm:gap-6 w-full min-w-0">
+              <div className="space-y-2 max-w-2xl min-w-0 w-full">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="px-3 py-1 rounded-full bg-white/15 backdrop-blur-xs text-white text-xs font-bold border border-white/20">
                     Category: {selectedCategory}
                   </span>
@@ -531,7 +531,7 @@ export const ServicesListPage: React.FC = () => {
                     {servicesInSelectedCategory.length} {servicesInSelectedCategory.length === 1 ? 'Service' : 'Services'} Available
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white break-words">
                   {selectedCategory === 'All' ? 'All Matching Services' : `${selectedCategory} Solutions`}
                 </h2>
                 <p className="text-xs sm:text-sm text-blue-100 leading-relaxed">
@@ -539,27 +539,27 @@ export const ServicesListPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 w-full md:w-auto shrink-0">
                 <button
                   onClick={() => openEstimateModal()}
-                  className="px-4 py-2.5 rounded-xl bg-white text-[#0A4385] hover:bg-blue-50 font-bold text-xs sm:text-sm shadow-md flex items-center gap-2 active-press transition-colors cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-white text-[#0A4385] hover:bg-blue-50 font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 active-press transition-colors cursor-pointer min-h-[42px]"
                 >
-                  <Calculator className="w-4 h-4 text-[#0D6EFD]" />
-                  <span>Instant Estimate</span>
+                  <Calculator className="w-4 h-4 text-[#0D6EFD] shrink-0" />
+                  <span className="whitespace-nowrap">Instant Estimate</span>
                 </button>
                 <button
                   onClick={() => handleWhatsAppInquiry(undefined, selectedCategory)}
-                  className="px-4 py-2.5 rounded-xl bg-[#16B95A] hover:bg-[#129a4a] text-white font-bold text-xs sm:text-sm shadow-md flex items-center gap-2 active-press transition-colors cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#16B95A] hover:bg-[#129a4a] text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 active-press transition-colors cursor-pointer min-h-[42px]"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Order via WhatsApp</span>
+                  <MessageCircle className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap">Order via WhatsApp</span>
                 </button>
               </div>
             </div>
 
             {/* List of Related Services Grid */}
             {isLoadingData && servicesInSelectedCategory.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 animate-pulse w-full">
                 {[1, 2, 3, 4].map(n => (
                   <div key={n} className="bg-white rounded-2xl border border-slate-200 p-4 h-96 flex flex-col justify-between shadow-soft-xs">
                     <div className="w-full h-48 bg-slate-200 rounded-xl mb-4" />
@@ -573,7 +573,7 @@ export const ServicesListPage: React.FC = () => {
                 ))}
               </div>
             ) : servicesInSelectedCategory.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-soft-sm">
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-8 sm:p-12 text-center shadow-soft-sm w-full">
                 <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="text-lg font-bold text-slate-800">No Services Found</h3>
                 <p className="text-sm text-slate-500 mt-1 mb-4">
@@ -587,19 +587,17 @@ export const ServicesListPage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 w-full">
                 {servicesInSelectedCategory.map((service) => (
-                  <motion.div
+                  <div
                     key={service.id}
-                    whileHover={{ y: -4 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg transition-all overflow-hidden flex flex-col justify-between"
+                    className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col h-full w-full min-w-0"
                   >
-                    <div>
+                    <div className="flex-1 flex flex-col">
                       {/* Service Photo Banner */}
                       <div 
                         onClick={() => navigate(`/services/${service.slug}`)}
-                        className="h-44 w-full relative overflow-hidden bg-slate-950 cursor-pointer"
+                        className="h-44 w-full relative overflow-hidden bg-slate-950 cursor-pointer shrink-0"
                       >
                         <img
                           src={service.image || CATEGORY_DEFAULT_IMAGES[service.category] || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'}
@@ -627,10 +625,10 @@ export const ServicesListPage: React.FC = () => {
                       </div>
 
                       {/* Content details */}
-                      <div className="p-5">
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col">
                         <h3 
                           onClick={() => navigate(`/services/${service.slug}`)}
-                          className="text-base sm:text-lg font-bold text-slate-900 hover:text-[#1E5AA8] transition-colors cursor-pointer line-clamp-1"
+                          className="text-base sm:text-lg font-bold text-slate-900 hover:text-[#1E5AA8] transition-colors cursor-pointer line-clamp-1 break-words"
                         >
                           {service.name}
                         </h3>
@@ -659,28 +657,28 @@ export const ServicesListPage: React.FC = () => {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="px-5 pb-5 pt-3 border-t border-slate-100 space-y-2 mt-auto">
+                    <div className="p-4 sm:p-5 pt-3 border-t border-slate-100 space-y-2 mt-auto">
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => handleWhatsAppInquiry(service.name, service.category)}
-                          className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer min-h-[38px]"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
+                          <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                           <span>WhatsApp</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => navigate(`/services/${service.slug}`)}
-                          className="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0D6EFD] border border-blue-200/80 font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                          className="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0D6EFD] border border-blue-200/80 font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer min-h-[38px]"
                         >
                           <span>Details</span>
-                          <ArrowRight className="w-3 h-3" />
+                          <ArrowRight className="w-3 h-3 shrink-0" />
                         </button>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}
@@ -689,23 +687,23 @@ export const ServicesListPage: React.FC = () => {
             {/* SPECIALIZED INVENTORY MODULE: SIM Cards Catalog (When SIM Cards is selected) */}
             {/* ========================================================================= */}
             {selectedCategory === 'SIM Cards' && (
-              <div className="mt-12 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/90 shadow-soft-sm space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                      <Smartphone className="w-5 h-5 text-[#1E5AA8]" />
+              <div className="mt-12 bg-white rounded-2xl p-5 sm:p-6 md:p-8 border border-slate-200/90 shadow-soft-sm space-y-6 w-full min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
+                  <div className="min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                      <Smartphone className="w-5 h-5 text-[#1E5AA8] shrink-0" />
                       <span>Live SIM Cards Stock & Network Inventory</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Official TRCSL Authorized SIM activations for Dialog, Mobitel, Hutch, and Airtel</p>
                   </div>
 
                   {/* Network Filter Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full min-w-0">
                     {['All', 'Dialog', 'Mobitel', 'Hutch', 'Airtel'].map(net => (
                       <button
                         key={net}
                         onClick={() => setSelectedNetwork(net)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 ${
                           selectedNetwork === net
                             ? 'bg-[#1E5AA8] text-white shadow-xs'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -718,17 +716,17 @@ export const ServicesListPage: React.FC = () => {
                 </div>
 
                 {activeSims.length === 0 ? (
-                  <div className="p-8 text-center bg-slate-50 rounded-xl">
+                  <div className="p-8 text-center bg-slate-50 rounded-xl w-full">
                     <Smartphone className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                     <p className="text-sm font-semibold text-slate-600">No SIM cards matching the current filter.</p>
                     <p className="text-xs text-slate-400 mt-1">Contact us on WhatsApp for real-time SIM inventory availability.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                     {activeSims.map(sim => (
                       <div 
                         key={sim.id} 
-                        className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:shadow-soft-sm transition-all flex flex-col justify-between"
+                        className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:shadow-soft-sm transition-all flex flex-col justify-between w-full min-w-0"
                       >
                         <div>
                           <div className="flex items-center justify-between mb-2">
@@ -746,7 +744,7 @@ export const ServicesListPage: React.FC = () => {
                               {sim.status}
                             </span>
                           </div>
-                          <h4 className="font-bold text-slate-900 text-sm">{sim.simNumber}</h4>
+                          <h4 className="font-bold text-slate-900 text-sm break-words">{sim.simNumber}</h4>
                           <p className="text-xs text-slate-500 mt-0.5">{sim.package || 'Standard Prepaid SIM'}</p>
                         </div>
 
@@ -754,9 +752,9 @@ export const ServicesListPage: React.FC = () => {
                           <span className="text-sm font-bold text-[#1E5AA8]">Rs. {sim.sellingPrice}</span>
                           <button
                             onClick={() => handleWhatsAppInquiry(`SIM Number: ${sim.simNumber} (${sim.network})`, 'SIM Cards')}
-                            className="px-3 py-1 rounded-lg bg-[#16B95A] hover:bg-[#129a4a] text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg bg-[#16B95A] hover:bg-[#129a4a] text-white font-bold text-xs flex items-center gap-1 cursor-pointer min-h-[36px]"
                           >
-                            <MessageCircle className="w-3 h-3" />
+                            <MessageCircle className="w-3 h-3 shrink-0" />
                             <span>Reserve</span>
                           </button>
                         </div>
@@ -771,23 +769,23 @@ export const ServicesListPage: React.FC = () => {
             {/* SPECIALIZED INVENTORY MODULE: Mobile & Broadband Packages (When Packages is selected) */}
             {/* ========================================================================= */}
             {selectedCategory === 'Packages' && (
-              <div className="mt-12 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/90 shadow-soft-sm space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                      <Package className="w-5 h-5 text-[#1E5AA8]" />
+              <div className="mt-12 bg-white rounded-2xl p-5 sm:p-6 md:p-8 border border-slate-200/90 shadow-soft-sm space-y-6 w-full min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
+                  <div className="min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                      <Package className="w-5 h-5 text-[#1E5AA8] shrink-0" />
                       <span>Mobile & Broadband Package Reloads</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">Instant reload activation for Dialog, Mobitel, Hutch, and Airtel packages</p>
                   </div>
 
                   {/* Network Filter Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full min-w-0">
                     {['All', 'Dialog', 'Mobitel', 'Hutch', 'Airtel'].map(net => (
                       <button
                         key={net}
                         onClick={() => setSelectedNetwork(net)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 ${
                           selectedNetwork === net
                             ? 'bg-[#1E5AA8] text-white shadow-xs'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -800,16 +798,16 @@ export const ServicesListPage: React.FC = () => {
                 </div>
 
                 {activePackages.length === 0 ? (
-                  <div className="p-8 text-center bg-slate-50 rounded-xl">
+                  <div className="p-8 text-center bg-slate-50 rounded-xl w-full">
                     <Package className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                     <p className="text-sm font-semibold text-slate-600">No packages found for the selected filter.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                     {activePackages.map(pkg => (
                       <div 
                         key={pkg.id} 
-                        className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:shadow-soft-sm transition-all flex flex-col justify-between"
+                        className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-200 hover:shadow-soft-sm transition-all flex flex-col justify-between w-full min-w-0"
                       >
                         <div>
                           <div className="flex items-center justify-between mb-2">
@@ -827,7 +825,7 @@ export const ServicesListPage: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          <h4 className="font-bold text-slate-900 text-sm">{pkg.name}</h4>
+                          <h4 className="font-bold text-slate-900 text-sm break-words">{pkg.name}</h4>
                           <p className="text-xs text-slate-500 mt-1 line-clamp-2">{pkg.description}</p>
                           {pkg.quota && (
                             <div className="mt-2 text-xs font-semibold text-[#1E5AA8] bg-blue-50 px-2 py-0.5 rounded inline-block">
@@ -840,9 +838,9 @@ export const ServicesListPage: React.FC = () => {
                           <span className="text-base font-extrabold text-[#1E5AA8]">Rs. {pkg.price}</span>
                           <button
                             onClick={() => handleWhatsAppInquiry(`Package Reload: ${pkg.name} - Rs. ${pkg.price} (${pkg.network})`, 'Packages')}
-                            className="px-3 py-1.5 rounded-lg bg-[#16B95A] hover:bg-[#129a4a] text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg bg-[#16B95A] hover:bg-[#129a4a] text-white font-bold text-xs flex items-center gap-1 cursor-pointer min-h-[36px]"
                           >
-                            <MessageCircle className="w-3.5 h-3.5" />
+                            <MessageCircle className="w-3.5 h-3.5 shrink-0" />
                             <span>Reload via WhatsApp</span>
                           </button>
                         </div>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Circular Outer Badge Background -->
+  <circle cx="256" cy="256" r="246" fill="#FFFFFF"/>
+  <circle cx="256" cy="256" r="246" fill="none" stroke="#E11D48" stroke-width="14"/>
+  <circle cx="256" cy="256" r="232" fill="none" stroke="#0F2B48" stroke-width="12"/>
+
+  <!-- Centered FR.HASAN TECH Monogram & Circuit Nodes -->
+  <g transform="translate(136, 128) scale(1.35)" filter="url(#shadow)">
+    <!-- Circuit Lines & Nodes (Red) -->
+    <path d="M 50 15 L 15 15" stroke="#E11D48" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="10" cy="15" r="10.5" fill="#E11D48"/>
+
+    <path d="M 50 45 L -5 45" stroke="#E11D48" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="-10" cy="45" r="10.5" fill="#E11D48"/>
+
+    <path d="M 50 75 L 10 75" stroke="#E11D48" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="5" cy="75" r="10.5" fill="#E11D48"/>
+
+    <path d="M 50 105 L 25 105 L 25 145" stroke="#E11D48" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="25" cy="150" r="10.5" fill="#E11D48"/>
+
+    <!-- FR Letterforms -->
+    <!-- Top Navy Bar -->
+    <path d="M 50 12 L 155 12 L 142 34 L 50 34 Z" fill="#0F2B48"/>
+    <!-- Red F Middle Bar and Spine -->
+    <path d="M 50 34 L 148 34 C 166 34 166 75 148 75 L 82 75 L 82 118 L 50 118 Z" fill="#E11D48"/>
+    <!-- Navy R Leg and Curve -->
+    <path d="M 92 75 L 144 75 C 156 75 160 88 148 102 L 112 118 L 86 118 Z" fill="#0F2B48"/>
+    <circle cx="168" cy="115" r="10.5" fill="#E11D48"/>
+  </g>
+</svg>

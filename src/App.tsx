@@ -95,13 +95,29 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 const AppRouter: React.FC = () => {
-  const { currentPath, navigate, isAdminAuthenticated, openEstimateModal } = useApp();
+  const { currentPath, navigate, isAdminAuthenticated, openEstimateModal, settings } = useApp();
 
   React.useEffect(() => {
     if (currentPath === '/estimate') {
       openEstimateModal();
     }
   }, [currentPath, openEstimateModal]);
+
+  React.useEffect(() => {
+    const faviconHref = settings.logoUrl || '/favicon.svg';
+    const iconLinks = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
+    if (iconLinks.length > 0) {
+      iconLinks.forEach(link => {
+        link.href = faviconHref;
+      });
+    } else {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/svg+xml';
+      link.href = faviconHref;
+      document.head.appendChild(link);
+    }
+  }, [settings.logoUrl]);
 
   // Route parser
   const renderRoute = () => {
