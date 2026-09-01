@@ -1,4 +1,5 @@
 import { supabase, getActiveCredentials } from '../lib/supabase';
+import { INITIAL_SETTINGS } from '../data/initialData';
 import { 
   ServiceItem, 
   SIMCard, 
@@ -14,6 +15,65 @@ import {
 // ============================================================================
 // DATA MAPPERS (Database snake_case <-> Frontend camelCase)
 // ============================================================================
+
+const normalizeCategoryForLegacyConstraint = (category?: string): string => {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('photo') || cat.includes('copy') || cat.includes('scan') || cat.includes('laminat')) return 'Photocopy';
+  if (cat.includes('sim') || cat.includes('esim')) return 'SIM Cards';
+  if (cat.includes('package') || cat.includes('reload') || cat.includes('broadband') || cat.includes('plan')) return 'Packages';
+  // Default fallback for Computer Services, Design & Documentation, Visiting Cards, Invitations, CV, Certificates, etc.
+  return 'Printing';
+};
+
+/**
+ * Builds cascading column payloads for services to be compatible with any Supabase schema version.
+ */
+const buildServicePayloadTiers = (service: Partial<ServiceItem>, forceLegacyCategory = false) => {
+  const id = service.id || `serv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const category = forceLegacyCategory ? normalizeCategoryForLegacyConstraint(service.category) : (service.category || 'Printing');
+  
+  // Tier 1: Full modern schema payload
+  const tier1Full = mapServiceToDB({ ...service, id, category });
+
+  // Tier 2: Standard schema (without new packages/gallery/seo columns)
+  const tier2Standard: Record<string, any> = {
+    id,
+    slug: service.slug || `service-${Date.now()}`,
+    name: service.name || '',
+    category,
+    icon: service.icon || 'Printer',
+    short_description: service.shortDescription || '',
+    full_description: service.fullDescription || service.description || '',
+    price_info: service.priceInfo || (service.singlePrice ? `LKR ${service.singlePrice}` : 'Contact for pricing'),
+    image: service.image || service.imageUrl || null,
+    available_services_list: Array.isArray(service.availableServicesList) ? service.availableServicesList : [],
+    important_notes: Array.isArray(service.importantNotes) ? service.importantNotes : [],
+    status: service.status || 'Active',
+    is_published: service.isPublished ?? true,
+  };
+
+  // Tier 3: Core basic schema
+  const tier3Core: Record<string, any> = {
+    id,
+    slug: service.slug || `service-${Date.now()}`,
+    name: service.name || '',
+    category,
+    short_description: service.shortDescription || '',
+    full_description: service.fullDescription || service.description || '',
+    price_info: service.priceInfo || 'Contact for pricing',
+    image: service.image || service.imageUrl || null,
+  };
+
+  // Tier 4: Absolute minimum schema
+  const tier4Minimal: Record<string, any> = {
+    id,
+    slug: service.slug || `service-${Date.now()}`,
+    name: service.name || '',
+    category,
+  };
+
+  return [tier1Full, tier2Standard, tier3Core, tier4Minimal];
+};
 
 export const mapEstimateCategoryFromDB = (row: any): EstimateCategory => ({
   id: String(row.id),
@@ -338,61 +398,63 @@ export const mapTransactionToDB = (item: Partial<POSTransaction>) => ({
   created_by: item.createdBy || 'FR Hasan (CEO)',
 });
 
-export const mapSettingsFromDB = (row: any): ShopSettings => ({
-  shopName: row.shop_name || 'FR.HASAN TECH',
-  tagline: row.tagline || '',
-  description: row.description || '',
-  logoUrl: row.logo_url || '/fr-hasan-logo.svg',
-  heroBackgroundUrl: row.hero_background_url || '',
-  whatsappNumber: row.whatsapp_number || '076 859 7800',
-  whatsappGroupUrl: row.whatsapp_group_url || '',
-  phoneNumber: row.phone_number || '076 859 7800',
-  email: row.email || 'contact@frhasantech.com',
-  address: row.address || '529, Siraj Nagar, Thampalagamam, Sri Lanka',
-  plusCode: row.plus_code || 'F37F+49 Mullipotana',
-  mapEmbedUrl: row.map_embed_url || '',
-  googleMapsUrl: row.google_maps_url || 'https://maps.google.com/?q=FR+HASAN+TECH+Mullipotana+F37F%2B49',
-  openingHours: row.opening_hours || {
-    monFri: '7:00 AM – 10:00 PM',
-    sat: '7:00 AM – 10:00 PM',
-    sun: '7:00 AM – 10:00 PM',
-  },
-  socialMedia: row.social_media || {
-    facebook: '',
-    instagram: '',
-    twitter: '',
-  },
-  heroContent: row.hero_content || {
-    title: 'Precision Technology & Telecommunication Services',
-    tagline: 'High-speed document printing, genuine SIM cards, mobile reloads, and custom tech solutions in Thampalagamam & Trincomalee.',
-    description: '',
-  },
-  aboutContent: row.about_content || {
-    title: 'About FR.HASAN TECH',
-    subtitle: 'Connecting Communities with Quality Technology & Communications Since 2020',
-    story: '',
-    mission: '',
-    ceoName: 'FR Hasan',
-    ceoTitle: 'Founder & Managing Director',
-    ceoPhoto: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80',
-    ceoBio: 'Founder & CEO of FR HASAN TECH',
-    ceoQuote: 'Committed to delivering reliable, professional digital and telecom solutions.',
-  },
-  posSettings: row.pos_settings || {
-    defaultPaymentMethod: 'Cash',
-    currencySymbol: 'LKR',
-    taxRate: 0,
-    receiptHeader: 'FR.HASAN TECH - Official Cash Receipt',
-    receiptFooter: 'Thank you for your business! Please visit us again.',
-    enableExpenseTracking: true,
-    serviceSubTypes: {
-      'Photocopy': ['Black & White (A4)', 'Black & White (Legal)', 'Color Copy', 'Double-Sided A4'],
-      'Printing': ['A4 Document (B&W)', 'A4 Color Printout', 'Glossy Photo Print', 'ID Card Laminating'],
-      'SIM Cards': ['Dialog 4G SIM', 'Mobitel 4G SIM', 'Hutch 4G SIM', 'Airtel 4G SIM'],
-      'Packages': ['Data Add-on', 'Voice Reload', 'Unlimited Router Plan', 'Monthly Bundle']
+export const mapSettingsFromDB = (row: any): ShopSettings => {
+  const rawAbout = (row && typeof row.about_content === 'object' && row.about_content !== null) ? row.about_content : {};
+  const rawHero = (row && typeof row.hero_content === 'object' && row.hero_content !== null) ? row.hero_content : {};
+  const rawPos = (row && typeof row.pos_settings === 'object' && row.pos_settings !== null) ? row.pos_settings : {};
+  const rawHours = (row && typeof row.opening_hours === 'object' && row.opening_hours !== null) ? row.opening_hours : {};
+  const rawSocial = (row && typeof row.social_media === 'object' && row.social_media !== null) ? row.social_media : {};
+
+  return {
+    shopName: row?.shop_name || INITIAL_SETTINGS.shopName,
+    tagline: row?.tagline || INITIAL_SETTINGS.tagline,
+    description: row?.description || INITIAL_SETTINGS.description,
+    logoUrl: row?.logo_url || INITIAL_SETTINGS.logoUrl,
+    heroBackgroundUrl: row?.hero_background_url || INITIAL_SETTINGS.heroBackgroundUrl,
+    whatsappNumber: row?.whatsapp_number || INITIAL_SETTINGS.whatsappNumber,
+    whatsappGroupUrl: row?.whatsapp_group_url || INITIAL_SETTINGS.whatsappGroupUrl,
+    phoneNumber: row?.phone_number || INITIAL_SETTINGS.phoneNumber,
+    email: row?.email || INITIAL_SETTINGS.email,
+    address: row?.address || INITIAL_SETTINGS.address,
+    plusCode: row?.plus_code || INITIAL_SETTINGS.plusCode,
+    mapEmbedUrl: row?.map_embed_url || INITIAL_SETTINGS.mapEmbedUrl,
+    googleMapsUrl: row?.google_maps_url || INITIAL_SETTINGS.googleMapsUrl,
+    openingHours: {
+      ...INITIAL_SETTINGS.openingHours,
+      ...rawHours,
+    },
+    socialMedia: {
+      ...INITIAL_SETTINGS.socialMedia,
+      ...rawSocial,
+    },
+    heroContent: {
+      ...INITIAL_SETTINGS.heroContent,
+      ...rawHero,
+    },
+    aboutContent: {
+      ...INITIAL_SETTINGS.aboutContent,
+      ...rawAbout,
+      ceoName: rawAbout.ceoName || INITIAL_SETTINGS.aboutContent.ceoName,
+      ceoTitle: rawAbout.ceoTitle || INITIAL_SETTINGS.aboutContent.ceoTitle,
+      ceoPhoto: rawAbout.ceoPhoto || INITIAL_SETTINGS.aboutContent.ceoPhoto,
+      ceoBio: rawAbout.ceoBio || INITIAL_SETTINGS.aboutContent.ceoBio,
+      ceoQuote: rawAbout.ceoQuote || INITIAL_SETTINGS.aboutContent.ceoQuote,
+      title: rawAbout.title || INITIAL_SETTINGS.aboutContent.title,
+      subtitle: rawAbout.subtitle || INITIAL_SETTINGS.aboutContent.subtitle,
+      story: rawAbout.story || INITIAL_SETTINGS.aboutContent.story,
+      mission: rawAbout.mission || INITIAL_SETTINGS.aboutContent.mission,
+    },
+    posSettings: {
+      ...INITIAL_SETTINGS.posSettings,
+      ...rawPos,
+      currencySymbol: rawPos.currencySymbol || INITIAL_SETTINGS.posSettings.currencySymbol || 'LKR',
+      serviceSubTypes: {
+        ...INITIAL_SETTINGS.posSettings.serviceSubTypes,
+        ...(rawPos.serviceSubTypes || {})
+      }
     }
-  }
-});
+  };
+};
 
 export const mapSettingsToDB = (s: ShopSettings) => ({
   id: 'default',
@@ -565,43 +627,46 @@ export const SupabaseService = {
     }
     try {
       const id = service.id || `serv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-      const payload = mapServiceToDB({ ...service, id });
-      
-      let { data, error } = await supabase
-        .from('services')
-        .insert(payload)
-        .select()
-        .single();
+      const serviceWithId = { ...service, id };
 
-      // If failed due to a missing column in an older table schema, fallback to core fields
-      if (error && (error.message?.includes('column') || error.code === '42703')) {
-        const corePayload = {
-          id,
-          slug: payload.slug || `service-${Date.now()}`,
-          name: payload.name || '',
-          category: payload.category || 'Printing',
-          icon: payload.icon || 'Printer',
-          short_description: payload.short_description || '',
-          full_description: payload.full_description || '',
-          price_info: payload.price_info || '',
-          image: payload.image || null,
-          available_services_list: payload.available_services_list || [],
-          important_notes: payload.important_notes || [],
-          status: payload.status || 'Active',
-          is_published: payload.is_published ?? true,
-        };
-        const retryRes = await supabase.from('services').insert(corePayload).select().single();
-        if (!retryRes.error && retryRes.data) {
-          return { ok: true, data: { ...mapServiceFromDB(retryRes.data), ...service, id } };
+      // Generate all payload tiers: first with modern category, then with legacy normalized category
+      const modernTiers = buildServicePayloadTiers(serviceWithId, false);
+      const legacyTiers = buildServicePayloadTiers(serviceWithId, true);
+      const allCandidatePayloads = [...modernTiers, ...legacyTiers];
+
+      let lastError: any = null;
+
+      for (const payload of allCandidatePayloads) {
+        const { data, error } = await supabase
+          .from('services')
+          .insert(payload)
+          .select()
+          .single();
+
+        if (!error && data) {
+          return { ok: true, data: { ...mapServiceFromDB(data), ...service, id } };
         }
-        error = retryRes.error || error;
+
+        // If error is duplicate slug or key (23505), try updating existing record
+        if (error && (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('services_slug_key'))) {
+          if (payload.slug) {
+            const updateRes = await this.updateService(id, service);
+            if (updateRes.ok) {
+              return { ok: true, data: { ...service, id } as ServiceItem };
+            }
+          }
+        }
+
+        lastError = error;
       }
 
-      if (error || !data) throw error;
-      return { ok: true, data: mapServiceFromDB(data) };
+      // If all candidate inserts failed, format error
+      const msg = formatSupabaseError(lastError);
+      console.warn('Supabase service insertion fallback alert:', msg);
+      return { ok: false, error: msg };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
-      console.error('Error inserting service into Supabase:', err);
+      console.warn('Error inserting service into Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -611,40 +676,45 @@ export const SupabaseService = {
       return { ok: false, error: 'Supabase credentials not configured' };
     }
     try {
-      const payload = mapServiceToDB(updates);
-      let { error } = await supabase
-        .from('services')
-        .update(payload)
-        .eq('id', id);
+      const modernTiers = buildServicePayloadTiers({ ...updates, id }, false);
+      const legacyTiers = buildServicePayloadTiers({ ...updates, id }, true);
+      const allCandidatePayloads = [...modernTiers, ...legacyTiers];
 
-      // If failed due to a missing column in an older table schema, fallback to core fields
-      if (error && (error.message?.includes('column') || error.code === '42703')) {
-        const corePayload: Record<string, any> = {};
-        if (payload.slug !== undefined) corePayload.slug = payload.slug;
-        if (payload.name !== undefined) corePayload.name = payload.name;
-        if (payload.category !== undefined) corePayload.category = payload.category;
-        if (payload.icon !== undefined) corePayload.icon = payload.icon;
-        if (payload.short_description !== undefined) corePayload.short_description = payload.short_description;
-        if (payload.full_description !== undefined) corePayload.full_description = payload.full_description;
-        if (payload.price_info !== undefined) corePayload.price_info = payload.price_info;
-        if (payload.image !== undefined) corePayload.image = payload.image;
-        if (payload.available_services_list !== undefined) corePayload.available_services_list = payload.available_services_list;
-        if (payload.important_notes !== undefined) corePayload.important_notes = payload.important_notes;
-        if (payload.status !== undefined) corePayload.status = payload.status;
-        if (payload.is_published !== undefined) corePayload.is_published = payload.is_published;
+      let lastError: any = null;
 
-        const retryRes = await supabase.from('services').update(corePayload).eq('id', id);
-        if (!retryRes.error) {
+      for (const payload of allCandidatePayloads) {
+        // Strip id from update payload
+        const { id: _id, ...cleanPayload } = payload;
+        
+        // Try update by id first
+        let { error } = await supabase
+          .from('services')
+          .update(cleanPayload)
+          .eq('id', id);
+
+        // If no rows matched or error, and slug is provided, try by slug
+        if ((!error || error.code === 'PGRST116') && updates.slug) {
+          const resSlug = await supabase
+            .from('services')
+            .update(cleanPayload)
+            .eq('slug', updates.slug);
+          if (!resSlug.error) return { ok: true };
+          if (error) error = resSlug.error;
+        }
+
+        if (!error) {
           return { ok: true };
         }
-        error = retryRes.error || error;
+
+        lastError = error;
       }
 
-      if (error) throw error;
-      return { ok: true };
+      const msg = formatSupabaseError(lastError);
+      console.warn('Supabase service update fallback alert:', msg);
+      return { ok: false, error: msg };
     } catch (err: any) {
       const msg = formatSupabaseError(err);
-      console.error('Error updating service in Supabase:', err);
+      console.warn('Error updating service in Supabase:', err);
       return { ok: false, error: msg };
     }
   },
@@ -1210,9 +1280,9 @@ export const SupabaseService = {
 
       // 2. Services
       if (data.services.length > 0) {
-        const servPayload = data.services.map(s => mapServiceToDB(s));
-        const { error: servErr } = await supabase.from('services').upsert(servPayload, { onConflict: 'slug' });
-        if (servErr) throw servErr;
+        for (const s of data.services) {
+          await this.createService(s);
+        }
       }
 
       // 3. SIMs

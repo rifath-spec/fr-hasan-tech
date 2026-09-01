@@ -51,10 +51,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   handleReload = () => {
-    window.location.href = '/';
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
   };
 
   handleReset = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {
+      // ignore
+    }
+    this.setState({ hasError: false, error: null });
     window.location.href = '/';
   };
 
@@ -70,17 +78,22 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
               The application encountered a temporary display issue. You can quickly reload to continue.
             </p>
+            {this.state.error && (
+              <div className="mb-4 p-3 bg-red-50/70 border border-red-100 rounded-xl text-left text-[11px] font-mono text-red-800 break-words max-h-24 overflow-y-auto">
+                {this.state.error.message || String(this.state.error)}
+              </div>
+            )}
             <div className="space-y-3">
               <button
                 onClick={this.handleReload}
-                className="w-full py-3 px-4 bg-[#1E5AA8] hover:bg-[#164785] text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm shadow-soft-sm active-press transition-colors"
+                className="w-full py-3 px-4 bg-[#1E5AA8] hover:bg-[#164785] text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm shadow-soft-sm active-press transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Reload Application</span>
               </button>
               <button
                 onClick={this.handleReset}
-                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs active-press transition-colors"
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs active-press transition-colors cursor-pointer"
               >
                 Reset Cache & Restore Defaults
               </button>

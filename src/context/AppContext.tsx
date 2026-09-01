@@ -163,10 +163,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Core Data States (Synchronized directly with Supabase PostgreSQL backend)
   const [settings, setSettings] = useState<ShopSettings>(INITIAL_SETTINGS);
-  const [services, setServices] = useState<ServiceItem[]>([]);
-  const [sims, setSims] = useState<SIMCard[]>([]);
-  const [packages, setPackages] = useState<MobilePackage[]>([]);
-  const [transactions, setTransactions] = useState<POSTransaction[]>([]);
+  const [services, setServices] = useState<ServiceItem[]>(INITIAL_SERVICES);
+  const [sims, setSims] = useState<SIMCard[]>(INITIAL_SIMS);
+  const [packages, setPackages] = useState<MobilePackage[]>(INITIAL_PACKAGES);
+  const [transactions, setTransactions] = useState<POSTransaction[]>(INITIAL_TRANSACTIONS);
 
   // Estimate Calculator States (Synchronized with Supabase)
   const [estimateCategories, setEstimateCategories] = useState<EstimateCategory[]>(INITIAL_ESTIMATE_CATEGORIES);
@@ -285,7 +285,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           setServices(INITIAL_SERVICES);
           if (getActiveCredentials().isConfigured) {
             INITIAL_SERVICES.forEach(s => {
-              SupabaseService.createService(s);
+              SupabaseService.createService(s).catch(err => {
+                console.warn('Background service sync notice:', err);
+              });
             });
           }
         } else {
@@ -297,7 +299,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             setServices(merged);
             if (getActiveCredentials().isConfigured) {
               missingDefaults.forEach(s => {
-                SupabaseService.createService(s);
+                SupabaseService.createService(s).catch(err => {
+                  console.warn('Background service sync notice:', err);
+                });
               });
             }
           } else {

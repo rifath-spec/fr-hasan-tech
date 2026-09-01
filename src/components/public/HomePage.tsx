@@ -33,15 +33,16 @@ export const HomePage: React.FC = () => {
   const { navigate, settings, services, openEstimateModal, isLoadingData } = useApp();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  const ceoName = settings.aboutContent.ceoName || 'FR Hasan';
-  const ceoTitle = settings.aboutContent.ceoTitle || 'Founder & CEO';
-  const ceoPhoto = settings.aboutContent.ceoPhoto || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80';
-  const ceoQuote = settings.aboutContent.ceoQuote || "Empowering individuals and local businesses through reliable technology, seamless telecommunication connectivity, and precision digital print solutions.";
+  const about: any = settings?.aboutContent || {};
+  const ceoName = about.ceoName || 'Faseerath Hasan';
+  const ceoTitle = about.ceoTitle || 'Founder & CEO';
+  const ceoPhoto = about.ceoPhoto || 'https://res.cloudinary.com/dut2fzqdd/image/upload/v1787850870/WhatsApp_Image_2026-08-27_at_7.46.48_PM.jpg';
+  const ceoQuote = about.ceoQuote || "Empowering individuals and local businesses through reliable technology, seamless telecommunication connectivity, and precision digital print solutions.";
 
   const handleWhatsApp = () => {
     openWhatsAppChat(
-      settings.whatsappNumber || '076 859 7800',
-      `Hello ${settings.shopName}, I would like to inquire about your services.`
+      settings?.whatsappNumber || '076 859 7800',
+      `Hello ${settings?.shopName || 'FR.HASAN TECH'}, I would like to inquire about your services.`
     );
   };
 

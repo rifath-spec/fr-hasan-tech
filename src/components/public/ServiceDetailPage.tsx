@@ -43,10 +43,20 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
   const { navigate, settings, services, packages, sims } = useApp();
 
   // Find target service by slug or fallback
-  const service = services.find(s => s.slug === slug) || services[0];
+  const service = useMemo(() => {
+    if (!services || services.length === 0) return null;
+    const cleanSlug = (slug || '').toLowerCase().trim();
+    return (
+      services.find(s => s.slug === slug || s.id === slug) ||
+      services.find(s => s.slug.toLowerCase() === cleanSlug || s.id.toLowerCase() === cleanSlug) ||
+      services.find(s => s.category.toLowerCase().includes(cleanSlug) || cleanSlug.includes(s.category.toLowerCase())) ||
+      services[0] ||
+      null
+    );
+  }, [services, slug]);
 
   // Active selected gallery image
-  const [activeImage, setActiveImage] = useState<string>(service?.image || service?.imageUrl || '');
+  const [activeImage, setActiveImage] = useState<string>('');
   const [selectedPackageTier, setSelectedPackageTier] = useState<ServicePackage | null>(null);
 
   // Update active image when service changes
@@ -190,10 +200,11 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
   }, [sims, selectedNetwork, searchQuery]);
 
   // Check if service has multiple packages defined
-  const hasServicePackages = Array.isArray(service.packages) && service.packages.length > 0;
+  const hasServicePackages = Boolean(service && Array.isArray(service.packages) && service.packages.length > 0);
 
   // All gallery pictures
   const allImages = useMemo(() => {
+    if (!service) return [];
     const list: string[] = [];
     if (service.image) list.push(service.image);
     if (service.imageUrl && !list.includes(service.imageUrl)) list.push(service.imageUrl);
@@ -204,6 +215,36 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
     }
     return list;
   }, [service]);
+
+  if (!service) {
+    return (
+      <div className="w-full bg-[#F8FAFC] py-16">
+        <div className="max-w-md mx-auto px-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#1E5AA8] flex items-center justify-center mx-auto mb-4 border border-blue-100">
+            <Sparkles className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Service Catalog</h2>
+          <p className="text-sm text-slate-600 mb-6">
+            Loading service information or exploring the complete services catalog...
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate('/services')}
+              className="w-full sm:w-auto px-6 py-2.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-sm font-bold rounded-xl shadow-soft-sm"
+            >
+              Browse All Services
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl shadow-2xs hover:bg-slate-50"
+            >
+              Return Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-[#F8FAFC] py-8 sm:py-12">

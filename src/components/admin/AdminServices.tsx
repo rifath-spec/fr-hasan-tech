@@ -36,19 +36,26 @@ import {
 import { ConfirmModal } from '../common/ConfirmModal';
 
 const DEFAULT_CATEGORY_PRESETS = [
+  'Printing',
+  'Visiting Cards',
+  'Invitation Card',
+  'Certificate Design',
+  'CV Creation',
+  'Microsoft Office Installation',
+  'Windows Installation',
+  'Document Printing',
+  'Packages',
+  'SIM Cards',
+  'Photocopy',
+  'Lamination',
+  'Scanning',
+  'Document Binding',
   'Computer Services',
   'Design & Documentation',
   'Printing & Design',
-  'Printing',
-  'Photocopy',
-  'SIM Cards',
-  'Packages',
-  'Lamination',
-  'Scanning',
   'Typing & Typesetting',
   'Bill Payments',
-  'Passport & ID Photos',
-  'Document Binding'
+  'Passport & ID Photos'
 ];
 
 export const AdminServices: React.FC = () => {

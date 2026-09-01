@@ -1,6 +1,18 @@
 export type NetworkProvider = 'Dialog' | 'Mobitel' | 'Hutch' | 'Airtel' | 'SLT-Mobitel';
 
-export type ServiceCategory = 'Photocopy' | 'Printing' | 'SIM Cards' | 'Packages' | string;
+export type ServiceCategory = 
+  | 'Printing'
+  | 'Visiting Cards'
+  | 'Invitation Card'
+  | 'Certificate Design'
+  | 'CV Creation'
+  | 'Microsoft Office Installation'
+  | 'Windows Installation'
+  | 'Document Printing'
+  | 'Packages'
+  | 'SIM Cards'
+  | 'Photocopy'
+  | string;
 
 export type SIMStatus = 'Available' | 'Reserved' | 'Sold' | 'Returned' | 'Damaged';
 

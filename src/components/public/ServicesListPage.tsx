@@ -25,18 +25,45 @@ import {
   Zap,
   Globe,
   Grid,
-  ExternalLink
+  ExternalLink,
+  CreditCard,
+  Mail,
+  Award,
+  Laptop,
+  Monitor
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { openWhatsAppChat } from '../../utils/whatsapp';
 import { ServiceItem } from '../../types';
 
+// The 11 main categories in preferred display order
+export const MAIN_CATEGORY_ORDER = [
+  'Printing',
+  'Visiting Cards',
+  'Invitation Card',
+  'Certificate Design',
+  'CV Creation',
+  'Microsoft Office Installation',
+  'Windows Installation',
+  'Document Printing',
+  'Packages',
+  'SIM Cards',
+  'Photocopy',
+];
+
 // Fallback high-resolution category artwork
 const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
-  'Photocopy': 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
-  'Printing': 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80',
-  'SIM Cards': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80',
+  'Printing': 'https://images.unsplash.com/photo-1562654501-a0ccc0fc3fb1?auto=format&fit=crop&w=1200&q=80',
+  'Visiting Cards': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
+  'Invitation Card': 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80',
+  'Certificate Design': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80',
+  'CV Creation': 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1200&q=80',
+  'Microsoft Office Installation': 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
+  'Windows Installation': 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=1200&q=80',
+  'Document Printing': 'https://images.unsplash.com/photo-1589330694653-dad6bc01cf0f?auto=format&fit=crop&w=1200&q=80',
   'Packages': 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80',
+  'SIM Cards': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80',
+  'Photocopy': 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
   'Lamination': 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=1200&q=80',
   'Document Binding': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
   'Scanning': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
@@ -86,7 +113,7 @@ export const ServicesListPage: React.FC = () => {
     return services.filter(s => s.isPublished);
   }, [services]);
 
-  // All distinct categories
+  // All distinct categories sorted by the main categories order
   const categories = useMemo(() => {
     const catSet = new Set<string>();
     publishedServices.forEach(s => {
@@ -95,7 +122,15 @@ export const ServicesListPage: React.FC = () => {
       }
     });
 
-    return Array.from(catSet);
+    const list = Array.from(catSet);
+    return list.sort((a, b) => {
+      const indexA = MAIN_CATEGORY_ORDER.indexOf(a);
+      const indexB = MAIN_CATEGORY_ORDER.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
   }, [publishedServices]);
 
   // Grouped map: Category Name -> Array of ServiceItems
@@ -121,9 +156,16 @@ export const ServicesListPage: React.FC = () => {
 
   // Icon helper
   const getCategoryIcon = (category: string, className = "w-6 h-6 text-[#1E5AA8]") => {
-    const lower = (category || '').toLowerCase();
+    const lower = (category || '').toLowerCase().trim();
     if (lower.includes('photo') && lower.includes('copy')) return <Copy className={className} />;
     if (lower === 'photocopy') return <Copy className={className} />;
+    if (lower === 'visiting cards' || lower.includes('visiting')) return <CreditCard className={className} />;
+    if (lower.includes('invitation')) return <Mail className={className} />;
+    if (lower.includes('certificate')) return <Award className={className} />;
+    if (lower.includes('cv') || lower.includes('resume')) return <FileText className={className} />;
+    if (lower.includes('office')) return <Laptop className={className} />;
+    if (lower.includes('windows') || lower.includes('computer') || lower.includes('pc')) return <Monitor className={className} />;
+    if (lower.includes('document print') || lower === 'document printing') return <FileText className={className} />;
     if (lower.includes('print')) return <Printer className={className} />;
     if (lower.includes('sim')) return <Smartphone className={className} />;
     if (lower.includes('package') || lower.includes('reload')) return <Package className={className} />;

@@ -56,14 +56,42 @@ CREATE TABLE IF NOT EXISTS public.services (
     short_description TEXT,
     full_description TEXT,
     price_info TEXT,
+    single_price NUMERIC(10, 2),
+    unit TEXT,
     image TEXT,
+    packages JSONB DEFAULT '[]'::jsonb,
+    gallery_images JSONB DEFAULT '[]'::jsonb,
     available_services_list JSONB DEFAULT '[]'::jsonb,
     important_notes JSONB DEFAULT '[]'::jsonb,
+    featured BOOLEAN NOT NULL DEFAULT FALSE,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
     status TEXT NOT NULL DEFAULT 'Active',
     is_published BOOLEAN NOT NULL DEFAULT TRUE,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    seo_title TEXT,
+    seo_description TEXT,
+    seo_keywords JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure all columns exist and remove any legacy category/network check constraints
+ALTER TABLE IF EXISTS public.services DROP CONSTRAINT IF EXISTS services_category_check;
+ALTER TABLE IF EXISTS public.sim_cards DROP CONSTRAINT IF EXISTS sim_cards_network_check;
+ALTER TABLE IF EXISTS public.sim_cards DROP CONSTRAINT IF EXISTS sim_cards_status_check;
+ALTER TABLE IF EXISTS public.mobile_packages DROP CONSTRAINT IF EXISTS mobile_packages_network_check;
+ALTER TABLE IF EXISTS public.pos_transactions DROP CONSTRAINT IF EXISTS pos_transactions_category_check;
+
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS single_price NUMERIC(10, 2);
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS unit TEXT;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS packages JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS gallery_images JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT FALSE;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT TRUE;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS seo_title TEXT;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS seo_description TEXT;
+ALTER TABLE IF EXISTS public.services ADD COLUMN IF NOT EXISTS seo_keywords JSONB DEFAULT '[]'::jsonb;
 
 DROP TRIGGER IF EXISTS tr_services_updated_at ON public.services;
 CREATE TRIGGER tr_services_updated_at

@@ -21,16 +21,21 @@ import { openWhatsAppChat } from '../../utils/whatsapp';
 export const AboutPage: React.FC = () => {
   const { settings, navigate } = useApp();
 
-  const ceoName = settings.aboutContent.ceoName || 'FR Hasan';
-  const ceoTitle = settings.aboutContent.ceoTitle || 'Founder & Chief Executive Officer (CEO)';
-  const ceoPhoto = settings.aboutContent.ceoPhoto || 'https://res.cloudinary.com/dut2fzqdd/image/upload/v1787850870/WhatsApp_Image_2026-08-27_at_7.46.48_PM.jpg';
-  const ceoBio = settings.aboutContent.ceoBio || "FR Hasan is the founder and visionary leader of FR HASAN TECH. With extensive experience across telecommunication networks, digital imaging, and information technology infrastructure, he oversees the company's continuous commitment to customer satisfaction, fast turnaround times, and high-performance digital services.";
-  const ceoQuote = settings.aboutContent.ceoQuote || "Empowering individuals and local businesses through reliable technology, seamless telecommunication connectivity, and precision digital print solutions.";
+  const about: any = settings?.aboutContent || {};
+  const ceoName = about.ceoName || 'Faseerath Hasan';
+  const ceoTitle = about.ceoTitle || 'Founder & Chief Executive Officer (CEO)';
+  const ceoPhoto = about.ceoPhoto || 'https://res.cloudinary.com/dut2fzqdd/image/upload/v1787850870/WhatsApp_Image_2026-08-27_at_7.46.48_PM.jpg';
+  const ceoBio = about.ceoBio || "FR Hasan is the founder and visionary leader of FR HASAN TECH. With extensive experience across telecommunication networks, digital imaging, and information technology infrastructure, he oversees the company's continuous commitment to customer satisfaction, fast turnaround times, and high-performance digital services.";
+  const ceoQuote = about.ceoQuote || "Empowering individuals and local businesses through reliable technology, seamless telecommunication connectivity, and precision digital print solutions.";
+  const pageTitle = about.title || 'About FR.HASAN TECH';
+  const pageSubtitle = about.subtitle || 'Connecting Communities with Quality Technology & Communications Since 2020';
+  const story = about.story || 'Founded by FR Hasan with a vision for modern technology solutions and community service excellence, FR.HASAN TECH is a premier one-stop center for document reproduction, color printing, mobile telecommunications connectivity, and digital package reloads. Located at 529, Siraj Nagar, Thampalagamam, Sri Lanka, we provide students, professionals, and enterprise clients with rapid turnaround and high quality.';
+  const mission = about.mission || 'To deliver fast, reliable, state-of-the-art printing, telecommunications connectivity, and IT services with honest local care and cutting-edge standards.';
 
   const handleCEOWhatsApp = () => {
     openWhatsAppChat(
-      settings.whatsappNumber || '076 859 7800',
-      `Hello ${ceoName} at ${settings.shopName}, I would like to connect regarding business services.`
+      settings?.whatsappNumber || '076 859 7800',
+      `Hello ${ceoName} at ${settings?.shopName || 'FR.HASAN TECH'}, I would like to connect regarding business services.`
     );
   };
 
@@ -45,10 +50,10 @@ export const AboutPage: React.FC = () => {
             <span>Company Profile & Leadership</span>
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#1A202C] tracking-tight">
-            {settings.aboutContent.title}
+            {pageTitle}
           </h1>
           <p className="text-sm sm:text-base text-[#64748B] mt-2 text-justify sm:text-left">
-            {settings.aboutContent.subtitle}
+            {pageSubtitle}
           </p>
         </div>
 
@@ -167,7 +172,7 @@ export const AboutPage: React.FC = () => {
               </div>
 
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed text-justify sm:text-left">
-                {settings.aboutContent.story}
+                {story}
               </p>
 
               {/* Mission Highlight Banner */}
@@ -177,7 +182,7 @@ export const AboutPage: React.FC = () => {
                   <span className="font-extrabold uppercase tracking-wider text-xs text-[#1E5AA8]">Our Mission & Core Purpose</span>
                 </div>
                 <p className="text-sm sm:text-base font-semibold text-slate-800 italic leading-relaxed text-justify sm:text-left">
-                  "{settings.aboutContent.mission}"
+                  "{mission}"
                 </p>
               </div>
 
