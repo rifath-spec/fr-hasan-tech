@@ -520,8 +520,8 @@ export const ServicesListPage: React.FC = () => {
                             {items.length === 0 ? (
                               <p className="text-xs text-slate-400 italic">No services listed yet</p>
                             ) : (
-                              items.slice(0, 4).map((srv) => (
-                                <div key={srv.id} className="flex items-center gap-2 text-xs text-slate-700 font-medium">
+                              items.slice(0, 4).map((srv, srvIdx) => (
+                                <div key={srv.id ? `${catName}-${srv.id}-${srvIdx}` : `${catName}-${srv.slug || srvIdx}`} className="flex items-center gap-2 text-xs text-slate-700 font-medium">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
                                   <span className="truncate">{srv.name}</span>
                                 </div>
@@ -630,9 +630,9 @@ export const ServicesListPage: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 w-full">
-                {servicesInSelectedCategory.map((service) => (
+                {servicesInSelectedCategory.map((service, sIndex) => (
                   <div
-                    key={service.id}
+                    key={service.id ? `service-${service.id}` : `service-${service.slug || sIndex}`}
                     className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col h-full w-full min-w-0"
                   >
                     <div className="flex-1 flex flex-col">

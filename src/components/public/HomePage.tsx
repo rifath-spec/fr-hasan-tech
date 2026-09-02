@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Printer, 
@@ -22,12 +22,45 @@ import {
   Share2,
   Calculator,
   Layers,
-  Palette
+  Palette,
+  CreditCard,
+  Mail,
+  Laptop,
+  Monitor,
+  ExternalLink
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { RotatableWhyChooseUs } from './RotatableWhyChooseUs';
 import { ShareLocationModal } from '../common/ShareLocationModal';
 import { openWhatsAppChat } from '../../utils/whatsapp';
+
+// The 11 core services in requested order
+const MAIN_SERVICES_ORDER = [
+  'Printing',
+  'Visiting Cards',
+  'Invitation Card',
+  'Certificate Design',
+  'CV Creation',
+  'Microsoft Office Installation',
+  'Windows Installation',
+  'Document Printing',
+  'Packages',
+  'SIM Cards',
+  'Photocopy',
+];
+
+const DEFAULT_SERVICE_IMAGES: Record<string, string> = {
+  'Printing': 'https://images.unsplash.com/photo-1562654501-a0ccc0fc3fb1?auto=format&fit=crop&w=1200&q=80',
+  'Visiting Cards': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
+  'Invitation Card': 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=1200&q=80',
+  'Certificate Design': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80',
+  'CV Creation': 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1200&q=80',
+  'Microsoft Office Installation': 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
+  'Windows Installation': 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=1200&q=80',
+  'Document Printing': 'https://images.unsplash.com/photo-1589330694653-dad6bc01cf0f?auto=format&fit=crop&w=1200&q=80',
+  'Packages': 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80',
+  'SIM Cards': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80',
+  'Photocopy': 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
+};
 
 export const HomePage: React.FC = () => {
   const { navigate, settings, services, openEstimateModal, isLoadingData } = useApp();
@@ -46,56 +79,64 @@ export const HomePage: React.FC = () => {
     );
   };
 
-  const getServiceIcon = (iconName: string, category: string) => {
-    const lower = (category || '').toLowerCase();
-    if (lower === 'photocopy') return <Copy className="w-7 h-7 text-[#1E5AA8]" />;
-    if (lower === 'printing') return <Printer className="w-7 h-7 text-[#1E5AA8]" />;
-    if (lower === 'sim cards') return <Smartphone className="w-7 h-7 text-[#1E5AA8]" />;
-    if (lower === 'packages') return <Package className="w-7 h-7 text-[#1E5AA8]" />;
-    if (lower.includes('laminat')) return <Sparkles className="w-7 h-7 text-[#1E5AA8]" />;
-    if (lower.includes('bind')) return <Layers className="w-7 h-7 text-[#1E5AA8]" />;
-    if (lower.includes('photo') || lower.includes('design')) return <Palette className="w-7 h-7 text-[#1E5AA8]" />;
-    if (lower.includes('id') || lower.includes('card')) return <ShieldCheck className="w-7 h-7 text-[#1E5AA8]" />;
-    return <FileText className="w-7 h-7 text-[#1E5AA8]" />;
+  const handleServiceWhatsApp = (serviceName: string, category: string) => {
+    openWhatsAppChat(
+      settings?.whatsappNumber || '076 859 7800',
+      `Hello ${settings?.shopName || 'FR.HASAN TECH'}, I am interested in your ${serviceName} (${category}) service. Could you please provide more details?`
+    );
   };
 
-  // Group published services by Main Category for public showcase
-  const publishedServices = services.filter(s => s.isPublished);
+  const getServiceIcon = (category: string, name: string = '', className: string = "w-6 h-6 text-[#1E5AA8]") => {
+    const combined = `${category} ${name}`.toLowerCase();
+    if (combined.includes('photo') && combined.includes('copy')) return <Copy className={className} />;
+    if (combined.includes('visiting') || combined.includes('business card')) return <CreditCard className={className} />;
+    if (combined.includes('invitation')) return <Mail className={className} />;
+    if (combined.includes('certificate')) return <Award className={className} />;
+    if (combined.includes('cv') || combined.includes('resume')) return <FileText className={className} />;
+    if (combined.includes('office')) return <Laptop className={className} />;
+    if (combined.includes('windows') || combined.includes('os install') || combined.includes('laptop')) return <Monitor className={className} />;
+    if (combined.includes('doc') || combined.includes('document')) return <FileText className={className} />;
+    if (combined.includes('print')) return <Printer className={className} />;
+    if (combined.includes('sim')) return <Smartphone className={className} />;
+    if (combined.includes('package') || combined.includes('bundle') || combined.includes('reload')) return <Package className={className} />;
+    return <Sparkles className={className} />;
+  };
 
-  const mainCategories = React.useMemo(() => {
-    const map: Record<string, typeof services> = {};
-    const catOrder: string[] = [];
+  // Sort published services so all 11 core services are presented in exact order
+  const publishedServices = useMemo(() => {
+    const list = services.filter(s => s.isPublished);
+    return [...list].sort((a, b) => {
+      const getOrderRank = (item: typeof a) => {
+        const cat = (item.category || '').trim();
+        const name = (item.name || '').trim();
+        const slug = (item.slug || '').trim();
 
-    publishedServices.forEach(s => {
-      const cat = (s.category || 'General').trim();
-      if (!map[cat]) {
-        map[cat] = [];
-        catOrder.push(cat);
-      }
-      map[cat].push(s);
-    });
+        // 1. Direct Category Match
+        const catIdx = MAIN_SERVICES_ORDER.findIndex(o => o.toLowerCase() === cat.toLowerCase());
+        if (catIdx !== -1) return catIdx;
 
-    return catOrder.map(catName => {
-      const items = map[catName] || [];
-      const itemWithImg = items.find(i => i.image && i.image.trim().length > 0);
-      const banner = itemWithImg?.image || (
-        catName === 'Photocopy' ? 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80' :
-        catName === 'Printing' ? 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80' :
-        catName === 'SIM Cards' ? 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80' :
-        catName === 'Packages' ? 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80' :
-        'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'
-      );
-      const startingPrice = items.length > 0 && items[0].priceInfo ? `From ${items[0].priceInfo}` : 'Competitive rates';
+        // 2. Name Match
+        const nameIdx = MAIN_SERVICES_ORDER.findIndex(o => 
+          name.toLowerCase() === o.toLowerCase() || 
+          name.toLowerCase().includes(o.toLowerCase()) || 
+          o.toLowerCase().includes(name.toLowerCase())
+        );
+        if (nameIdx !== -1) return nameIdx;
 
-      return {
-        name: catName,
-        items,
-        count: items.length,
-        banner,
-        startingPrice
+        // 3. Slug Match
+        const slugFormatted = slug.replace(/-/g, ' ').toLowerCase();
+        const slugIdx = MAIN_SERVICES_ORDER.findIndex(o => slugFormatted.includes(o.toLowerCase()) || o.toLowerCase().includes(slugFormatted));
+        if (slugIdx !== -1) return slugIdx;
+
+        return 999;
       };
+
+      const rankA = getOrderRank(a);
+      const rankB = getOrderRank(b);
+      if (rankA !== rankB) return rankA - rankB;
+      return (a.sortOrder || 99) - (b.sortOrder || 99);
     });
-  }, [publishedServices]);
+  }, [services]);
 
   return (
     <div className="w-full bg-[#F8FAFC]">
@@ -393,7 +434,7 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 2.3 Our Services Section - Grouped by Main Category */}
+      {/* 2.3 Our Services Section - All 11 Core Services */}
       <section className="py-10 sm:py-14 bg-[#F8FAFC]">
         <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           
@@ -401,30 +442,42 @@ export const HomePage: React.FC = () => {
             <div className="text-left max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[#1E5AA8] text-xs font-bold mb-2.5">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Organized by Main Service Category</span>
+                <span>All 11 Core Services & Solutions</span>
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
                 Our Services
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-2">
-                Click any main category below to view all related services, specifications, and instant pricing.
+                Explore our full suite of professional digital printing, document processing, IT installations, and telecommunication solutions.
               </p>
             </div>
 
-            <button
-              onClick={() => navigate('/services')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 text-[#1E5AA8] font-bold text-xs sm:text-sm shadow-soft-xs transition-all self-start md:self-auto cursor-pointer"
-            >
-              <span>View Full Catalog</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
+              <button
+                type="button"
+                onClick={() => openEstimateModal()}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100/70 text-emerald-800 font-bold text-xs sm:text-sm shadow-soft-xs transition-all cursor-pointer"
+              >
+                <Calculator className="w-4 h-4 text-emerald-600" />
+                <span>Instant Estimator</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/services')}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 text-[#1E5AA8] font-bold text-xs sm:text-sm shadow-soft-xs transition-all cursor-pointer"
+              >
+                <span>Full Catalog</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Main Categories Bento Grid */}
-          {isLoadingData && mainCategories.length === 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7 animate-pulse">
-              {[1, 2, 3, 4].map(n => (
-                <div key={n} className="bg-white rounded-2xl border border-slate-200 p-4 h-80 flex flex-col justify-between shadow-soft-xs">
+          {/* All 11 Services Bento Grid */}
+          {isLoadingData && publishedServices.length === 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 animate-pulse">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+                <div key={n} className="bg-white rounded-2xl border border-slate-200 p-4 h-96 flex flex-col justify-between shadow-soft-xs">
                   <div className="w-full h-44 bg-slate-200 rounded-xl mb-4" />
                   <div className="space-y-2">
                     <div className="h-4 bg-slate-200 rounded-md w-3/4" />
@@ -434,7 +487,7 @@ export const HomePage: React.FC = () => {
                 </div>
               ))}
             </div>
-          ) : mainCategories.length === 0 ? (
+          ) : publishedServices.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200/90 p-10 sm:p-14 text-center max-w-xl mx-auto shadow-soft-sm">
               <div className="w-14 h-14 bg-blue-50 text-[#1E5AA8] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
                 <Printer className="w-7 h-7" />
@@ -445,108 +498,114 @@ export const HomePage: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 xl:gap-7">
-              {mainCategories.map((cat) => (
-                <div
-                  key={cat.name}
-                  onClick={() => navigate(`/services?category=${encodeURIComponent(cat.name)}`)}
-                  className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg flex flex-col justify-between overflow-hidden bg-white rounded-2xl transform-gpu hover:-translate-y-1 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="flex flex-col">
-                    {/* Category Photo Banner */}
-                    <div className="h-44 sm:h-48 w-full relative overflow-hidden bg-slate-900">
-                      <img 
-                        src={cat.banner} 
-                        alt={cat.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      {/* Rich dark gradient overlay for text readability & contrast */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-black/30 pointer-events-none" />
-                      
-                      {/* Top-Left Category Pill & Top-Right Icon Badge */}
-                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                        <span className="px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-md text-white font-bold text-xs shadow-md border border-white/20">
-                          {cat.name}
-                        </span>
-                        <div className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md flex items-center justify-center text-[#1E5AA8] shadow-md border border-white/40">
-                          {getServiceIcon(cat.name, cat.name)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
+              {publishedServices.map((service, sIndex) => {
+                const bannerImg = service.image || service.imageUrl || DEFAULT_SERVICE_IMAGES[service.category] || DEFAULT_SERVICE_IMAGES[service.name] || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80';
+                const serviceSlug = service.slug || service.id;
+
+                return (
+                  <div
+                    key={service.id ? `home-srv-${service.id}` : `home-srv-${service.slug || sIndex}`}
+                    onClick={() => navigate(`/services/${serviceSlug}`)}
+                    className="group bento-card border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg flex flex-col justify-between overflow-hidden bg-white rounded-2xl transform-gpu hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="flex flex-col">
+                      {/* Service Photo Banner */}
+                      <div className="h-44 sm:h-48 w-full relative overflow-hidden bg-slate-900">
+                        <img 
+                          src={bannerImg} 
+                          alt={service.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        {/* Rich dark gradient overlay for text contrast */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-black/20 pointer-events-none" />
+                        
+                        {/* Top Category Badge & Icon */}
+                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                          <span className="px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-md text-white font-bold text-xs shadow-md border border-white/20 truncate max-w-[70%]">
+                            {service.category}
+                          </span>
+                          <div className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-md flex items-center justify-center text-[#1E5AA8] shadow-md border border-white/40 shrink-0">
+                            {getServiceIcon(service.category, service.name, "w-4 h-4 text-[#1E5AA8]")}
+                          </div>
+                        </div>
+
+                        {/* Bottom Service Title */}
+                        <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none">
+                          <h3 className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm line-clamp-1">
+                            {service.name}
+                          </h3>
                         </div>
                       </div>
 
-                      {/* Bottom floating category title & count */}
-                      <div className="absolute bottom-3 left-3 right-3 text-white pointer-events-none">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/90 text-white text-[10px] font-bold uppercase tracking-wide mb-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          {cat.count} {cat.count === 1 ? 'Service' : 'Services'} Available
-                        </span>
-                        <h3 className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm truncate">
-                          {cat.name}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="p-5">
-                      {/* Starting Price Pill */}
-                      <div className="mb-3">
-                        <span 
-                          className="inline-block text-xs font-bold text-[#1E5AA8] bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg truncate max-w-full"
-                        >
-                          {cat.startingPrice}
-                        </span>
-                      </div>
-
-                      {/* Sub-services preview chips */}
-                      <div className="space-y-1.5 border-t border-slate-100 pt-3">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Included Solutions:
-                        </span>
-                        {cat.items.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic">Services available on request</p>
-                        ) : (
-                          cat.items.slice(0, 3).map((srv) => (
-                            <div key={srv.id} className="flex items-center gap-1.5 text-xs text-slate-700 font-medium">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
-                              <span className="truncate">{srv.name}</span>
-                            </div>
-                          ))
-                        )}
-                        {cat.items.length > 3 && (
-                          <span className="text-[11px] text-[#1E5AA8] font-bold block pt-0.5">
-                            + {cat.items.length - 3} more {cat.name.toLowerCase()} services...
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                        {/* Price Badge */}
+                        <div className="mb-3">
+                          <span 
+                            className="inline-block text-xs font-bold text-[#1E5AA8] bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg truncate max-w-full"
+                          >
+                            {service.priceInfo ? service.priceInfo : service.singlePrice ? `LKR ${service.singlePrice.toLocaleString()}${service.unit ? ` / ${service.unit}` : ''}` : 'Official Rates'}
                           </span>
+                        </div>
+
+                        {/* Short Description */}
+                        <p className="text-xs sm:text-[13px] text-slate-600 line-clamp-2 leading-relaxed mb-3">
+                          {service.shortDescription || service.description || 'Professional service with fast turnaround and dedicated quality.'}
+                        </p>
+
+                        {/* Available Features / Sub-services preview */}
+                        {service.availableServicesList && service.availableServicesList.length > 0 && (
+                          <div className="space-y-1.5 border-t border-slate-100 pt-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                              Key Highlights:
+                            </span>
+                            {service.availableServicesList.slice(0, 2).map((item, fIdx) => (
+                              <div key={fIdx} className="flex items-center gap-1.5 text-xs text-slate-700 font-medium">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                                <span className="truncate">{item}</span>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Bottom Action Controls: View Category Services */}
-                  <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center mt-auto">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/services?category=${encodeURIComponent(cat.name)}`);
-                      }}
-                      className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold text-[#0D6EFD] bg-blue-50 group-hover:bg-[#1E5AA8] group-hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-soft-xs"
-                    >
-                      <span>Explore All {cat.count} Services</span>
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    </button>
+                    {/* Bottom Action Controls */}
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-100 flex items-center gap-2 mt-auto">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/services/${serviceSlug}`);
+                        }}
+                        className="flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold text-[#0D6EFD] bg-blue-50 group-hover:bg-[#1E5AA8] group-hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-soft-xs"
+                      >
+                        <span>View Details</span>
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleServiceWhatsApp(service.name, service.category);
+                        }}
+                        className="p-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 transition-all cursor-pointer shrink-0"
+                        title="Inquire via WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
         </div>
-      </section>
-
-      {/* 2.4 Why Choose Us Section (360° Horizontal Rotatable Total Showcase) */}
-      <section className="py-8 sm:py-10 lg:py-12 bg-[#F8FAFC] border-y border-slate-200/80 overflow-hidden">
-        <RotatableWhyChooseUs />
       </section>
 
       {/* Leadership & CEO Message Spotlight (Bento Grid) */}

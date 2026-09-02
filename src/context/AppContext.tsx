@@ -291,11 +291,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             });
           }
         } else {
+          // Deduplicate dbServices by id and slug
+          const seenIds = new Set<string>();
+          const seenSlugs = new Set<string>();
+          const uniqueDbServices: ServiceItem[] = [];
+
+          dbServices.forEach(s => {
+            const idKey = s.id ? String(s.id).trim() : '';
+            const slugKey = (s.slug || '').trim().toLowerCase();
+            if (idKey && seenIds.has(idKey)) return;
+            if (slugKey && seenSlugs.has(slugKey)) return;
+            if (idKey) seenIds.add(idKey);
+            if (slugKey) seenSlugs.add(slugKey);
+            uniqueDbServices.push(s);
+          });
+
           // Keep existing services and non-destructively merge any missing default services
-          const existingSlugs = new Set(dbServices.map(s => s.slug));
-          const missingDefaults = INITIAL_SERVICES.filter(s => !existingSlugs.has(s.slug));
+          const missingDefaults = INITIAL_SERVICES.filter(s => {
+            const sSlug = (s.slug || '').trim().toLowerCase();
+            const sId = (s.id || '').trim();
+            return !seenSlugs.has(sSlug) && !seenIds.has(sId);
+          });
+
           if (missingDefaults.length > 0) {
-            const merged = [...dbServices, ...missingDefaults];
+            const merged = [...uniqueDbServices, ...missingDefaults];
             setServices(merged);
             if (getActiveCredentials().isConfigured) {
               missingDefaults.forEach(s => {
@@ -305,7 +324,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               });
             }
           } else {
-            setServices(dbServices);
+            setServices(uniqueDbServices);
           }
         }
       }
