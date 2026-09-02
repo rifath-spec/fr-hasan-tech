@@ -12,7 +12,6 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   FileText, 
-  Calculator, 
   UploadCloud,
   Sparkles,
   ArrowRight,
@@ -137,16 +136,6 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
   const [selectedNetwork, setSelectedNetwork] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-
-  // Quick price estimator for Photocopy/Printing
-  const [calcType, setCalcType] = useState<'bw' | 'color'>('bw');
-  const [calcPages, setCalcPages] = useState<number>(20);
-  const [calcSize, setCalcSize] = useState<'a4' | 'a3'>('a4');
-
-  const unitRate = calcType === 'bw' 
-    ? (calcSize === 'a4' ? 5 : 15) 
-    : (calcSize === 'a4' ? 35 : 75);
-  const estimatedTotal = calcPages * unitRate;
 
   const handleWhatsApp = (customMsg?: string) => {
     let text = customMsg;
@@ -473,6 +462,124 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
                 </div>
               )}
 
+              {/* SPECIFIC SECTION: PACKAGES & RELOADS */}
+              {(service.category === 'Packages' || service.name.toLowerCase().includes('package')) && (
+                <div className="space-y-6 pt-4 border-t border-gray-100">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Official Mobile & Broadband Packages</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Real-time data packages, voice combos, social media plans & broadband reloads</p>
+                  </div>
+
+                  {/* Network Filter Selector */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {['All', 'Dialog', 'Mobitel', 'Airtel', 'Hutch'].map(net => (
+                      <button
+                        key={net}
+                        onClick={() => setSelectedNetwork(net)}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                          selectedNetwork === net
+                            ? 'bg-[#1E5AA8] text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        {net}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Category Filter Selector */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {['All', 'Mobile SIM Plans', 'Home Broadband (Router / Wi-Fi)'].map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                          selectedCategory === cat
+                            ? 'bg-blue-100 text-[#1E5AA8] border border-blue-200'
+                            : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Packages Catalog Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {activePackages.map(pkg => (
+                      <div 
+                        key={pkg.id} 
+                        className="p-5 rounded-2xl border border-gray-200 bg-white shadow-soft-sm hover:shadow-soft-md transition-all flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className={`px-2.5 py-1 rounded text-xs font-bold ${
+                              pkg.network === 'Dialog' ? 'bg-red-50 text-red-700 border border-red-200' :
+                              pkg.network === 'Mobitel' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                              pkg.network === 'Hutch' ? 'bg-orange-50 text-orange-700 border border-orange-200' : 
+                              'bg-amber-50 text-amber-800 border border-amber-200'
+                            }`}>
+                              {pkg.network}
+                            </span>
+                            {pkg.badge && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">
+                                {pkg.badge}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="font-bold text-base text-gray-900">{pkg.name}</h4>
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{pkg.description}</p>
+
+                          <div className="mt-3 flex items-center gap-2 flex-wrap text-xs">
+                            {pkg.quota && (
+                              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
+                                📊 {pkg.quota}
+                              </span>
+                            )}
+                            {pkg.validity && (
+                              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
+                                ⏳ {pkg.validity}
+                              </span>
+                            )}
+                            {pkg.type && (
+                              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-medium">
+                                🏷️ {pkg.type}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-4 p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-between">
+                            <span className="text-xs text-slate-500">Price</span>
+                            <span className="font-mono font-bold text-base text-[#1E5AA8]">Rs. {pkg.price}</span>
+                          </div>
+
+                          {pkg.ussdCode && (
+                            <div className="mt-2 text-[11px] font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded border border-dashed border-slate-200">
+                              Activation: {pkg.ussdCode}
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => handleWhatsApp(`Hello ${settings.shopName}, I would like to activate/reload the *${pkg.network} ${pkg.name}* (Price: Rs. ${pkg.price}). Could you please assist me?`)}
+                          className="mt-4 w-full py-2.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          <MessageCircle className="w-4 h-4 fill-white" />
+                          <span>Reload via WhatsApp</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {activePackages.length === 0 && (
+                    <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <p className="text-xs sm:text-sm text-slate-500 font-medium">No active packages matching the selected filter.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* SPECIFIC SECTION: SIM CARDS */}
               {service.category === 'SIM Cards' && (
                 <div className="space-y-6 pt-4 border-t border-gray-100">
@@ -541,71 +648,6 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
                         </button>
                       </div>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ESTIMATE CALCULATOR FOR PHOTOCOPY / PRINTING */}
-              {(service.category === 'Photocopy' || service.category === 'Printing') && (
-                <div className="p-5 bg-gradient-to-br from-blue-50/40 via-white to-slate-50 rounded-2xl border border-blue-100 space-y-4 shadow-soft-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#1E5AA8] flex items-center justify-center">
-                        <Calculator className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900">Instant Estimate Calculator</h3>
-                        <p className="text-xs text-gray-500">Calculate job price based on page count and paper size</p>
-                      </div>
-                    </div>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#1E5AA8] border border-blue-200">
-                      Live Counter Rates
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-gray-600 block mb-1">Color Mode</label>
-                      <select
-                        value={calcType}
-                        onChange={(e) => setCalcType(e.target.value as 'bw' | 'color')}
-                        className="w-full text-xs font-medium bg-white border border-gray-300 rounded-lg p-2.5 focus:border-[#1E5AA8] outline-none"
-                      >
-                        <option value="bw">Black & White</option>
-                        <option value="color">Full Colour</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-600 block mb-1">Paper Size</label>
-                      <select
-                        value={calcSize}
-                        onChange={(e) => setCalcSize(e.target.value as 'a4' | 'a3')}
-                        className="w-full text-xs font-medium bg-white border border-gray-300 rounded-lg p-2.5 focus:border-[#1E5AA8] outline-none"
-                      >
-                        <option value="a4">A4 Standard</option>
-                        <option value="a3">A3 Large</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-600 block mb-1">Number of Pages</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={calcPages}
-                        onChange={(e) => setCalcPages(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-full text-xs font-medium bg-white border border-gray-300 rounded-lg p-2.5 focus:border-[#1E5AA8] outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-gray-200/80 flex items-center justify-between text-xs">
-                    <span className="text-gray-500">
-                      Est. Rate: <span className="font-semibold text-gray-800">LKR {unitRate}.00 / page</span>
-                    </span>
-                    <div className="text-right">
-                      <span className="text-gray-600 mr-2 text-xs">Estimated Total:</span>
-                      <span className="text-lg font-mono font-bold text-[#1E5AA8]">LKR {estimatedTotal.toLocaleString()}.00</span>
-                    </div>
                   </div>
                 </div>
               )}

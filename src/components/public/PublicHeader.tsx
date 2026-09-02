@@ -14,15 +14,14 @@ import {
   Info, 
   MapPin,
   Sparkles,
-  Users,
-  Calculator
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FRHasanLogo } from '../common/FRHasanLogo';
 import { openWhatsAppChat } from '../../utils/whatsapp';
 
 export const PublicHeader: React.FC = () => {
-  const { currentPath, navigate, settings, openEstimateModal } = useApp();
+  const { currentPath, navigate, settings } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -217,31 +216,6 @@ export const PublicHeader: React.FC = () => {
 
                 {/* Drawer Scrollable Content */}
                 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-                  
-                  {/* Highlighted Instant Estimate Calculator button in Mobile Drawer */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      openEstimateModal();
-                    }}
-                    className="w-full p-3.5 rounded-2xl text-left bg-gradient-to-r from-[#062B5C] to-[#0A4385] text-white shadow-md flex items-center justify-between group active:scale-[0.98] transition-transform border border-white/15 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-[#38BDF8] shrink-0">
-                        <Calculator className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-white flex items-center gap-1.5">
-                          <span>Instant Estimate</span>
-                          <span className="text-[10px] bg-[#16B95A] text-white px-1.5 py-0.2 rounded font-semibold">New</span>
-                        </div>
-                        <p className="text-[11px] text-[#BFD3EA]">Calculate print & copy prices</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-white/70 group-hover:translate-x-0.5 transition-transform" />
-                  </button>
-
                   {/* Primary Navigation Links */}
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">

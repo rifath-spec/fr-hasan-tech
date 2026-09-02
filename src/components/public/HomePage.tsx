@@ -20,7 +20,6 @@ import {
   Zap, 
   Award, 
   Share2,
-  Calculator,
   Layers,
   Palette,
   CreditCard,
@@ -63,7 +62,7 @@ const DEFAULT_SERVICE_IMAGES: Record<string, string> = {
 };
 
 export const HomePage: React.FC = () => {
-  const { navigate, settings, services, openEstimateModal, isLoadingData } = useApp();
+  const { navigate, settings, services, isLoadingData } = useApp();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const about: any = settings?.aboutContent || {};
@@ -214,26 +213,6 @@ export const HomePage: React.FC = () => {
                 >
                   <span>View Services</span>
                   <ArrowRight className="w-4 h-4 shrink-0" />
-                </button>
-
-                {/* Tertiary CTA: Instant Estimate */}
-                <button
-                  type="button"
-                  id="hero-instant-estimate-btn"
-                  onClick={() => openEstimateModal()}
-                  className="w-full sm:w-auto px-5 py-3.5 rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-all active-press cursor-pointer min-h-[48px]"
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    color: '#062B5C',
-                    border: '1px solid rgba(255, 255, 255, 0.7)',
-                    boxShadow: '0 4px 14px 0 rgba(0, 0, 0, 0.12)'
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0F5FF')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-                  title="Calculate instant estimated price for printing, photocopy, lamination & binding"
-                >
-                  <Calculator className="w-5 h-5 text-[#0D6EFD] shrink-0" />
-                  <span>Instant Estimate</span>
                 </button>
               </div>
 
@@ -453,15 +432,6 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
-              <button
-                type="button"
-                onClick={() => openEstimateModal()}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100/70 text-emerald-800 font-bold text-xs sm:text-sm shadow-soft-xs transition-all cursor-pointer"
-              >
-                <Calculator className="w-4 h-4 text-emerald-600" />
-                <span>Instant Estimator</span>
-              </button>
-
               <button
                 type="button"
                 onClick={() => navigate('/services')}
