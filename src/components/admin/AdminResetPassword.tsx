@@ -20,7 +20,7 @@ export const AdminResetPassword: React.FC = () => {
 
   const isValid = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -33,7 +33,7 @@ export const AdminResetPassword: React.FC = () => {
       return;
     }
 
-    const success = resetAdminPassword(newPassword);
+    const success = await resetAdminPassword(newPassword);
     if (success) {
       setIsSuccess(true);
     }

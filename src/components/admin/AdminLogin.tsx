@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Mail, Lock, Eye, EyeOff, Shield, ArrowRight, ArrowLeft } from 'lucide-react';
-import { motion } from 'motion/react';
 
 export const AdminLogin: React.FC = () => {
   const { loginAdmin, navigate, settings } = useApp();
-  const [email, setEmail] = useState('admin@frhasantech.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -25,15 +24,18 @@ export const AdminLogin: React.FC = () => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const success = loginAdmin(email, password);
+    try {
+      const success = await loginAdmin(email, password);
       if (success) {
         navigate('/admin/pos');
       } else {
-        setError('Invalid credentials. Please verify your password.');
+        setError('Invalid email or password. Please verify your credentials or check connection.');
       }
-    }, 400);
+    } catch (err: any) {
+      setError(err?.message || 'Authentication error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,9 +54,7 @@ export const AdminLogin: React.FC = () => {
       </div>
 
       {/* Centered Login Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="w-full max-w-[420px] bg-white rounded-xl shadow-soft-lg p-6 sm:p-8 border border-gray-200"
       >
         {/* Admin Logo 64x64px */}
@@ -156,22 +156,7 @@ export const AdminLogin: React.FC = () => {
             )}
           </button>
         </form>
-
-        {/* Demo Fast Fill Hint */}
-        <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-500 mb-2">Demo Credentials Pre-filled</p>
-          <button
-            type="button"
-            onClick={() => {
-              setEmail('admin@frhasantech.com');
-              setPassword('admin123');
-            }}
-            className="text-xs font-mono text-[#1E5AA8] bg-blue-50 px-2.5 py-1 rounded hover:bg-blue-100 transition-colors"
-          >
-            admin@frhasantech.com / admin123
-          </button>
-        </div>
-      </motion.div>
+      </div>
 
       {/* Security Note */}
       <p className="text-xs text-gray-500 mt-6 text-center">

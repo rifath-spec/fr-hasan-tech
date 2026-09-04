@@ -19,7 +19,6 @@
   }
 
   html {
-    scroll-behavior: smooth;
     text-rendering: optimizeLegibility;
     -webkit-text-size-adjust: 100%;
   }
@@ -47,20 +46,18 @@
   }
 }
 
-/* Custom Bento Grid Theme Utilities with GPU acceleration */
+/* Custom Bento Grid Theme Utilities */
 .bento-card {
   background-color: #ffffff;
   border-radius: 1rem;
   border: 1px solid #E2E8F0;
   box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .bento-card:hover {
   border-color: #CBD5E1;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.06);
 }
 
 .bento-pill {
@@ -107,7 +104,7 @@
 
 /* Animation active touch */
 .active-press:active {
-  transform: scale(0.98);
+  opacity: 0.92;
 }
 
 /* Scrollbar polish */
@@ -124,34 +121,4 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
-}
-
-/* Marquee Ticker Animation with GPU acceleration and performance containment */
-@keyframes marquee-scroll {
-  0% {
-    transform: translate3d(0%, 0, 0);
-  }
-  100% {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
-.animate-marquee-infinite {
-  display: flex;
-  width: max-content;
-  animation: marquee-scroll 35s linear infinite;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-.animate-marquee-infinite:hover,
-.group:hover .animate-marquee-infinite {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-marquee-infinite {
-    animation-duration: 90s;
-  }
 }

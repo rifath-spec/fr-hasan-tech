@@ -460,7 +460,7 @@ export const ServicesListPage: React.FC = () => {
                   {publishedServices.map((service, sIndex) => (
                     <div
                       key={service.id ? `all-service-${service.id}` : `all-service-${service.slug || sIndex}`}
-                      className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col h-full w-full min-w-0 group"
+                      className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-md overflow-hidden flex flex-col h-full w-full min-w-0 group"
                     >
                       <div className="flex-1 flex flex-col">
                         {/* Service Photo Banner */}
@@ -471,7 +471,7 @@ export const ServicesListPage: React.FC = () => {
                           <img
                             src={service.image || CATEGORY_DEFAULT_IMAGES[service.category] || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'}
                             alt={service.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
                             loading="lazy"
                           />
@@ -610,7 +610,7 @@ export const ServicesListPage: React.FC = () => {
                             <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white pointer-events-none">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#16B95A]/90 text-white text-[10px] font-bold tracking-wide uppercase shadow-xs">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
                                   {items.length} {items.length === 1 ? 'Service' : 'Services'} Inside
                                 </span>
                               </div>
@@ -745,7 +745,7 @@ export const ServicesListPage: React.FC = () => {
                 {servicesInSelectedCategory.map((service, sIndex) => (
                   <div
                     key={service.id ? `service-${service.id}` : `service-${service.slug || sIndex}`}
-                    className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col h-full w-full min-w-0"
+                    className="bg-white rounded-2xl border border-slate-200/90 shadow-soft-sm hover:shadow-soft-md overflow-hidden flex flex-col h-full w-full min-w-0"
                   >
                     <div className="flex-1 flex flex-col">
                       {/* Service Photo Banner */}
@@ -756,7 +756,7 @@ export const ServicesListPage: React.FC = () => {
                         <img
                           src={service.image || CATEGORY_DEFAULT_IMAGES[service.category] || 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80'}
                           alt={service.name}
-                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                          className="w-full h-full object-cover"
                           referrerPolicy="no-referrer"
                           loading="lazy"
                         />

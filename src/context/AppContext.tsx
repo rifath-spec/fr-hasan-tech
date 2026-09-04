@@ -11,7 +11,9 @@ import {
   EstimateCategory,
   EstimateService,
   EstimateSize,
-  EstimateItem
+  EstimateItem,
+  OfferItem,
+  AdminUser
 } from '../types';
 import { 
   INITIAL_SETTINGS, 
@@ -21,7 +23,8 @@ import {
   INITIAL_TRANSACTIONS,
   INITIAL_ESTIMATE_CATEGORIES,
   INITIAL_ESTIMATE_SERVICES,
-  INITIAL_ESTIMATE_SIZES
+  INITIAL_ESTIMATE_SIZES,
+  INITIAL_OFFERS
 } from '../data/initialData';
 import { 
   SupabaseService,
@@ -32,7 +35,9 @@ import {
   mapSettingsFromDB,
   mapEstimateCategoryFromDB,
   mapEstimateServiceFromDB,
-  mapEstimateSizeFromDB
+  mapEstimateSizeFromDB,
+  mapOfferFromDB,
+  mapAdminUserFromDB
 } from '../services/supabaseService';
 import { supabase, isSupabaseConfigured, getSupabaseConfig, getActiveCredentials, reinitializeSupabase } from '../lib/supabase';
 
@@ -43,10 +48,14 @@ interface AppContextType {
   
   // Auth
   isAdminAuthenticated: boolean;
-  adminUser: { email: string; name: string; role: string } | null;
-  loginAdmin: (email: string, pass: string) => boolean;
+  adminUser: AdminUser | null;
+  adminUsers: AdminUser[];
+  loginAdmin: (email: string, pass: string) => Promise<boolean>;
   logoutAdmin: () => void;
-  resetAdminPassword: (newPass: string) => boolean;
+  resetAdminPassword: (newPass: string) => Promise<boolean>;
+  addAdminUser: (user: Omit<AdminUser, 'id'>) => Promise<void>;
+  updateAdminUser: (id: string, user: Partial<AdminUser>) => Promise<void>;
+  deleteAdminUser: (id: string) => Promise<void>;
   
   // Supabase Backend Status & Sync
   isSupabaseConnected: boolean;
@@ -65,6 +74,7 @@ interface AppContextType {
   clearPackages: () => Promise<void>;
   clearSims: () => Promise<void>;
   clearTransactions: () => Promise<void>;
+  clearOffers: () => Promise<void>;
   
   services: ServiceItem[];
   addService: (service: Omit<ServiceItem, 'id'>) => Promise<void>;
@@ -81,6 +91,11 @@ interface AppContextType {
   updatePackage: (id: string, pkg: Partial<MobilePackage>) => Promise<void>;
   deletePackage: (id: string) => Promise<void>;
   reorderPackages: (packages: MobilePackage[]) => Promise<void>;
+  
+  offers: OfferItem[];
+  addOffer: (offer: Omit<OfferItem, 'id'>) => Promise<void>;
+  updateOffer: (id: string, offer: Partial<OfferItem>) => Promise<void>;
+  deleteOffer: (id: string) => Promise<void>;
   
   transactions: POSTransaction[];
   addTransaction: (tx: Omit<POSTransaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<POSTransaction>;
@@ -148,17 +163,64 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Navigation State
   const [currentPath, setCurrentPath] = useState<string>(getInitialPath);
 
-  // Auth State (Session based in-memory)
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(false);
+  // Database-backed Admin Users & Authentication State
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('fr_hasan_admin_users');
+        if (saved) return JSON.parse(saved);
+      }
+    } catch {}
+    return [
+      {
+        id: 'user-founder-001',
+        email: 'admin@frhasantech.com',
+        name: 'FR Hasan',
+        role: 'Super-Admin',
+        phone: '076 859 7800',
+        isActive: true,
+        password: 'admin123'
+      },
+      {
+        id: 'user-founder-002',
+        email: 'ceo@frhasantech.com',
+        name: 'FR Hasan (Founder & CEO)',
+        role: 'Super-Admin',
+        phone: '076 859 7800',
+        isActive: true,
+        password: 'admin123'
+      }
+    ];
+  });
 
-  const [adminUser] = useState({
-    email: 'ceo@frhasantech.com',
-    name: 'FR Hasan',
-    role: 'Founder & CEO'
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem('fr_hasan_is_admin_auth') === 'true';
+      }
+    } catch {}
+    return false;
+  });
+
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('fr_hasan_current_admin');
+        if (saved) return JSON.parse(saved);
+      }
+    } catch {}
+    return {
+      id: 'user-founder-001',
+      email: 'admin@frhasantech.com',
+      name: 'FR Hasan',
+      role: 'Super-Admin',
+      phone: '076 859 7800',
+      isActive: true
+    };
   });
 
   // Supabase connection & loading state
-  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(getActiveCredentials().isConfigured);
 
   // Core Data States (Synchronized directly with Supabase PostgreSQL backend)
@@ -166,6 +228,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [services, setServices] = useState<ServiceItem[]>(INITIAL_SERVICES);
   const [sims, setSims] = useState<SIMCard[]>(INITIAL_SIMS);
   const [packages, setPackages] = useState<MobilePackage[]>(INITIAL_PACKAGES);
+  const [offers, setOffers] = useState<OfferItem[]>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('fr_hasan_offers_cache');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            const dummyIds = [
+              'offer-business-starter-pack',
+              'offer-print-starter-bundle',
+              'offer-pc-windows-clean-setup',
+              'offer-sim-unlimited-combo',
+              'offer-student-thesis-print-bundle'
+            ];
+            const clean = parsed.filter(o => !dummyIds.includes(o.id));
+            localStorage.setItem('fr_hasan_offers_cache', JSON.stringify(clean));
+            return clean;
+          }
+        }
+      }
+    } catch {}
+    return INITIAL_OFFERS;
+  });
   const [transactions, setTransactions] = useState<POSTransaction[]>(INITIAL_TRANSACTIONS);
 
   // Estimate Calculator States (Synchronized with Supabase)
@@ -227,7 +312,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (currentFull !== cleanPath) {
           window.history.pushState(null, '', cleanPath);
         }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo(0, 0);
       }
       setCurrentPath(cleanPath);
     } catch {
@@ -262,19 +347,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         dbServices, 
         dbSims, 
         dbPackages, 
+        dbOffers,
         dbTransactions,
         dbEstCategories,
         dbEstServices,
-        dbEstSizes
+        dbEstSizes,
+        dbAdminUsers
       ] = await Promise.all([
         SupabaseService.getSettings(),
         SupabaseService.getServices(),
         SupabaseService.getSIMs(),
         SupabaseService.getPackages(),
+        SupabaseService.getOffers(),
         SupabaseService.getTransactions(),
         SupabaseService.getEstimateCategories(),
         SupabaseService.getEstimateServices(),
         SupabaseService.getEstimateSizes(),
+        SupabaseService.getAdminUsers(),
       ]);
 
       if (dbSettings) {
@@ -334,6 +423,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (dbPackages !== null) {
         setPackages(dbPackages);
       }
+      if (dbOffers !== null && dbOffers.length > 0) {
+        setOffers(dbOffers);
+      }
       if (dbTransactions !== null) {
         setTransactions(dbTransactions);
       }
@@ -345,6 +437,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       if (dbEstSizes !== null && dbEstSizes.length > 0) {
         setEstimateSizes(dbEstSizes);
+      }
+      if (dbAdminUsers !== null && dbAdminUsers.length > 0) {
+        setAdminUsers(dbAdminUsers);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('fr_hasan_admin_users', JSON.stringify(dbAdminUsers));
+        }
       }
 
       setIsSupabaseConnected(true);
@@ -552,7 +650,55 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               }
             }
           )
-          // I. Catch-all for schema or general mutations
+          // I. Offers table real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'offers' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newOffer = mapOfferFromDB(payload.new);
+                setOffers(prev => {
+                  if (prev.some(o => o.id === newOffer.id)) {
+                    return prev.map(o => o.id === newOffer.id ? newOffer : o);
+                  }
+                  return [newOffer, ...prev].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedOffer = mapOfferFromDB(payload.new);
+                setOffers(prev => 
+                  prev.map(o => o.id === updatedOffer.id ? updatedOffer : o)
+                      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                );
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setOffers(prev => prev.filter(o => o.id !== deletedId));
+              }
+            }
+          )
+          // J. Admin Users table real-time changes
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'admin_users' },
+            (payload) => {
+              if (payload.eventType === 'INSERT') {
+                const newUser = mapAdminUserFromDB(payload.new);
+                setAdminUsers(prev => {
+                  if (prev.some(u => u.id === newUser.id)) {
+                    return prev.map(u => u.id === newUser.id ? newUser : u);
+                  }
+                  return [...prev, newUser];
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedUser = mapAdminUserFromDB(payload.new);
+                setAdminUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+                setAdminUser(current => current && current.id === updatedUser.id ? updatedUser : current);
+              } else if (payload.eventType === 'DELETE') {
+                const deletedId = String(payload.old?.id);
+                setAdminUsers(prev => prev.filter(u => u.id !== deletedId));
+              }
+            }
+          )
+          // K. Catch-all for schema or general mutations
           .on(
             'postgres_changes',
             { event: '*', schema: 'public' },
@@ -583,30 +729,150 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, [loadDataFromSupabase]);
 
-  // Auth methods
-  const loginAdmin = (email: string, pass: string): boolean => {
-    if (email && pass) {
-      setIsAdminAuthenticated(true);
-      showToast("Welcome back, Admin! Signed in successfully.", "success");
-      return true;
+  // Auth methods (Database-backed with Supabase & local fallback)
+  const loginAdmin = async (email: string, pass: string): Promise<boolean> => {
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    // First try authenticating against Supabase admin_users table
+    try {
+      const authResult = await SupabaseService.authenticateAdminUser(trimmedEmail, pass);
+      if (authResult.success && authResult.user) {
+        setIsAdminAuthenticated(true);
+        setAdminUser(authResult.user);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('fr_hasan_is_admin_auth', 'true');
+          localStorage.setItem('fr_hasan_current_admin', JSON.stringify(authResult.user));
+        }
+        showToast(`Welcome back, ${authResult.user.name}! Signed in successfully.`, 'success');
+        return true;
+      }
+      
+      // If table is unconfigured or fallback needed, check local state
+      const localMatch = adminUsers.find(
+        u => u.email.toLowerCase() === trimmedEmail && u.password && u.password === pass
+      );
+      if (localMatch) {
+        if (!localMatch.isActive) {
+          showToast('This account has been deactivated. Please contact the administrator.', 'error');
+          return false;
+        }
+        setIsAdminAuthenticated(true);
+        setAdminUser(localMatch);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('fr_hasan_is_admin_auth', 'true');
+          localStorage.setItem('fr_hasan_current_admin', JSON.stringify(localMatch));
+        }
+        showToast(`Welcome back, ${localMatch.name}!`, 'success');
+        return true;
+      }
+
+      showToast(authResult.error || 'Invalid email or password', 'error');
+      return false;
+    } catch (err: any) {
+      console.warn('Login error:', err);
+      showToast('Authentication failed. Please verify your credentials.', 'error');
+      return false;
     }
-    showToast("Invalid email or password", "error");
-    return false;
   };
 
   const logoutAdmin = () => {
     setIsAdminAuthenticated(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('fr_hasan_is_admin_auth');
+      localStorage.removeItem('fr_hasan_current_admin');
+    }
     showToast("Signed out successfully", "info");
     navigate('/admin/login');
   };
 
-  const resetAdminPassword = (newPass: string): boolean => {
-    if (newPass.length >= 6) {
-      showToast("Password updated successfully! Please log in.", "success");
-      return true;
+  const resetAdminPassword = async (newPass: string): Promise<boolean> => {
+    if (newPass.length < 6) {
+      showToast("Password must be at least 6 characters", "error");
+      return false;
     }
-    showToast("Password does not meet criteria", "error");
-    return false;
+    const currentEmail = adminUser?.email || 'admin@frhasantech.com';
+    try {
+      const res = await SupabaseService.updateAdminPassword(currentEmail, newPass);
+      // Update local state and cache
+      setAdminUsers(prev => prev.map(u => u.email.toLowerCase() === currentEmail.toLowerCase() ? { ...u, password: newPass } : u));
+      if (adminUser) {
+        const updated = { ...adminUser, password: newPass };
+        setAdminUser(updated);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('fr_hasan_current_admin', JSON.stringify(updated));
+        }
+      }
+      if (res.ok) {
+        showToast("Password updated in database! Please log in with your new password.", "success");
+      } else {
+        showToast(`Password updated locally. Notice: ${res.error}`, "info");
+      }
+      return true;
+    } catch (err: any) {
+      showToast(err?.message || "Failed to update password", "error");
+      return false;
+    }
+  };
+
+  const addAdminUser = async (user: Omit<AdminUser, 'id'>) => {
+    const id = `user-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newUser: AdminUser = {
+      ...user,
+      id,
+      email: user.email.trim().toLowerCase(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    setAdminUsers(prev => {
+      const updated = [...prev, newUser];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('fr_hasan_admin_users', JSON.stringify(updated));
+      }
+      return updated;
+    });
+    if (getActiveCredentials().isConfigured) {
+      await SupabaseService.saveAdminUser(newUser);
+    }
+    showToast(`Staff account created for ${newUser.name}`, 'success');
+  };
+
+  const updateAdminUser = async (id: string, updates: Partial<AdminUser>) => {
+    setAdminUsers(prev => {
+      const updated = prev.map(u => u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('fr_hasan_admin_users', JSON.stringify(updated));
+      }
+      return updated;
+    });
+    if (adminUser?.id === id) {
+      const updatedCurrent = { ...adminUser, ...updates };
+      setAdminUser(updatedCurrent);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('fr_hasan_current_admin', JSON.stringify(updatedCurrent));
+      }
+    }
+    if (getActiveCredentials().isConfigured) {
+      await SupabaseService.saveAdminUser({ id, ...updates });
+    }
+    showToast('User account updated successfully', 'success');
+  };
+
+  const deleteAdminUser = async (id: string) => {
+    if (adminUsers.length <= 1) {
+      showToast('Cannot delete the last administrator account', 'error');
+      return;
+    }
+    setAdminUsers(prev => {
+      const updated = prev.filter(u => u.id !== id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('fr_hasan_admin_users', JSON.stringify(updated));
+      }
+      return updated;
+    });
+    if (getActiveCredentials().isConfigured) {
+      await SupabaseService.deleteAdminUser(id);
+    }
+    showToast('User account removed', 'info');
   };
 
   // 1. Settings CRUD with Supabase persistence
@@ -631,6 +897,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setServices(INITIAL_SERVICES);
     setSims(INITIAL_SIMS);
     setPackages(INITIAL_PACKAGES);
+    setOffers(INITIAL_OFFERS);
     setTransactions(INITIAL_TRANSACTIONS);
     setEstimateCategories(INITIAL_ESTIMATE_CATEGORIES);
     setEstimateServices(INITIAL_ESTIMATE_SERVICES);
@@ -642,6 +909,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         services: INITIAL_SERVICES,
         sims: INITIAL_SIMS,
         packages: INITIAL_PACKAGES,
+        offers: INITIAL_OFFERS,
         transactions: INITIAL_TRANSACTIONS,
       });
       await SupabaseService.seedEstimateData({
@@ -660,6 +928,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setServices([]);
     setSims([]);
     setPackages([]);
+    setOffers([]);
     setTransactions([]);
 
     if (getActiveCredentials().isConfigured) {
@@ -667,7 +936,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       showToast(res.message, res.ok ? "success" : "error");
       return res;
     } else {
-      const msg = "All services, packages, and SIM inventory cleared locally.";
+      const msg = "All services, packages, offers, and SIM inventory cleared locally.";
       showToast(msg, "info");
       return { ok: true, message: msg };
     }
@@ -690,6 +959,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       showToast(res.message, res.ok ? "success" : "error");
     } else {
       showToast("All packages cleared locally", "info");
+    }
+  };
+
+  const clearOffers = async () => {
+    setOffers([]);
+    if (getActiveCredentials().isConfigured) {
+      const res = await SupabaseService.clearOffersTable();
+      showToast(res.message, res.ok ? "success" : "error");
+    } else {
+      showToast("All offers cleared locally", "info");
     }
   };
 
@@ -722,6 +1001,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       services,
       sims,
       packages,
+      offers,
       transactions,
     });
     if (res.ok) {
@@ -928,7 +1208,98 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  // 5. POS Transactions CRUD with Supabase
+  // 5. Offers CRUD with Supabase
+  const addOffer = async (offer: Omit<OfferItem, 'id'>) => {
+    const tempId = `offer-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const newOffer: OfferItem = { 
+      ...offer, 
+      id: tempId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setOffers(prev => {
+      const updated = [newOffer, ...prev];
+      try {
+        localStorage.setItem('fr_hasan_offers_cache', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (getActiveCredentials().isConfigured) {
+      const res = await SupabaseService.createOffer(offer);
+      if (res.ok && res.data) {
+        setOffers(prev => {
+          const updated = prev.map(o => o.id === tempId ? res.data! : o);
+          try {
+            localStorage.setItem('fr_hasan_offers_cache', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+        showToast(`Special Offer "${offer.title}" saved to Supabase!`, "success");
+        return;
+      } else if (res.isMissingTable) {
+        showToast(
+          `Offer saved locally! To sync with Supabase cloud, please run the Special Offers SQL script from Admin > Settings > Database.`,
+          "warning",
+          "Saved Locally (Database Migration Required)"
+        );
+        return;
+      } else {
+        showToast(`Supabase save notice: ${res.error || 'Saved locally'}`, "warning");
+        return;
+      }
+    }
+    showToast(`Special Offer "${offer.title}" saved locally`, "info");
+  };
+
+  const updateOffer = async (id: string, updated: Partial<OfferItem>) => {
+    setOffers(prev => {
+      const nextOffers = prev.map(o => o.id === id ? { ...o, ...updated, updatedAt: new Date().toISOString() } : o);
+      try {
+        localStorage.setItem('fr_hasan_offers_cache', JSON.stringify(nextOffers));
+      } catch {}
+      return nextOffers;
+    });
+
+    if (getActiveCredentials().isConfigured) {
+      const res = await SupabaseService.updateOffer(id, updated);
+      if (res.ok) {
+        showToast("Offer updated in Supabase", "success");
+      } else if (res.isMissingTable) {
+        showToast("Offer updated locally. (Supabase 'offers' table needs to be created to sync)", "warning");
+      } else {
+        showToast(`Supabase update error: ${res.error || 'Failed to update'}`, "error");
+      }
+    } else {
+      showToast("Offer updated locally", "info");
+    }
+  };
+
+  const deleteOffer = async (id: string) => {
+    setOffers(prev => {
+      const filtered = prev.filter(o => o.id !== id);
+      try {
+        localStorage.setItem('fr_hasan_offers_cache', JSON.stringify(filtered));
+      } catch {}
+      return filtered;
+    });
+
+    if (getActiveCredentials().isConfigured) {
+      const res = await SupabaseService.deleteOffer(id);
+      if (res.ok) {
+        showToast("Offer deleted from Supabase", "info");
+      } else if (res.isMissingTable) {
+        showToast("Offer removed from local view", "info");
+      } else {
+        showToast(`Supabase delete error: ${res.error || 'Failed to delete'}`, "error");
+      }
+    } else {
+      showToast("Offer deleted", "info");
+    }
+  };
+
+  // 6. POS Transactions CRUD with Supabase
   const addTransaction = async (tx: Omit<POSTransaction, 'id' | 'createdAt' | 'updatedAt'>): Promise<POSTransaction> => {
     const nowIso = new Date().toISOString();
     const tempId = `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -1211,9 +1582,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     navigate,
     isAdminAuthenticated,
     adminUser,
+    adminUsers,
     loginAdmin,
     logoutAdmin,
     resetAdminPassword,
+    addAdminUser,
+    updateAdminUser,
+    deleteAdminUser,
     isSupabaseConnected,
     isLoadingData,
     refreshFromSupabase: loadDataFromSupabase,
@@ -1226,6 +1601,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     clearAllData,
     clearServices,
     clearPackages,
+    clearOffers,
     clearSims,
     clearTransactions,
     services,
@@ -1241,6 +1617,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     updatePackage,
     deletePackage,
     reorderPackages,
+    offers,
+    addOffer,
+    updateOffer,
+    deleteOffer,
     transactions,
     addTransaction,
     updateTransaction,
@@ -1278,6 +1658,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     currentPath,
     isAdminAuthenticated,
     adminUser,
+    adminUsers,
     isSupabaseConnected,
     isLoadingData,
     loadDataFromSupabase,
@@ -1285,6 +1666,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     services,
     sims,
     packages,
+    offers,
     transactions,
     estimateCategories,
     estimateServices,

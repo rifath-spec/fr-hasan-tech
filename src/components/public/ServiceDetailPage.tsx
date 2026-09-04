@@ -272,7 +272,7 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ slug }) =>
               <img
                 src={activeImage}
                 alt={service.name}
-                className="w-full h-full object-cover object-center transition-all duration-500"
+                className="w-full h-full object-cover object-center"
                 referrerPolicy="no-referrer"
               />
               {/* Scrim */}

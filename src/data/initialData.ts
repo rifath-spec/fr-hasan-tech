@@ -1,4 +1,4 @@
-import { ServiceItem, SIMCard, MobilePackage, POSTransaction, ShopSettings } from '../types';
+import { ServiceItem, SIMCard, MobilePackage, POSTransaction, ShopSettings, OfferItem } from '../types';
 
 export const INITIAL_SETTINGS: ShopSettings = {
   shopName: "FR.HASAN TECH",
@@ -1401,3 +1401,7 @@ export const INITIAL_ESTIMATE_SERVICES: EstimateService[] = [
 ];
 
 export const INITIAL_ESTIMATE_SIZES = STANDARD_SIZES;
+
+export const INITIAL_OFFERS: OfferItem[] = [];
+
+

@@ -9,7 +9,9 @@ import {
   EstimateCategory,
   EstimateService,
   EstimateSize,
-  EstimateServiceOption
+  EstimateServiceOption,
+  OfferItem,
+  AdminUser
 } from '../types';
 
 // ============================================================================
@@ -398,6 +400,80 @@ export const mapTransactionToDB = (item: Partial<POSTransaction>) => ({
   created_by: item.createdBy || 'FR Hasan (CEO)',
 });
 
+export const mapOfferFromDB = (row: any): OfferItem => {
+  let featuresList: string[] = [];
+  if (Array.isArray(row.features)) {
+    featuresList = row.features;
+  } else if (typeof row.features === 'string') {
+    try {
+      featuresList = JSON.parse(row.features);
+    } catch {
+      featuresList = row.features.split('\n').map((f: string) => f.trim()).filter(Boolean);
+    }
+  }
+
+  let termsList: string[] = [];
+  if (Array.isArray(row.terms)) {
+    termsList = row.terms;
+  } else if (typeof row.terms === 'string') {
+    try {
+      termsList = JSON.parse(row.terms);
+    } catch {
+      termsList = row.terms.split('\n').map((t: string) => t.trim()).filter(Boolean);
+    }
+  }
+
+  const isActive = row.active !== undefined ? Boolean(row.active) : (row.status !== 'Expired' && row.status !== 'Draft');
+
+  return {
+    id: String(row.id),
+    title: row.title || '',
+    badge: row.badge || 'Special Deal',
+    shortDescription: row.short_description || row.shortDescription || '',
+    description: row.description || row.full_description || row.short_description || '',
+    image: row.image || row.image_url || row.imageUrl || 'https://images.unsplash.com/photo-1589330694653-ded6df03f754?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: row.image_url || row.image || undefined,
+    originalPrice: row.original_price !== undefined && row.original_price !== null ? Number(row.original_price) : undefined,
+    offerPrice: row.offer_price !== undefined && row.offer_price !== null ? Number(row.offer_price) : undefined,
+    discountPercentage: row.discount_percentage !== undefined && row.discount_percentage !== null ? Number(row.discount_percentage) : undefined,
+    currency: row.currency || 'LKR',
+    validUntil: row.valid_until || row.validUntil || 'Limited Time',
+    category: row.category || 'General',
+    features: featuresList,
+    terms: termsList,
+    featured: row.featured === true || row.is_featured === true,
+    status: (row.status as any) || (isActive ? 'Active' : 'Expired'),
+    isPublished: row.is_published !== undefined ? Boolean(row.is_published) : isActive,
+    sortOrder: Number(row.sort_order ?? 0),
+    ctaText: row.cta_text || 'Claim on WhatsApp',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+export const mapOfferToDB = (item: Partial<OfferItem>) => ({
+  ...(item.id ? { id: item.id } : {}),
+  ...(item.title !== undefined ? { title: item.title } : {}),
+  badge: item.badge || 'Special Deal',
+  short_description: item.shortDescription || '',
+  description: item.description || '',
+  image: item.image || item.imageUrl || null,
+  image_url: item.imageUrl || item.image || null,
+  original_price: item.originalPrice !== undefined ? Number(item.originalPrice) : null,
+  offer_price: item.offerPrice !== undefined ? Number(item.offerPrice) : null,
+  discount_percentage: item.discountPercentage !== undefined ? Number(item.discountPercentage) : null,
+  currency: item.currency || 'LKR',
+  valid_until: item.validUntil || 'Limited Time',
+  category: item.category || 'General',
+  features: Array.isArray(item.features) ? item.features : [],
+  terms: Array.isArray(item.terms) ? item.terms : [],
+  featured: item.featured !== undefined ? item.featured : false,
+  status: item.status || 'Active',
+  is_published: item.isPublished !== undefined ? item.isPublished : true,
+  sort_order: item.sortOrder !== undefined ? Number(item.sortOrder) : 0,
+  cta_text: item.ctaText || 'Claim on WhatsApp',
+});
+
 export const mapSettingsFromDB = (row: any): ShopSettings => {
   const rawAbout = (row && typeof row.about_content === 'object' && row.about_content !== null) ? row.about_content : {};
   const rawHero = (row && typeof row.hero_content === 'object' && row.hero_content !== null) ? row.hero_content : {};
@@ -478,6 +554,32 @@ export const mapSettingsToDB = (s: ShopSettings) => ({
   pos_settings: s.posSettings || {},
 });
 
+export const mapAdminUserFromDB = (row: any): AdminUser => ({
+  id: String(row.id),
+  email: row.email || '',
+  name: row.name || 'Staff User',
+  role: (row.role as any) || 'Admin',
+  password: row.password_hash || '',
+  phone: row.phone || '',
+  avatarUrl: row.avatar_url || '',
+  isActive: row.is_active !== undefined ? Boolean(row.is_active) : true,
+  lastLoginAt: row.last_login_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const mapAdminUserToDB = (user: Partial<AdminUser>) => ({
+  ...(user.id ? { id: user.id } : {}),
+  ...(user.email !== undefined ? { email: user.email.trim().toLowerCase() } : {}),
+  ...(user.password !== undefined ? { password_hash: user.password } : {}),
+  ...(user.name !== undefined ? { name: user.name } : {}),
+  ...(user.role !== undefined ? { role: user.role } : {}),
+  ...(user.isActive !== undefined ? { is_active: user.isActive } : {}),
+  phone: user.phone || null,
+  avatar_url: user.avatarUrl || null,
+  ...(user.lastLoginAt !== undefined ? { last_login_at: user.lastLoginAt } : {}),
+});
+
 // Helper to format Supabase errors into human-friendly explanations
 export const formatSupabaseError = (err: any): string => {
   if (!err) return 'Unknown database error occurred';
@@ -486,10 +588,18 @@ export const formatSupabaseError = (err: any): string => {
   if (msg.includes('Forbidden use of secret API key') || err?.hint?.includes('Secret API keys')) {
     return 'Invalid Key: Supabase requires the "anon public" JWT key (starts with "eyJ...") from Project Settings > API.';
   }
-  if (msg.includes('relation') && msg.includes('does not exist')) {
-    return 'Database tables do not exist in Supabase yet. Please run the SQL schema script in Supabase SQL Editor.';
+  if (
+    err?.code === 'PGRST205' || 
+    msg.includes('schema cache') || 
+    msg.includes('Could not find the table') || 
+    (msg.includes('relation') && msg.includes('does not exist'))
+  ) {
+    if (msg.includes('offers')) {
+      return 'The "offers" table is not created in Supabase yet. Please run the Special Offers SQL script in Supabase SQL Editor (Admin > Settings > Database).';
+    }
+    return 'Database table does not exist in Supabase yet. Please run the SQL schema script in Supabase SQL Editor (Admin > Settings > Database).';
   }
-  if (msg.includes('permission denied') || msg.includes('violates row-level security policy')) {
+  if (msg.includes('permission denied') || msg.includes('violates row-level security policy') || err?.code === '42501') {
     return 'Permission denied by Supabase RLS. Please re-run the updated SQL schema script with permissive GRANTs.';
   }
   if (msg.includes('JWT') || msg.includes('token') || msg.includes('invalid claim')) {
@@ -534,6 +644,12 @@ export const SupabaseService = {
       const { count: txCount, error: txErr } = await supabase.from('pos_transactions').select('*', { count: 'exact', head: true });
       if (txErr) throw txErr;
       results['pos_transactions'] = txCount ?? 0;
+
+      // Offers table
+      try {
+        const { count: offerCount } = await supabase.from('offers').select('*', { count: 'exact', head: true });
+        if (offerCount !== null && offerCount !== undefined) results['offers'] = offerCount;
+      } catch {}
 
       const { error: setErr } = await supabase.from('shop_settings').select('id').limit(1);
       if (setErr) throw setErr;
@@ -1262,6 +1378,106 @@ export const SupabaseService = {
     }
   },
 
+  // 9. Special Offers
+  async getOffers(): Promise<OfferItem[] | null> {
+    if (!isConfigured()) return null;
+    try {
+      const { data, error } = await supabase
+        .from('offers')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error || !data) return null;
+      return data.map(mapOfferFromDB);
+    } catch (err) {
+      console.warn('Notice: Could not load offers from Supabase (table may not be created yet):', err);
+      return null;
+    }
+  },
+
+  async createOffer(offer: Omit<OfferItem, 'id'> & { id?: string }): Promise<{ ok: boolean; data?: OfferItem; error?: string; isMissingTable?: boolean }> {
+    if (!isConfigured()) {
+      return { ok: false, error: 'Supabase credentials not configured' };
+    }
+    try {
+      const id = offer.id || `offer-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      const payload = mapOfferToDB({ ...offer, id });
+      const { data, error } = await supabase
+        .from('offers')
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error || !data) throw error;
+      return { ok: true, data: mapOfferFromDB(data) };
+    } catch (err: any) {
+      const isMissingTable = err?.code === 'PGRST205' || 
+        String(err?.message || '').includes('schema cache') || 
+        String(err?.message || '').includes('does not exist');
+      const msg = formatSupabaseError(err);
+      if (!isMissingTable) {
+        console.error('Error inserting offer into Supabase:', err);
+      } else {
+        console.warn('Supabase offers table missing:', msg);
+      }
+      return { ok: false, error: msg, isMissingTable };
+    }
+  },
+
+  async updateOffer(id: string, updates: Partial<OfferItem>): Promise<{ ok: boolean; error?: string; isMissingTable?: boolean }> {
+    if (!isConfigured()) {
+      return { ok: false, error: 'Supabase credentials not configured' };
+    }
+    try {
+      const payload = mapOfferToDB(updates);
+      const { error } = await supabase
+        .from('offers')
+        .update(payload)
+        .eq('id', id);
+
+      if (error) throw error;
+      return { ok: true };
+    } catch (err: any) {
+      const isMissingTable = err?.code === 'PGRST205' || 
+        String(err?.message || '').includes('schema cache') || 
+        String(err?.message || '').includes('does not exist');
+      const msg = formatSupabaseError(err);
+      if (!isMissingTable) {
+        console.error('Error updating offer in Supabase:', err);
+      } else {
+        console.warn('Supabase offers table missing during update:', msg);
+      }
+      return { ok: false, error: msg, isMissingTable };
+    }
+  },
+
+  async deleteOffer(id: string): Promise<{ ok: boolean; error?: string; isMissingTable?: boolean }> {
+    if (!isConfigured()) {
+      return { ok: false, error: 'Supabase credentials not configured' };
+    }
+    try {
+      const { error } = await supabase
+        .from('offers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { ok: true };
+    } catch (err: any) {
+      const isMissingTable = err?.code === 'PGRST205' || 
+        String(err?.message || '').includes('schema cache') || 
+        String(err?.message || '').includes('does not exist');
+      const msg = formatSupabaseError(err);
+      if (!isMissingTable) {
+        console.error('Error deleting offer from Supabase:', err);
+      } else {
+        console.warn('Supabase offers table missing during delete:', msg);
+      }
+      return { ok: false, error: msg, isMissingTable };
+    }
+  },
+
   // 6. Seed / Bootstrap Supabase with clean initial store data
   async seedInitialDataToSupabase(data: {
     settings: ShopSettings;
@@ -1269,6 +1485,7 @@ export const SupabaseService = {
     sims: SIMCard[];
     packages: MobilePackage[];
     transactions: POSTransaction[];
+    offers?: OfferItem[];
   }): Promise<{ ok: boolean; message: string }> {
     if (!isConfigured()) {
       return { ok: false, message: 'Supabase credentials not configured in environment' };
@@ -1299,7 +1516,14 @@ export const SupabaseService = {
         if (pkgErr) throw pkgErr;
       }
 
-      // 5. Transactions
+      // 5. Offers
+      if (data.offers && data.offers.length > 0) {
+        const offerPayload = data.offers.map(o => mapOfferToDB(o));
+        const { error: offerErr } = await supabase.from('offers').upsert(offerPayload, { onConflict: 'id' });
+        if (offerErr) console.warn('Offer sync note:', offerErr);
+      }
+
+      // 6. Transactions
       if (data.transactions.length > 0) {
         const txPayload = data.transactions.map(t => mapTransactionToDB(t));
         const { error: txErr } = await supabase.from('pos_transactions').upsert(txPayload, { onConflict: 'id' });
@@ -1330,7 +1554,22 @@ export const SupabaseService = {
       const { error: err4 } = await supabase.from('services').delete().neq('id', '___non_existent___');
       if (err4) throw err4;
 
-      return { ok: true, message: 'All services, packages, SIM cards, and transactions cleared successfully from Supabase database.' };
+      try {
+        await supabase.from('offers').delete().neq('id', '___non_existent___');
+      } catch {}
+
+      return { ok: true, message: 'All services, packages, SIM cards, offers, and transactions cleared successfully from Supabase database.' };
+    } catch (err: any) {
+      return { ok: false, message: formatSupabaseError(err) };
+    }
+  },
+
+  async clearOffersTable(): Promise<{ ok: boolean; message: string }> {
+    if (!isConfigured()) return { ok: true, message: 'Cleared offers locally' };
+    try {
+      const { error } = await supabase.from('offers').delete().neq('id', '___non_existent___');
+      if (error) throw error;
+      return { ok: true, message: 'All special offers cleared from Supabase' };
     } catch (err: any) {
       return { ok: false, message: formatSupabaseError(err) };
     }
@@ -1377,6 +1616,155 @@ export const SupabaseService = {
       return { ok: true, message: 'All POS transactions cleared from Supabase' };
     } catch (err: any) {
       return { ok: false, message: formatSupabaseError(err) };
+    }
+  },
+
+  // --------------------------------------------------------------------------
+  // ADMIN USERS & AUTHENTICATION TABLE METHODS
+  // --------------------------------------------------------------------------
+  async testAdminUsersTable(): Promise<{ ok: boolean; message: string; userCount?: number }> {
+    if (!isConfigured()) return { ok: false, message: 'Supabase credentials not configured. Using local fallback accounts.' };
+    try {
+      const { count, error } = await supabase
+        .from('admin_users')
+        .select('*', { count: 'exact', head: true });
+      if (error) {
+        return { ok: false, message: `Table access issue: ${error.message}` };
+      }
+      return { 
+        ok: true, 
+        message: `Table "public.admin_users" is verified and active!`,
+        userCount: count ?? 0 
+      };
+    } catch (err: any) {
+      return { ok: false, message: formatSupabaseError(err) };
+    }
+  },
+
+  async getAdminUsers(): Promise<AdminUser[]> {
+    if (!isConfigured()) return [];
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) {
+        console.warn('admin_users table not found or inaccessible:', error.message);
+        return [];
+      }
+      return (data || []).map(mapAdminUserFromDB);
+    } catch (err) {
+      console.warn('Failed to load admin users:', err);
+      return [];
+    }
+  },
+
+  async authenticateAdminUser(email: string, password: string): Promise<{ success: boolean; user?: AdminUser; error?: string }> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!isConfigured()) {
+      // Local development or unconfigured fallback
+      if (normalizedEmail && password) {
+        return {
+          success: true,
+          user: {
+            id: 'user-local',
+            email: normalizedEmail,
+            name: normalizedEmail.includes('admin') ? 'FR Hasan' : 'Staff Admin',
+            role: 'Super-Admin',
+            isActive: true,
+          }
+        };
+      }
+      return { success: false, error: 'Please enter both email and password' };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('admin_users lookup failed:', error.message);
+        return { success: false, error: 'Authentication table error: ' + error.message };
+      }
+
+      if (!data) {
+        return { success: false, error: 'No account registered with this email address' };
+      }
+
+      if (!data.is_active) {
+        return { success: false, error: 'This user account has been deactivated. Contact the Super-Admin.' };
+      }
+
+      if (data.password_hash !== password) {
+        return { success: false, error: 'Incorrect password. Please verify your credentials.' };
+      }
+
+      // Record last login timestamp
+      const nowIso = new Date().toISOString();
+      try {
+        await supabase
+          .from('admin_users')
+          .update({ last_login_at: nowIso })
+          .eq('id', data.id);
+      } catch {
+        // ignore timestamp update error
+      }
+
+      return {
+        success: true,
+        user: { ...mapAdminUserFromDB(data), lastLoginAt: nowIso }
+      };
+    } catch (err: any) {
+      return { success: false, error: formatSupabaseError(err) };
+    }
+  },
+
+  async saveAdminUser(user: Partial<AdminUser>): Promise<{ ok: boolean; data?: AdminUser; error?: string }> {
+    if (!isConfigured()) return { ok: true, data: user as AdminUser };
+    try {
+      const payload = mapAdminUserToDB(user);
+      const { data, error } = await supabase
+        .from('admin_users')
+        .upsert(payload, { onConflict: 'id' })
+        .select()
+        .single();
+      if (error) throw error;
+      return { ok: true, data: mapAdminUserFromDB(data) };
+    } catch (err: any) {
+      return { ok: false, error: formatSupabaseError(err) };
+    }
+  },
+
+  async updateAdminPassword(idOrEmail: string, newPassword: string): Promise<{ ok: boolean; error?: string }> {
+    if (!isConfigured()) return { ok: true };
+    try {
+      const isEmail = idOrEmail.includes('@');
+      const query = supabase.from('admin_users').update({ 
+        password_hash: newPassword,
+        updated_at: new Date().toISOString()
+      });
+      const { error } = isEmail 
+        ? await query.eq('email', idOrEmail.trim().toLowerCase()) 
+        : await query.eq('id', idOrEmail);
+      if (error) throw error;
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: formatSupabaseError(err) };
+    }
+  },
+
+  async deleteAdminUser(id: string): Promise<{ ok: boolean; error?: string }> {
+    if (!isConfigured()) return { ok: true };
+    try {
+      const { error } = await supabase.from('admin_users').delete().eq('id', id);
+      if (error) throw error;
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: formatSupabaseError(err) };
     }
   }
 };

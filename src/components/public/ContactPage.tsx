@@ -210,7 +210,7 @@ export const ContactPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs uppercase tracking-wider font-bold text-slate-400">Store Hours</span>
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   Open Today
                 </span>
               </div>

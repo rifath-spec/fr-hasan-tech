@@ -7,6 +7,7 @@ import { ServicesListPage } from './components/public/ServicesListPage';
 import { ServiceDetailPage } from './components/public/ServiceDetailPage';
 import { AboutPage } from './components/public/AboutPage';
 import { ContactPage } from './components/public/ContactPage';
+import { OffersPage } from './components/public/OffersPage';
 
 import { AdminLogin } from './components/admin/AdminLogin';
 import { AdminForgotPassword } from './components/admin/AdminForgotPassword';
@@ -16,6 +17,7 @@ import { AdminDashboardOverview } from './components/admin/AdminDashboardOvervie
 import { AdminServices } from './components/admin/AdminServices';
 import { AdminSims } from './components/admin/AdminSims';
 import { AdminPackages } from './components/admin/AdminPackages';
+import { AdminOffers } from './components/admin/AdminOffers';
 import { AdminSettings } from './components/admin/AdminSettings';
 import { AdminEstimateManagement } from './components/admin/AdminEstimateManagement';
 
@@ -191,6 +193,14 @@ const AppRouter: React.FC = () => {
         );
       }
 
+      if (currentPath === '/admin/offers') {
+        return (
+          <AdminLayout pageTitle="Special Offers & Promotions">
+            <AdminOffers />
+          </AdminLayout>
+        );
+      }
+
       if (currentPath === '/admin' || currentPath === '/admin/' || currentPath === '/admin/pos' || currentPath === '/admin/pos/dashboard') {
         return (
           <AdminLayout pageTitle="Point of Sale (POS)">
@@ -268,6 +278,14 @@ const AppRouter: React.FC = () => {
       return (
         <PublicLayout>
           <ServicesListPage />
+        </PublicLayout>
+      );
+    }
+
+    if (currentPath === '/offers' || currentPath.startsWith('/offers?') || currentPath.startsWith('/offers/')) {
+      return (
+        <PublicLayout>
+          <OffersPage />
         </PublicLayout>
       );
     }

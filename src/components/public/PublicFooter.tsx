@@ -65,6 +65,11 @@ export const PublicFooter: React.FC = () => {
                 </button>
               </li>
               <li>
+                <button onClick={() => navigate('/offers')} className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-amber-400 font-semibold">
+                  <span>🔥 Special Offers & Deals</span>
+                </button>
+              </li>
+              <li>
                 <button onClick={() => navigate('/about')} className="hover:text-white transition-colors flex items-center gap-1">
                   <span>About Us</span>
                 </button>

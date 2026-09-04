@@ -70,6 +70,32 @@ export interface ServiceItem {
   updatedAt?: string;
 }
 
+export interface OfferItem {
+  id: string;
+  title: string;
+  badge: string; // e.g. "50% OFF", "Special Deal", "Combo Pack", "Limited Offer"
+  shortDescription: string;
+  description: string;
+  image?: string;
+  imageUrl?: string;
+  originalPrice?: number;
+  offerPrice?: number;
+  discountPercentage?: number;
+  currency?: string; // Default "LKR"
+  validUntil?: string; // e.g. "2026-10-31" or "Limited stock"
+  category?: string; // e.g. "Printing", "SIM Cards", "IT & Software", "Packages", "General"
+  features?: string[];
+  terms?: string[];
+  featured?: boolean;
+  active?: boolean;
+  status: 'Active' | 'Expired' | 'Draft' | 'Inactive';
+  isPublished: boolean;
+  sortOrder?: number;
+  ctaText?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface SIMCard {
   id: string;
   network: NetworkProvider;
@@ -358,4 +384,20 @@ export interface EstimateCalculation {
   estimatedTotal: number;
   currency: string;
   disclaimer: string;
+}
+
+export type AdminRole = 'Super-Admin' | 'Admin' | 'Manager' | 'Cashier';
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: AdminRole;
+  password?: string;
+  phone?: string;
+  isActive: boolean;
+  avatarUrl?: string;
+  lastLoginAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

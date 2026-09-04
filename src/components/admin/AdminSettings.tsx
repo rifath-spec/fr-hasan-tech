@@ -7,47 +7,75 @@ import {
   Save, 
   Database, 
   KeyRound, 
-  CheckCircle2,
-  AlertTriangle,
-  Image as ImageIcon,
-  Upload,
-  UserCheck,
-  Server,
-  Copy,
-  Check,
-  RefreshCw,
-  ExternalLink,
-  Table,
-  Trash2,
-  Eye,
-  EyeOff,
-  Link,
-  Sparkles
+  CheckCircle2, 
+  AlertTriangle, 
+  Image as ImageIcon, 
+  Upload, 
+  UserCheck, 
+  Server, 
+  Copy, 
+  Check, 
+  RefreshCw, 
+  ExternalLink, 
+  Table, 
+  Trash2, 
+  Eye, 
+  EyeOff, 
+  Link, 
+  Sparkles,
+  FileCode,
+  FileJson,
+  Download,
+  Users,
+  UserPlus,
+  UserX,
+  ShieldCheck,
+  Edit2
 } from 'lucide-react';
-import { ShopSettings } from '../../types';
+import { ShopSettings, AdminRole, AdminUser } from '../../types';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { FRHasanLogo } from '../common/FRHasanLogo';
-import { SUPABASE_SQL_SCHEMA } from '../../data/supabaseSqlScript';
+import { SUPABASE_SQL_SCHEMA, SUPABASE_OFFERS_SQL_MIGRATION, SUPABASE_ADMIN_USERS_SQL_MIGRATION } from '../../data/supabaseSqlScript';
 import { SupabaseService } from '../../services/supabaseService';
 import { getSupabaseConfig, getActiveCredentials } from '../../lib/supabase';
+import { SqlBackupModal } from './SqlBackupModal';
+import { 
+  generateSqlBackup, 
+  getBackupStats, 
+  downloadFile, 
+  DatabaseBackupPayload, 
+  BackupStats 
+} from '../../utils/sqlBackupGenerator';
 
 export const AdminSettings: React.FC = () => {
   const { 
     settings, 
     updateSettings, 
     adminUser, 
+    adminUsers,
     resetAdminPassword, 
-    resetToInitialData,
-    clearAllData,
-    clearServices,
-    clearPackages,
-    clearSims,
-    clearTransactions,
-    seedSupabaseDatabase,
-    updateSupabaseCredentials,
-    clearSupabaseCredentials,
-    isSupabaseConnected,
-    showToast
+    addAdminUser,
+    updateAdminUser,
+    deleteAdminUser,
+    resetToInitialData, 
+    clearAllData, 
+    clearServices, 
+    clearPackages, 
+    clearSims, 
+    clearTransactions, 
+    seedSupabaseDatabase, 
+    updateSupabaseCredentials, 
+    clearSupabaseCredentials, 
+    isSupabaseConnected, 
+    showToast,
+    services,
+    packages,
+    sims,
+    offers,
+    transactions,
+    estimateCategories,
+    estimateSizes,
+    estimateServices
   } = useApp();
 
   const [activeSection, setActiveSection] = useState<'shop' | 'branding' | 'pos' | 'security' | 'supabase' | 'data'>('shop');
@@ -69,11 +97,47 @@ export const AdminSettings: React.FC = () => {
   const [isClearing, setIsClearing] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
 
+  // SQL Backup State
+  const [showSqlBackupModal, setShowSqlBackupModal] = useState(false);
+  const [sqlBackupContent, setSqlBackupContent] = useState('');
+  const [sqlBackupStats, setSqlBackupStats] = useState<BackupStats | null>(null);
+  const [isGeneratingBackup, setIsGeneratingBackup] = useState(false);
+
   // Password Modal
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Admin Auth & Users Table Diagnostics State
+  const [isTestingAdminAuth, setIsTestingAdminAuth] = useState(false);
+  const [testAdminAuthResult, setTestAdminAuthResult] = useState<{ ok: boolean; message: string; userCount?: number } | null>(null);
+  const [copiedAdminMigration, setCopiedAdminMigration] = useState(false);
+
+  // Admin User CRUD Modal State
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userModalMode, setUserModalMode] = useState<'create' | 'edit'>('create');
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [userForm, setUserForm] = useState<{
+    name: string;
+    email: string;
+    password?: string;
+    role: AdminRole;
+    phone: string;
+    isActive: boolean;
+  }>({
+    name: '',
+    email: '',
+    password: '',
+    role: 'Admin',
+    phone: '',
+    isActive: true
+  });
+  const [userFormError, setUserFormError] = useState('');
+  const [isSavingUser, setIsSavingUser] = useState(false);
+  const [showDeleteUserConfirm, setShowDeleteUserConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
 
   // Confirmation Modals
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -136,7 +200,7 @@ export const AdminSettings: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError('');
 
@@ -149,10 +213,143 @@ export const AdminSettings: React.FC = () => {
       return;
     }
 
-    resetAdminPassword(newPassword);
-    setShowPasswordModal(false);
-    setNewPassword('');
-    setConfirmPassword('');
+    setIsChangingPassword(true);
+    try {
+      const ok = await resetAdminPassword(newPassword);
+      if (ok) {
+        setShowPasswordModal(false);
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleTestAdminUsersTable = async () => {
+    setIsTestingAdminAuth(true);
+    setTestAdminAuthResult(null);
+    try {
+      const res = await SupabaseService.testAdminUsersTable();
+      setTestAdminAuthResult(res);
+      if (res.ok) {
+        showToast(res.message, "success");
+      } else {
+        showToast(res.message, "error");
+      }
+    } finally {
+      setIsTestingAdminAuth(false);
+    }
+  };
+
+  const handleCopyAdminMigrationSql = () => {
+    try {
+      navigator.clipboard.writeText(SUPABASE_ADMIN_USERS_SQL_MIGRATION);
+      setCopiedAdminMigration(true);
+      showToast("Admin Users SQL Migration copied to clipboard!", "success");
+      setTimeout(() => setCopiedAdminMigration(false), 2500);
+    } catch {
+      showToast("Unable to copy to clipboard", "warning");
+    }
+  };
+
+  const handleOpenCreateUser = () => {
+    setUserModalMode('create');
+    setEditingUserId(null);
+    setUserForm({
+      name: '',
+      email: '',
+      password: '',
+      role: 'Admin',
+      phone: '',
+      isActive: true
+    });
+    setUserFormError('');
+    setShowUserModal(true);
+  };
+
+  const handleOpenEditUser = (user: AdminUser) => {
+    setUserModalMode('edit');
+    setEditingUserId(user.id);
+    setUserForm({
+      name: user.name,
+      email: user.email,
+      password: '',
+      role: user.role || 'Admin',
+      phone: user.phone || '',
+      isActive: user.isActive !== false
+    });
+    setUserFormError('');
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserFormError('');
+
+    if (!userForm.name.trim()) {
+      setUserFormError('Please enter user full name');
+      return;
+    }
+    if (!userForm.email.trim()) {
+      setUserFormError('Please enter email address');
+      return;
+    }
+    if (userModalMode === 'create' && (!userForm.password || userForm.password.length < 6)) {
+      setUserFormError('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsSavingUser(true);
+    try {
+      if (userModalMode === 'create') {
+        await addAdminUser({
+          name: userForm.name.trim(),
+          email: userForm.email.trim().toLowerCase(),
+          password: userForm.password,
+          role: userForm.role,
+          phone: userForm.phone.trim(),
+          isActive: userForm.isActive
+        });
+      } else if (editingUserId) {
+        const updates: Partial<AdminUser> = {
+          name: userForm.name.trim(),
+          email: userForm.email.trim().toLowerCase(),
+          role: userForm.role,
+          phone: userForm.phone.trim(),
+          isActive: userForm.isActive
+        };
+        if (userForm.password && userForm.password.length >= 6) {
+          updates.password = userForm.password;
+        }
+        await updateAdminUser(editingUserId, updates);
+      }
+      setShowUserModal(false);
+    } catch (err: any) {
+      setUserFormError(err?.message || 'Failed to save account');
+    } finally {
+      setIsSavingUser(false);
+    }
+  };
+
+  const handleToggleUserActive = async (user: AdminUser) => {
+    if (user.id === adminUser?.id) {
+      showToast('You cannot deactivate your own currently active account', 'error');
+      return;
+    }
+    await updateAdminUser(user.id, { isActive: !user.isActive });
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    if (userToDelete.id === adminUser?.id) {
+      showToast('You cannot delete your own currently active account', 'error');
+      setShowDeleteUserConfirm(false);
+      return;
+    }
+    await deleteAdminUser(userToDelete.id);
+    setShowDeleteUserConfirm(false);
+    setUserToDelete(null);
   };
 
   const handleCopySql = () => {
@@ -273,18 +470,78 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
+  const getFullBackupPayload = (): DatabaseBackupPayload => ({
+    settings: formData,
+    services,
+    sims,
+    packages,
+    offers,
+    transactions,
+    estimateCategories,
+    estimateSizes,
+    estimateServices,
+    adminUsers
+  });
+
+  const handleGenerateSqlBackup = (autoDownload = false) => {
+    setIsGeneratingBackup(true);
+    try {
+      const payload = getFullBackupPayload();
+      const sql = generateSqlBackup(payload);
+      const stats = getBackupStats(payload);
+      setSqlBackupContent(sql);
+      setSqlBackupStats(stats);
+
+      if (autoDownload) {
+        const filename = `FRHasanTech_Database_Backup_${new Date().toISOString().split('T')[0]}.sql`;
+        downloadFile(sql, filename, 'application/sql');
+        showToast(`Downloaded SQL database backup (${stats.totalRecords} records)!`, "success");
+      } else {
+        setShowSqlBackupModal(true);
+      }
+    } catch (err: any) {
+      showToast(err?.message || "Failed to generate SQL backup", "error");
+    } finally {
+      setIsGeneratingBackup(false);
+    }
+  };
+
+  const handleCopySqlBackup = () => {
+    try {
+      const payload = getFullBackupPayload();
+      const sql = generateSqlBackup(payload);
+      navigator.clipboard.writeText(sql);
+      showToast("Live Database SQL backup script copied to clipboard!", "success");
+    } catch (err: any) {
+      showToast(err?.message || "Failed to copy SQL backup", "error");
+    }
+  };
+
   const downloadBackupJSON = () => {
-    const backupData = {
-      timestamp: new Date().toISOString(),
-      settings: formData,
-    };
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `FRHasanTech_Backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const payload = getFullBackupPayload();
+      const stats = getBackupStats(payload);
+      const exportObject = {
+        application: "FR.HASAN TECH - POS & Digital Services Platform",
+        version: "2.0",
+        exportedAt: new Date().toISOString(),
+        shopName: formData.shopName || settings.shopName,
+        stats,
+        database: payload
+      };
+      const blob = new Blob([JSON.stringify(exportObject, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `FRHasanTech_Full_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Full JSON backup downloaded (${stats.totalRecords} records)!`, "success");
+    } catch (err: any) {
+      showToast(err?.message || "Failed to export JSON backup", "error");
+    }
   };
 
   const config = getSupabaseConfig();
@@ -981,11 +1238,12 @@ export const AdminSettings: React.FC = () => {
                     <span>{testResult.message}</span>
                   </div>
                   {testResult.tables && (
-                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-emerald-200 font-mono text-[11px]">
+                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-emerald-200 font-mono text-[11px]">
                       <div>services: <strong>{testResult.tables['services'] ?? 0} rows</strong></div>
                       <div>sim_cards: <strong>{testResult.tables['sim_cards'] ?? 0} rows</strong></div>
                       <div>mobile_packages: <strong>{testResult.tables['mobile_packages'] ?? 0} rows</strong></div>
                       <div>pos_transactions: <strong>{testResult.tables['pos_transactions'] ?? 0} rows</strong></div>
+                      <div>offers: <strong>{testResult.tables['offers'] !== undefined ? `${testResult.tables['offers']} rows` : 'Table Not Found'}</strong></div>
                     </div>
                   )}
                 </div>
@@ -994,22 +1252,47 @@ export const AdminSettings: React.FC = () => {
 
             {/* SQL Script Viewer & Copy */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h4 className="font-bold text-xs text-gray-900 uppercase tracking-wider">PostgreSQL Schema & Security Script (SQL)</h4>
-                  <p className="text-[11px] text-gray-500">Run this complete script once in your Supabase SQL Editor to create all 5 tables, triggers, indexes, and RLS policies.</p>
+                  <h4 className="font-bold text-xs text-gray-900 uppercase tracking-wider">PostgreSQL Schema & Migration Scripts (SQL)</h4>
+                  <p className="text-[11px] text-gray-500">Run in your Supabase SQL Editor to ensure all tables (including offers) are active.</p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleCopySql}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-soft-xs ${
-                    copiedSql ? 'bg-emerald-600 text-white' : 'bg-slate-800 hover:bg-black text-white'
-                  }`}
-                >
-                  {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedSql ? 'Copied SQL!' : 'Copy SQL Script'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateSqlBackup(false)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1E5AA8] hover:bg-[#164785] text-white flex items-center gap-1.5 transition-colors shadow-soft-xs cursor-pointer"
+                    title="Export live store data as an executable SQL backup script"
+                  >
+                    <FileCode className="w-3.5 h-3.5" />
+                    <span>Export Live Data SQL</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(SUPABASE_OFFERS_SQL_MIGRATION);
+                      showToast('Offers Migration SQL copied! Paste in Supabase SQL Editor.', 'success');
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 transition-colors shadow-soft-xs cursor-pointer"
+                    title="Copy only the SQL to add the 'offers' table"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Offers SQL Only</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopySql}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-soft-xs cursor-pointer ${
+                      copiedSql ? 'bg-emerald-600 text-white' : 'bg-slate-800 hover:bg-black text-white'
+                    }`}
+                  >
+                    {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedSql ? 'Copied Full SQL!' : 'Copy Full SQL Script'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="relative rounded-xl overflow-hidden border border-slate-300 bg-slate-900 text-slate-100 p-4 font-mono text-xs max-h-72 overflow-y-auto leading-relaxed shadow-inner">
@@ -1019,35 +1302,311 @@ export const AdminSettings: React.FC = () => {
           </div>
         )}
 
-        {/* SECTION 5: SECURITY & ADMIN */}
+        {/* SECTION 5: SECURITY & ADMIN (DATABASE-BACKED AUTHENTICATION) */}
         {activeSection === 'security' && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#1E5AA8]" />
-              <span>Admin Authentication & Credentials</span>
-            </h3>
-
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-6">
+            
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
               <div>
-                <span className="font-bold text-sm text-gray-900 block">{adminUser?.name}</span>
-                <span className="text-xs text-gray-600 block">{adminUser?.email}</span>
-                <span className="text-[11px] text-gray-400 font-mono mt-1 block">Role: System Super-Admin</span>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-[#1E5AA8]" />
+                  <span>Admin Authentication & Staff Management</span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Manage database-backed accounts in the <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px] font-mono text-gray-700">public.admin_users</code> table with Role-Based Access Control.
+                </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowPasswordModal(true)}
-                className="px-4 py-2.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-md flex items-center gap-2 shadow-xs active-press"
-              >
-                <KeyRound className="w-4 h-4" />
-                <span>Change Password</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#1E5AA8] border border-blue-200">
+                  {adminUsers.length} {adminUsers.length === 1 ? 'Account' : 'Accounts'}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleOpenCreateUser}
+                  className="px-3 py-1.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-soft-xs cursor-pointer active-press"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Add Admin / Staff</span>
+                </button>
+              </div>
             </div>
 
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800 space-y-1">
-              <span className="font-bold block">Security Note:</span>
-              <span>All authentication sessions are verified and persisted safely in client-side state and protected by Supabase Row Level Security (RLS).</span>
+            {/* Diagnostics Card: Check Database Authentication Table */}
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#1E5AA8] flex items-center justify-center font-bold shrink-0">
+                    <Database className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm text-slate-900 block flex items-center gap-2">
+                      <span>Database Table: <code>public.admin_users</code></span>
+                      <span className={`px-2 py-0.5 text-[10.5px] rounded-full font-medium ${
+                        isSupabaseConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {isSupabaseConnected ? 'Supabase Connected' : 'Local / Offline Cache'}
+                      </span>
+                    </span>
+                    <span className="text-xs text-slate-500 block mt-0.5">
+                      Provides persistent credential verification, custom roles, and encrypted SQL backups.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled={isTestingAdminAuth}
+                    onClick={handleTestAdminUsersTable}
+                    className="px-3 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isTestingAdminAuth ? 'animate-spin text-[#1E5AA8]' : ''}`} />
+                    <span>{isTestingAdminAuth ? 'Testing Table...' : 'Verify Auth Table'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyAdminMigrationSql}
+                    className="px-3 py-2 bg-slate-800 hover:bg-black text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {copiedAdminMigration ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedAdminMigration ? 'Copied SQL!' : 'Copy Migration SQL'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Diagnostic Test Result Banner */}
+              {testAdminAuthResult && (
+                <div className={`p-3 rounded-lg border text-xs flex items-start gap-2.5 ${
+                  testAdminAuthResult.ok 
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-amber-50 border-amber-200 text-amber-900'
+                }`}>
+                  {testAdminAuthResult.ok ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-semibold">{testAdminAuthResult.message}</p>
+                    {testAdminAuthResult.ok && typeof testAdminAuthResult.userCount === 'number' && (
+                      <p className="text-[11px] text-emerald-700 mt-0.5">
+                        Detected {testAdminAuthResult.userCount} active staff record(s) in remote database table.
+                      </p>
+                    )}
+                    {!testAdminAuthResult.ok && (
+                      <p className="text-[11px] text-amber-700 mt-1">
+                        If the table does not exist in your database yet, click "Copy Migration SQL" above and paste it into your Supabase SQL Editor.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Current Active Session */}
+            <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-soft-xs space-y-3">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
+                Current Active Session
+              </span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-[#1E293B] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                    {adminUser?.name ? adminUser.name.charAt(0).toUpperCase() : 'A'}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-base text-gray-900">{adminUser?.name || 'Administrator'}</span>
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                        {adminUser?.role || 'Super-Admin'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-600 block mt-0.5">{adminUser?.email}</span>
+                    {adminUser?.phone && (
+                      <span className="text-xs text-gray-400 block font-mono mt-0.5">{adminUser.phone}</span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(true)}
+                  className="px-3.5 py-2 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-soft-xs cursor-pointer active-press transition-colors"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  <span>Change My Password</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Staff & Administrator Accounts Directory */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-sm text-gray-900 flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-[#1E5AA8]" />
+                    <span>Staff & Administrator Accounts</span>
+                  </h4>
+                  <p className="text-xs text-gray-500">
+                    Accounts can log in at <code className="font-mono text-gray-700 bg-gray-100 px-1 rounded">/admin/login</code> with customized shop access levels.
+                  </p>
+                </div>
+              </div>
+
+              {adminUsers.length === 0 ? (
+                <div className="p-8 text-center bg-gray-50 border border-dashed border-gray-300 rounded-xl">
+                  <Shield className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500 font-medium">No admin accounts configured.</p>
+                  <button
+                    type="button"
+                    onClick={handleOpenCreateUser}
+                    className="mt-3 px-3 py-1.5 bg-[#1E5AA8] text-white text-xs font-bold rounded-lg"
+                  >
+                    Add Default Admin
+                  </button>
+                </div>
+              ) : (
+                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-soft-xs bg-white">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                          <th className="py-3 px-4">User</th>
+                          <th className="py-3 px-4">Role</th>
+                          <th className="py-3 px-4">Phone</th>
+                          <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-xs">
+                        {adminUsers.map((user) => {
+                          const isCurrent = user.id === adminUser?.id;
+                          return (
+                            <tr key={user.id} className={`hover:bg-slate-50/70 transition-colors ${!user.isActive ? 'opacity-60 bg-gray-50/50' : ''}`}>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {user.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-bold text-gray-900">{user.name}</span>
+                                      {isCurrent && (
+                                        <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-blue-100 text-[#1E5AA8]">
+                                          You
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[11px] text-gray-500 font-mono block">{user.email}</span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                                  user.role === 'Super-Admin'
+                                    ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                    : user.role === 'Admin'
+                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    : user.role === 'Manager'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                }`}>
+                                  {user.role}
+                                </span>
+                              </td>
+
+                              <td className="py-3 px-4 font-mono text-gray-600">
+                                {user.phone || '—'}
+                              </td>
+
+                              <td className="py-3 px-4 text-center">
+                                <button
+                                  type="button"
+                                  disabled={isCurrent}
+                                  onClick={() => handleToggleUserActive(user)}
+                                  title={isCurrent ? "You cannot deactivate your own account" : "Click to toggle active status"}
+                                  className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                    user.isActive
+                                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                                      : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                  } ${isCurrent ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}
+                                >
+                                  {user.isActive ? 'Active' : 'Deactivated'}
+                                </button>
+                              </td>
+
+                              <td className="py-3 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditUser(user)}
+                                    className="p-1.5 text-gray-500 hover:text-[#1E5AA8] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                                    title="Edit User Details & Password"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    disabled={isCurrent || adminUsers.length <= 1}
+                                    onClick={() => {
+                                      setUserToDelete(user);
+                                      setShowDeleteUserConfirm(true);
+                                    }}
+                                    className={`p-1.5 rounded-lg transition-colors ${
+                                      isCurrent || adminUsers.length <= 1
+                                        ? 'text-gray-300 cursor-not-allowed'
+                                        : 'text-gray-400 hover:text-red-600 hover:bg-red-50 cursor-pointer'
+                                    }`}
+                                    title={isCurrent ? "Cannot delete yourself" : adminUsers.length <= 1 ? "Cannot delete last admin" : "Delete Account"}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SQL Migration Script Box (Collapsible / Reference) */}
+            <div className="border border-slate-200 rounded-xl bg-slate-900 text-slate-200 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
+                  <FileCode className="w-3.5 h-3.5 text-blue-400" />
+                  <span>SQL DDL Schema: public.admin_users</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyAdminMigrationSql}
+                  className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  {copiedAdminMigration ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedAdminMigration ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+              <pre className="font-mono text-[11px] text-slate-300 max-h-36 overflow-y-auto leading-relaxed scrollbar-thin">
+                {SUPABASE_ADMIN_USERS_SQL_MIGRATION}
+              </pre>
+            </div>
+
+            {/* Row Level Security Note */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800 space-y-1">
+              <span className="font-bold block flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#1E5AA8]" />
+                <span>Security & Persistence Guarantee:</span>
+              </span>
+              <span>All authentication sessions are verified and persisted safely in client-side state and protected by Supabase Row Level Security (RLS). SQL exports include full admin DDL and INSERT scripts.</span>
+            </div>
+
           </div>
         )}
 
@@ -1149,35 +1708,135 @@ export const AdminSettings: React.FC = () => {
               </div>
             </div>
 
-            {/* Backup & Factory Reset */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl border border-gray-200 bg-gray-50 flex flex-col justify-between">
+            {/* Backup & System Data Export */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-white shadow-soft-xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                 <div>
-                  <h4 className="font-bold text-sm text-gray-900">Export System Backup</h4>
-                  <p className="text-xs text-gray-500 mt-1">Download complete JSON dump containing catalog, SIMs, reload plans, POS logs, and settings.</p>
+                  <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <Database className="w-4 h-4 text-[#1E5AA8]" />
+                    <span>Database Backup & Data Export</span>
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Export your complete store catalog, inventory, POS sales, and configuration as ready-to-use SQL or portable JSON.
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={downloadBackupJSON}
-                  className="mt-4 w-full py-2 bg-gray-800 hover:bg-black text-white text-xs font-bold rounded-md transition-colors"
-                >
-                  Download JSON Backup
-                </button>
+                
+                {/* Live Catalog Status Badge */}
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-full shrink-0">
+                  <span>Live Catalog:</span>
+                  <span className="text-[#1E5AA8] font-bold">
+                    {services.length} Services · {sims.length} SIMs · {packages.length} Plans · {transactions.length} Sales
+                  </span>
+                </div>
               </div>
 
-              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900">Restore Factory Data</h4>
-                  <p className="text-xs text-slate-600 mt-1">Reset application state back to official FR.HASAN TECH initial configuration.</p>
+              {/* Two Column Grid: SQL Backup (New Option!) vs JSON Backup */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* 1. SQL BACKUP CARD (PROMINENT & SUPABASE-READY) */}
+                <div className="p-4 rounded-xl border-2 border-blue-200 bg-gradient-to-b from-blue-50/60 to-white flex flex-col justify-between space-y-4 shadow-soft-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#1E5AA8] flex items-center justify-center font-bold">
+                          <FileCode className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-sm text-slate-900 block">SQL Database Backup (.sql)</span>
+                          <span className="text-[11px] text-[#1E5AA8] font-semibold">Supabase & PostgreSQL Dump</span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1E5AA8] text-white">
+                        Recommended
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Generates a full executable SQL script containing table DDL schemas, security policies, and idempotent <code className="font-mono text-blue-900 bg-blue-100/70 px-1 py-0.5 rounded">ON CONFLICT DO UPDATE</code> inserts for all live records. Run directly in Supabase SQL Editor.
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1 text-[10.5px]">
+                      <span className="px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800 font-medium">9 Tables Supported</span>
+                      <span className="px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800 font-medium">Safe Re-runnable DDL</span>
+                      <span className="px-2 py-0.5 rounded-md bg-blue-100/80 text-blue-800 font-medium">Auto Escaped Data</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-blue-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isGeneratingBackup}
+                      onClick={() => handleGenerateSqlBackup(true)}
+                      className="flex-1 py-2.5 px-3.5 bg-[#1E5AA8] hover:bg-[#164785] text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-soft-xs active-press cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download .SQL Backup</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isGeneratingBackup}
+                      onClick={() => handleGenerateSqlBackup(false)}
+                      className="py-2.5 px-3 bg-white hover:bg-blue-50 text-[#1E5AA8] border border-blue-300 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <FileCode className="w-3.5 h-3.5" />
+                      <span>Preview / Copy</span>
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowResetConfirm(true)}
-                  className="mt-4 w-full py-2 bg-slate-700 hover:bg-slate-900 text-white text-xs font-bold rounded-md transition-colors"
-                >
-                  Reset to Initial Templates
-                </button>
+
+                {/* 2. JSON BACKUP CARD */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold">
+                        <FileJson className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-sm text-slate-900 block">JSON System Snapshot (.json)</span>
+                        <span className="text-[11px] text-slate-500 font-medium">Universal Application Dump</span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Exports complete JSON structure containing shop profile, services catalog, SIM cards, mobile packages, special offers, POS transaction logs, and estimate calculator configurations.
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1 text-[10.5px]">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-200/80 text-slate-700 font-medium">All 9 Data Tables</span>
+                      <span className="px-2 py-0.5 rounded-md bg-slate-200/80 text-slate-700 font-medium">Universal Format</span>
+                      <span className="px-2 py-0.5 rounded-md bg-slate-200/80 text-slate-700 font-medium">Timestamped</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200 flex items-center">
+                    <button
+                      type="button"
+                      onClick={downloadBackupJSON}
+                      className="w-full py-2.5 px-3.5 bg-slate-800 hover:bg-black text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-soft-xs active-press cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download JSON Backup</span>
+                    </button>
+                  </div>
+                </div>
+
               </div>
+            </div>
+
+            {/* Factory Reset */}
+            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-sm text-slate-900">Restore Factory Data</h4>
+                <p className="text-xs text-slate-600 mt-0.5">Reset application state back to official FR.HASAN TECH initial configuration.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(true)}
+                className="px-4 py-2.5 bg-slate-700 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition-colors shrink-0 cursor-pointer"
+              >
+                Reset to Initial Templates
+              </button>
             </div>
           </div>
         )}
@@ -1231,21 +1890,162 @@ export const AdminSettings: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPasswordModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded text-gray-700 font-semibold"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 text-xs font-semibold hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#1E5AA8] text-white rounded font-bold"
+                  disabled={isChangingPassword}
+                  className="px-4 py-2 bg-[#1E5AA8] hover:bg-[#164785] text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
                 >
-                  Update Password
+                  {isChangingPassword && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{isChangingPassword ? 'Saving to Database...' : 'Update Password'}</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Admin User Create / Edit Modal */}
+      {showUserModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-gray-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#1E5AA8]" />
+                <span>{userModalMode === 'create' ? 'Add New Administrator / Staff' : 'Edit Staff Account'}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowUserModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            {userFormError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-medium flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{userFormError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveUser} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={userForm.name}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g. M. F. M. Hasan"
+                  className="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none focus:border-[#1E5AA8]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  value={userForm.email}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="staff@frhasantech.com"
+                  className="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none focus:border-[#1E5AA8]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1">
+                  {userModalMode === 'create' ? 'Password * (min 6 characters)' : 'New Password (leave blank to keep current)'}
+                </label>
+                <input
+                  type="password"
+                  required={userModalMode === 'create'}
+                  value={userForm.password || ''}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder={userModalMode === 'create' ? '••••••••' : 'Leave unchanged'}
+                  className="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none focus:border-[#1E5AA8]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Role</label>
+                  <select
+                    value={userForm.role}
+                    onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value as AdminRole }))}
+                    className="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none focus:border-[#1E5AA8]"
+                  >
+                    <option value="Super-Admin">Super-Admin</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Cashier">Cashier</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={userForm.phone}
+                    onChange={(e) => setUserForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="076 859 7800"
+                    className="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 outline-none focus:border-[#1E5AA8]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="userActiveStatus"
+                  checked={userForm.isActive}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="w-4 h-4 text-[#1E5AA8] rounded border-gray-300 focus:ring-[#1E5AA8]"
+                />
+                <label htmlFor="userActiveStatus" className="font-semibold text-gray-700 cursor-pointer">
+                  Account is Active (can sign in to admin dashboard)
+                </label>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUserModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingUser}
+                  className="px-4 py-2 bg-[#1E5AA8] hover:bg-[#164785] text-white rounded-lg font-bold flex items-center gap-1.5 transition-colors"
+                >
+                  {isSavingUser && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{userModalMode === 'create' ? 'Create Account' : 'Save Changes'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteUserConfirm}
+        title="Delete Staff Account?"
+        message={`Are you sure you want to permanently remove "${userToDelete?.name}" (${userToDelete?.email})? This user will no longer be able to log in.`}
+        confirmLabel="Yes, Delete Account"
+        onConfirm={handleDeleteUser}
+        onCancel={() => {
+          setShowDeleteUserConfirm(false);
+          setUserToDelete(null);
+        }}
+      />
 
       {/* Clear All Dummy Data Confirmation Modal */}
       <ConfirmModal
@@ -1300,6 +2100,17 @@ export const AdminSettings: React.FC = () => {
         }}
         onCancel={() => setShowResetConfirm(false)}
       />
+
+      {/* Database SQL Backup Preview & Download Modal */}
+      {showSqlBackupModal && sqlBackupStats && (
+        <SqlBackupModal
+          isOpen={showSqlBackupModal}
+          onClose={() => setShowSqlBackupModal(false)}
+          sqlContent={sqlBackupContent}
+          stats={sqlBackupStats}
+          shopName={formData.shopName || settings.shopName}
+        />
+      )}
 
     </div>
   );

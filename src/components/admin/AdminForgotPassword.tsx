@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 
 export const AdminForgotPassword: React.FC = () => {
   const { navigate } = useApp();
-  const [email, setEmail] = useState('admin@frhasantech.com');
+  const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -247,6 +247,58 @@ CREATE TRIGGER tr_estimate_services_updated_at
 BEFORE UPDATE ON public.estimate_services
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- I. SPECIAL OFFERS & PROMOTIONS TABLE
+CREATE TABLE IF NOT EXISTS public.offers (
+    id TEXT PRIMARY KEY DEFAULT ('offer-' || extract(epoch from now())::bigint || '-' || substr(md5(random()::text), 1, 6)),
+    title TEXT NOT NULL,
+    badge TEXT NOT NULL DEFAULT 'Special Deal',
+    short_description TEXT,
+    description TEXT,
+    image TEXT,
+    image_url TEXT,
+    original_price NUMERIC(10, 2),
+    offer_price NUMERIC(10, 2),
+    discount_percentage NUMERIC(5, 2),
+    currency TEXT NOT NULL DEFAULT 'LKR',
+    valid_until TEXT DEFAULT 'Limited Time',
+    category TEXT DEFAULT 'General',
+    features JSONB DEFAULT '[]'::jsonb,
+    terms JSONB DEFAULT '[]'::jsonb,
+    featured BOOLEAN NOT NULL DEFAULT FALSE,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    status TEXT NOT NULL DEFAULT 'Active',
+    is_published BOOLEAN NOT NULL DEFAULT TRUE,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    cta_text TEXT DEFAULT 'Claim on WhatsApp',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TRIGGER IF EXISTS tr_offers_updated_at ON public.offers;
+CREATE TRIGGER tr_offers_updated_at
+BEFORE UPDATE ON public.offers
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- J. ADMIN USERS & AUTHENTICATION TABLE
+CREATE TABLE IF NOT EXISTS public.admin_users (
+    id TEXT PRIMARY KEY DEFAULT ('user-' || extract(epoch from now())::bigint || '-' || substr(md5(random()::text), 1, 6)),
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Admin',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    phone TEXT,
+    avatar_url TEXT,
+    last_login_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TRIGGER IF EXISTS tr_admin_users_updated_at ON public.admin_users;
+CREATE TRIGGER tr_admin_users_updated_at
+BEFORE UPDATE ON public.admin_users
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- 3. INDEXES FOR HIGH-SPEED QUERIES
 CREATE INDEX IF NOT EXISTS idx_services_slug ON public.services(slug);
 CREATE INDEX IF NOT EXISTS idx_services_category ON public.services(category);
@@ -260,6 +312,11 @@ CREATE INDEX IF NOT EXISTS idx_est_services_active ON public.estimate_services(a
 CREATE INDEX IF NOT EXISTS idx_est_categories_active ON public.estimate_categories(active);
 CREATE INDEX IF NOT EXISTS idx_est_sizes_group ON public.estimate_sizes(size_group);
 CREATE INDEX IF NOT EXISTS idx_est_sizes_active ON public.estimate_sizes(active);
+CREATE INDEX IF NOT EXISTS idx_offers_status ON public.offers(status);
+CREATE INDEX IF NOT EXISTS idx_offers_published ON public.offers(is_published);
+CREATE INDEX IF NOT EXISTS idx_offers_category ON public.offers(category);
+CREATE INDEX IF NOT EXISTS idx_admin_users_email ON public.admin_users(email);
+CREATE INDEX IF NOT EXISTS idx_admin_users_active ON public.admin_users(is_active);
 
 -- 4. GRANTS & ROLES ACCESS
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
@@ -276,6 +333,8 @@ ALTER TABLE public.pos_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.estimate_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.estimate_sizes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.estimate_services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public shop settings access" ON public.shop_settings;
 CREATE POLICY "Public shop settings access" ON public.shop_settings FOR ALL USING (true) WITH CHECK (true);
@@ -301,6 +360,12 @@ CREATE POLICY "Public estimate sizes access" ON public.estimate_sizes FOR ALL US
 DROP POLICY IF EXISTS "Public estimate services access" ON public.estimate_services;
 CREATE POLICY "Public estimate services access" ON public.estimate_services FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public offers access" ON public.offers;
+CREATE POLICY "Public offers access" ON public.offers FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public admin users access" ON public.admin_users;
+CREATE POLICY "Public admin users access" ON public.admin_users FOR ALL USING (true) WITH CHECK (true);
+
 -- 6. REALTIME BROADCASTING
 DO $$
 BEGIN
@@ -318,6 +383,12 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'pos_transactions') THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.pos_transactions;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'offers') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.offers;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'admin_users') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_users;
     END IF;
 EXCEPTION
     WHEN OTHERS THEN
@@ -656,4 +727,157 @@ ON CONFLICT (id) DO UPDATE SET
     active = EXCLUDED.active,
     sort_order = EXCLUDED.sort_order,
     updated_at = NOW();
+
+-- H. ADMIN USERS & CREDENTIALS SEED
+INSERT INTO public.admin_users (id, email, password_hash, name, role, is_active, phone, created_at) VALUES
+('user-founder-001', 'admin@frhasantech.com', 'admin123', 'FR Hasan', 'Super-Admin', true, '076 859 7800', NOW()),
+('user-founder-002', 'ceo@frhasantech.com', 'admin123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW())
+ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
+    name = EXCLUDED.name,
+    role = EXCLUDED.role,
+    is_active = EXCLUDED.is_active,
+    phone = EXCLUDED.phone,
+    updated_at = NOW();
 `;
+
+// Standalone migration script for adding JUST the Special Offers & Promotions table to an existing Supabase instance
+export const SUPABASE_OFFERS_SQL_MIGRATION = `-- ======================================================================================
+-- FR.HASAN TECH - Standalone Special Offers Table Migration
+-- Run this in your Supabase SQL Editor if you already initialized the database earlier
+-- ======================================================================================
+
+-- 1. CREATE OFFERS TABLE
+CREATE TABLE IF NOT EXISTS public.offers (
+    id TEXT PRIMARY KEY DEFAULT ('offer-' || extract(epoch from now())::bigint || '-' || substr(md5(random()::text), 1, 6)),
+    title TEXT NOT NULL,
+    badge TEXT NOT NULL DEFAULT 'Special Deal',
+    short_description TEXT,
+    description TEXT,
+    image TEXT,
+    image_url TEXT,
+    original_price NUMERIC(10, 2),
+    offer_price NUMERIC(10, 2),
+    discount_percentage NUMERIC(5, 2),
+    currency TEXT NOT NULL DEFAULT 'LKR',
+    valid_until TEXT DEFAULT 'Limited Time',
+    category TEXT DEFAULT 'General',
+    features JSONB DEFAULT '[]'::jsonb,
+    terms JSONB DEFAULT '[]'::jsonb,
+    featured BOOLEAN NOT NULL DEFAULT FALSE,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    status TEXT NOT NULL DEFAULT 'Active',
+    is_published BOOLEAN NOT NULL DEFAULT TRUE,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    cta_text TEXT DEFAULT 'Claim on WhatsApp',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 2. TRIGGER FOR UPDATED_AT
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tr_offers_updated_at ON public.offers;
+CREATE TRIGGER tr_offers_updated_at
+BEFORE UPDATE ON public.offers
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 3. INDEXES
+CREATE INDEX IF NOT EXISTS idx_offers_status ON public.offers(status);
+CREATE INDEX IF NOT EXISTS idx_offers_published ON public.offers(is_published);
+CREATE INDEX IF NOT EXISTS idx_offers_category ON public.offers(category);
+
+-- 4. PERMISSIONS & ROW LEVEL SECURITY
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.offers TO anon, authenticated, service_role;
+
+ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public offers access" ON public.offers;
+CREATE POLICY "Public offers access" ON public.offers FOR ALL USING (true) WITH CHECK (true);
+
+-- 5. REALTIME REPLICATION
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'offers') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.offers;
+    END IF;
+END $$;
+`;
+
+// Standalone migration script for adding JUST the Admin Users & Authentication table to an existing Supabase instance
+export const SUPABASE_ADMIN_USERS_SQL_MIGRATION = `-- ======================================================================================
+-- FR.HASAN TECH - Standalone Admin Users & Authentication Table Migration
+-- Run this in your Supabase SQL Editor to enable database-backed staff & admin accounts
+-- ======================================================================================
+
+-- 1. CREATE ADMIN USERS TABLE
+CREATE TABLE IF NOT EXISTS public.admin_users (
+    id TEXT PRIMARY KEY DEFAULT ('user-' || extract(epoch from now())::bigint || '-' || substr(md5(random()::text), 1, 6)),
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Admin',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    phone TEXT,
+    avatar_url TEXT,
+    last_login_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 2. TRIGGER FOR UPDATED_AT
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tr_admin_users_updated_at ON public.admin_users;
+CREATE TRIGGER tr_admin_users_updated_at
+BEFORE UPDATE ON public.admin_users
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 3. INDEXES
+CREATE INDEX IF NOT EXISTS idx_admin_users_email ON public.admin_users(email);
+CREATE INDEX IF NOT EXISTS idx_admin_users_active ON public.admin_users(is_active);
+
+-- 4. PERMISSIONS & ROW LEVEL SECURITY
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON TABLE public.admin_users TO anon, authenticated, service_role;
+
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public admin users access" ON public.admin_users;
+CREATE POLICY "Public admin users access" ON public.admin_users FOR ALL USING (true) WITH CHECK (true);
+
+-- 5. SEED INITIAL SUPER-ADMIN ACCOUNTS
+INSERT INTO public.admin_users (id, email, password_hash, name, role, is_active, phone, created_at) VALUES
+('user-founder-001', 'admin@frhasantech.com', 'admin123', 'FR Hasan', 'Super-Admin', true, '076 859 7800', NOW()),
+('user-founder-002', 'ceo@frhasantech.com', 'admin123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW())
+ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
+    name = EXCLUDED.name,
+    role = EXCLUDED.role,
+    is_active = EXCLUDED.is_active,
+    phone = EXCLUDED.phone,
+    updated_at = NOW();
+
+-- 6. REALTIME REPLICATION
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'admin_users') THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_users;
+    END IF;
+END $$;
+`;
+
+
