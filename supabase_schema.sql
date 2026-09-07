@@ -298,4 +298,60 @@ BEGIN
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.pos_transactions;
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'admin_users'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.admin_users;
+  END IF;
 END $$;
+
+
+-- ======================================================================================
+-- 6. ADMIN USERS & AUTHENTICATION (Table, Policies, & Initial Founder Records)
+-- ======================================================================================
+CREATE TABLE IF NOT EXISTS public.admin_users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    name TEXT,
+    role TEXT NOT NULL DEFAULT 'Super-Admin',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    last_login_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'Super-Admin';
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_users_email_uniq ON public.admin_users(email);
+
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public admin users access" ON public.admin_users;
+DROP POLICY IF EXISTS "Allow all operations for admin_users" ON public.admin_users;
+
+CREATE POLICY "Allow all operations for admin_users"
+ON public.admin_users
+FOR ALL
+USING (true)
+WITH CHECK (true);
+
+GRANT ALL ON TABLE public.admin_users TO anon, authenticated, service_role;
+
+DELETE FROM public.admin_users 
+WHERE email IN ('frhasantech@gmail.com', 'admin@frhasantech.com', 'ceo@frhasantech.com', 'rifathahamed.official@gmail.com');
+
+INSERT INTO public.admin_users (email, password_hash, full_name, name, role, is_active)
+VALUES 
+  ('frhasantech@gmail.com', 'frhasan@123', 'FR Hasan (Founder & CEO)', 'FR Hasan', 'Super-Admin', true),
+  ('admin@frhasantech.com', 'frhasan@123', 'FR Hasan Admin', 'Admin', 'Super-Admin', true),
+  ('ceo@frhasantech.com', 'frhasan@123', 'FR Hasan (CEO)', 'FR Hasan', 'Super-Admin', true),
+  ('rifathahamed.official@gmail.com', 'frhasan@123', 'FR Hasan (Founder)', 'FR Hasan', 'Super-Admin', true);
+

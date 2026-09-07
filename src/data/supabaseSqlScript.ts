@@ -813,66 +813,48 @@ END $$;
 
 // Standalone migration script for adding JUST the Admin Users & Authentication table to an existing Supabase instance
 export const SUPABASE_ADMIN_USERS_SQL_MIGRATION = `-- ======================================================================================
--- FR.HASAN TECH - Standalone Admin Users & Authentication Table Migration
--- Run this in your Supabase SQL Editor to enable database-backed staff & admin accounts
+-- FR.HASAN TECH - Admin Credentials Insertion & Supabase Authentication Setup
+-- Run this in your Supabase SQL Editor: https://supabase.com/dashboard/project/_/sql
 -- ======================================================================================
 
--- 1. CREATE ADMIN USERS TABLE
-CREATE TABLE IF NOT EXISTS public.admin_users (
-    id TEXT PRIMARY KEY DEFAULT ('user-' || extract(epoch from now())::bigint || '-' || substr(md5(random()::text), 1, 6)),
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'Admin',
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    phone TEXT,
-    avatar_url TEXT,
-    last_login_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- 1. Ensure columns exist on public.admin_users (safe and idempotent)
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'Super-Admin';
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.admin_users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 
--- 2. TRIGGER FOR UPDATED_AT
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- 2. Ensure unique index on email
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_users_email_uniq ON public.admin_users(email);
 
-DROP TRIGGER IF EXISTS tr_admin_users_updated_at ON public.admin_users;
-CREATE TRIGGER tr_admin_users_updated_at
-BEFORE UPDATE ON public.admin_users
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- 3. Enable Row Level Security (RLS) and grant read/write access to the application
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
--- 3. INDEXES
-CREATE INDEX IF NOT EXISTS idx_admin_users_email ON public.admin_users(email);
-CREATE INDEX IF NOT EXISTS idx_admin_users_active ON public.admin_users(is_active);
+DROP POLICY IF EXISTS "Public admin users access" ON public.admin_users;
+DROP POLICY IF EXISTS "Allow all operations for admin_users" ON public.admin_users;
+DROP POLICY IF EXISTS "Allow select admin users" ON public.admin_users;
 
--- 4. PERMISSIONS & ROW LEVEL SECURITY
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+CREATE POLICY "Allow all operations for admin_users"
+ON public.admin_users
+FOR ALL
+USING (true)
+WITH CHECK (true);
+
 GRANT ALL ON TABLE public.admin_users TO anon, authenticated, service_role;
 
-ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Public admin users access" ON public.admin_users;
-CREATE POLICY "Public admin users access" ON public.admin_users FOR ALL USING (true) WITH CHECK (true);
+-- 4. Delete existing duplicates if any, then insert the founder and staff admin credentials
+DELETE FROM public.admin_users 
+WHERE email IN ('frhasantech@gmail.com', 'admin@frhasantech.com', 'ceo@frhasantech.com', 'rifathahamed.official@gmail.com');
 
--- 5. SEED INITIAL SUPER-ADMIN ACCOUNTS
-INSERT INTO public.admin_users (id, email, password_hash, name, role, is_active, phone, created_at) VALUES
-('user-founder-000', 'frhasantech@gmail.com', 'frhasan@123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW()),
-('user-founder-001', 'admin@frhasantech.com', 'frhasan@123', 'FR Hasan', 'Super-Admin', true, '076 859 7800', NOW()),
-('user-founder-002', 'ceo@frhasantech.com', 'frhasan@123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW())
-ON CONFLICT (id) DO UPDATE SET
-    email = EXCLUDED.email,
-    password_hash = EXCLUDED.password_hash,
-    name = EXCLUDED.name,
-    role = EXCLUDED.role,
-    is_active = EXCLUDED.is_active,
-    phone = EXCLUDED.phone,
-    updated_at = NOW();
+INSERT INTO public.admin_users (email, password_hash, full_name, name, role, is_active)
+VALUES 
+  ('frhasantech@gmail.com', 'frhasan@123', 'FR Hasan (Founder & CEO)', 'FR Hasan', 'Super-Admin', true),
+  ('admin@frhasantech.com', 'frhasan@123', 'FR Hasan Admin', 'Admin', 'Super-Admin', true),
+  ('ceo@frhasantech.com', 'frhasan@123', 'FR Hasan (CEO)', 'FR Hasan', 'Super-Admin', true),
+  ('rifathahamed.official@gmail.com', 'frhasan@123', 'FR Hasan (Founder)', 'FR Hasan', 'Super-Admin', true);
 
--- 6. REALTIME REPLICATION
+-- 5. Enable Realtime updates
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'admin_users') THEN

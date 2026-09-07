@@ -557,10 +557,10 @@ export const mapSettingsToDB = (s: ShopSettings) => ({
 export const mapAdminUserFromDB = (row: any): AdminUser => ({
   id: String(row.id),
   email: row.email || '',
-  name: row.name || 'Staff User',
-  role: (row.role as any) || 'Admin',
+  name: row.full_name || row.name || 'Staff User',
+  role: (row.role as any) || 'Super-Admin',
   password: row.password_hash || '',
-  phone: row.phone || '',
+  phone: row.phone || row.phone_number || '',
   avatarUrl: row.avatar_url || '',
   isActive: row.is_active !== undefined ? Boolean(row.is_active) : true,
   lastLoginAt: row.last_login_at,
@@ -568,17 +568,19 @@ export const mapAdminUserFromDB = (row: any): AdminUser => ({
   updatedAt: row.updated_at,
 });
 
-export const mapAdminUserToDB = (user: Partial<AdminUser>) => ({
-  ...(user.id ? { id: user.id } : {}),
-  ...(user.email !== undefined ? { email: user.email.trim().toLowerCase() } : {}),
-  ...(user.password !== undefined ? { password_hash: user.password } : {}),
-  ...(user.name !== undefined ? { name: user.name } : {}),
-  ...(user.role !== undefined ? { role: user.role } : {}),
-  ...(user.isActive !== undefined ? { is_active: user.isActive } : {}),
-  phone: user.phone || null,
-  avatar_url: user.avatarUrl || null,
-  ...(user.lastLoginAt !== undefined ? { last_login_at: user.lastLoginAt } : {}),
-});
+export const mapAdminUserToDB = (user: Partial<AdminUser>) => {
+  const isValidUuid = user.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+  const payload: any = {
+    ...(isValidUuid ? { id: user.id } : {}),
+    ...(user.email !== undefined ? { email: user.email.trim().toLowerCase() } : {}),
+    ...(user.password !== undefined ? { password_hash: user.password } : {}),
+    ...(user.name !== undefined ? { name: user.name, full_name: user.name } : {}),
+    ...(user.role !== undefined ? { role: user.role } : {}),
+    ...(user.isActive !== undefined ? { is_active: user.isActive } : {}),
+    ...(user.lastLoginAt !== undefined ? { last_login_at: user.lastLoginAt } : {}),
+  };
+  return payload;
+};
 
 // Helper to format Supabase errors into human-friendly explanations
 export const formatSupabaseError = (err: any): string => {
@@ -1689,13 +1691,50 @@ export const SupabaseService = {
       lastLoginAt: new Date().toISOString()
     });
 
-    // 1. Instant direct pass for founder credentials
-    // Prevents any blocking due to remote Supabase RLS policies, cold starts, or table sync issues
-    if (isFounder && isFounderPassword) {
-      return { success: true, user: getFounderUser() };
+    // 1. Primary: Fetch & Authenticate directly from the Supabase database!
+    if (isConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('email', normalizedEmail)
+          .maybeSingle();
+
+        if (error) {
+          console.warn('Database query on admin_users:', error.message);
+        } else if (data) {
+          // Account found in Supabase!
+          if (data.is_active === false) {
+            return { success: false, error: 'This user account has been deactivated. Contact the Super-Admin.' };
+          }
+
+          if (data.password_hash !== normalizedPassword) {
+            return { success: false, error: 'Incorrect password. Please verify your credentials.' };
+          }
+
+          // Password matches live database record!
+          const nowIso = new Date().toISOString();
+          try {
+            await supabase
+              .from('admin_users')
+              .update({ last_login_at: nowIso })
+              .eq('id', data.id);
+          } catch {
+            // non-blocking
+          }
+
+          const dbUser = mapAdminUserFromDB(data);
+          return {
+            success: true,
+            user: { ...dbUser, lastLoginAt: nowIso }
+          };
+        }
+      } catch (err: any) {
+        console.warn('Failed querying Supabase for admin authentication:', err);
+      }
     }
 
-    // 2. Check localStorage for customized credentials on this device
+    // 2. Check local device state (if user updated credentials locally)
     try {
       if (typeof window !== 'undefined') {
         const savedAdmins = localStorage.getItem('fr_hasan_admin_users');
@@ -1718,88 +1757,33 @@ export const SupabaseService = {
       // ignore localStorage check error
     }
 
+    // 3. Fallback for founder if database is not yet seeded with admin rows
+    if (isFounder && isFounderPassword) {
+      return { success: true, user: getFounderUser() };
+    }
+
     if (!isConfigured()) {
-      // Local development or unconfigured fallback
-      if (isFounder && isFounderPassword) {
-        return { success: true, user: getFounderUser() };
-      }
       return {
-        success: true,
-        user: {
-          id: 'user-local',
-          email: normalizedEmail,
-          name: normalizedEmail.includes('admin') || isFounder ? 'FR Hasan' : 'Staff Admin',
-          role: 'Super-Admin',
-          isActive: true,
-        }
+        success: false,
+        error: 'Supabase database is not configured and credentials were not found.'
       };
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', normalizedEmail)
-        .maybeSingle();
-
-      if (error) {
-        console.warn('admin_users lookup failed or table error:', error.message);
-        if (isFounder && isFounderPassword) {
-          return { success: true, user: getFounderUser() };
-        }
-        return { success: false, error: 'Authentication table error: ' + error.message };
-      }
-
-      if (!data) {
-        if (isFounder && isFounderPassword) {
-          return { success: true, user: getFounderUser() };
-        }
-        return { success: false, error: 'No account registered with this email address' };
-      }
-
-      if (!data.is_active) {
-        return { success: false, error: 'This user account has been deactivated. Contact the Super-Admin.' };
-      }
-
-      if (data.password_hash !== normalizedPassword) {
-        if (isFounder && isFounderPassword) {
-          return { success: true, user: { ...mapAdminUserFromDB(data), lastLoginAt: new Date().toISOString() } };
-        }
-        return { success: false, error: 'Incorrect password. Please verify your credentials.' };
-      }
-
-      // Record last login timestamp
-      const nowIso = new Date().toISOString();
-      try {
-        await supabase
-          .from('admin_users')
-          .update({ last_login_at: nowIso })
-          .eq('id', data.id);
-      } catch {
-        // ignore timestamp update error
-      }
-
-      return {
-        success: true,
-        user: { ...mapAdminUserFromDB(data), lastLoginAt: nowIso }
-      };
-    } catch (err: any) {
-      if (isFounder && isFounderPassword) {
-        return { success: true, user: getFounderUser() };
-      }
-      return { success: false, error: formatSupabaseError(err) };
-    }
+    return { 
+      success: false, 
+      error: 'No active admin account found for this email in the database. Please check credentials or run the SQL setup script.' 
+    };
   },
 
   async saveAdminUser(user: Partial<AdminUser>): Promise<{ ok: boolean; data?: AdminUser; error?: string }> {
     if (!isConfigured()) return { ok: true, data: user as AdminUser };
     try {
       const payload = mapAdminUserToDB(user);
-      const { data, error } = await supabase
-        .from('admin_users')
-        .upsert(payload, { onConflict: 'id' })
-        .select()
-        .single();
+      const query = user.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id)
+        ? supabase.from('admin_users').upsert(payload)
+        : supabase.from('admin_users').insert([payload]);
+        
+      const { data, error } = await query.select().single();
       if (error) throw error;
       return { ok: true, data: mapAdminUserFromDB(data) };
     } catch (err: any) {
@@ -1811,10 +1795,8 @@ export const SupabaseService = {
     if (!isConfigured()) return { ok: true };
     try {
       const isEmail = idOrEmail.includes('@');
-      const query = supabase.from('admin_users').update({ 
-        password_hash: newPassword,
-        updated_at: new Date().toISOString()
-      });
+      const updatePayload: any = { password_hash: newPassword };
+      const query = supabase.from('admin_users').update(updatePayload);
       const { error } = isEmail 
         ? await query.eq('email', idOrEmail.trim().toLowerCase()) 
         : await query.eq('id', idOrEmail);

@@ -767,6 +767,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return false;
     }
 
+    // 1. Primary: Authenticate against live Supabase database first!
+    try {
+      const authResult = await SupabaseService.authenticateAdminUser(trimmedEmail, trimmedPass);
+      if (authResult.success && authResult.user) {
+        setIsAdminAuthenticated(true);
+        setAdminUser(authResult.user);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('fr_hasan_is_admin_auth', 'true');
+          localStorage.setItem('fr_hasan_current_admin', JSON.stringify(authResult.user));
+        }
+        showToast(`Welcome back, ${authResult.user.name}!`, 'success');
+        return true;
+      }
+
+      // If database explicitly rejected the password or account is inactive, notify user
+      if (authResult.error && (authResult.error.includes('Incorrect password') || authResult.error.includes('deactivated'))) {
+        showToast(authResult.error, 'error');
+        return false;
+      }
+    } catch (err: any) {
+      console.warn('Database login attempt error:', err);
+    }
+
+    // 2. Check local admin accounts (e.g. if password was updated via Reset Password locally)
     const isFounder = [
       'frhasantech@gmail.com',
       'admin@frhasantech.com',
@@ -777,29 +801,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const isMasterPassword = trimmedPass === 'frhasan@123' || trimmedPass === 'admin123';
 
-    // 1. Direct instant pass for founder credentials
-    // Guarantees 100% login success on any hosted platform (Netlify, GitHub, Vercel)
-    if (isFounder && isMasterPassword) {
-      const founderUser: AdminUser = {
-        id: 'user-founder-000',
-        email: trimmedEmail,
-        name: trimmedEmail.includes('ceo') ? 'FR Hasan (Founder & CEO)' : 'FR Hasan',
-        role: 'Super-Admin',
-        phone: '076 859 7800',
-        isActive: true,
-        lastLoginAt: new Date().toISOString()
-      };
-      setIsAdminAuthenticated(true);
-      setAdminUser(founderUser);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('fr_hasan_is_admin_auth', 'true');
-        localStorage.setItem('fr_hasan_current_admin', JSON.stringify(founderUser));
-      }
-      showToast(`Welcome back, ${founderUser.name}! Signed in successfully.`, 'success');
-      return true;
-    }
-
-    // 2. Check local admin accounts (e.g. if password was updated via Reset Password)
     const localMatch = adminUsers.find(u => {
       const emailMatch = u.email.toLowerCase() === trimmedEmail;
       if (!emailMatch) return false;
@@ -823,27 +824,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return true;
     }
 
-    // 3. Authenticate against Supabase database
-    try {
-      const authResult = await SupabaseService.authenticateAdminUser(trimmedEmail, trimmedPass);
-      if (authResult.success && authResult.user) {
-        setIsAdminAuthenticated(true);
-        setAdminUser(authResult.user);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('fr_hasan_is_admin_auth', 'true');
-          localStorage.setItem('fr_hasan_current_admin', JSON.stringify(authResult.user));
-        }
-        showToast(`Welcome back, ${authResult.user.name}! Signed in successfully.`, 'success');
-        return true;
+    // 3. Fallback founder bypass if database has not yet been seeded with admin rows
+    if (isFounder && isMasterPassword) {
+      const founderUser: AdminUser = {
+        id: 'user-founder-000',
+        email: trimmedEmail,
+        name: trimmedEmail.includes('ceo') ? 'FR Hasan (Founder & CEO)' : 'FR Hasan',
+        role: 'Super-Admin',
+        phone: '076 859 7800',
+        isActive: true,
+        lastLoginAt: new Date().toISOString()
+      };
+      setIsAdminAuthenticated(true);
+      setAdminUser(founderUser);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('fr_hasan_is_admin_auth', 'true');
+        localStorage.setItem('fr_hasan_current_admin', JSON.stringify(founderUser));
       }
-
-      showToast(authResult.error || 'Invalid email or password. Please verify credentials.', 'error');
-      return false;
-    } catch (err: any) {
-      console.warn('Login error:', err);
-      showToast('Authentication failed. Please verify your credentials.', 'error');
-      return false;
+      showToast(`Welcome back, ${founderUser.name}! Signed in successfully.`, 'success');
+      return true;
     }
+
+    showToast('Invalid email or password. Please verify your credentials.', 'error');
+    return false;
   };
 
   const logoutAdmin = () => {
