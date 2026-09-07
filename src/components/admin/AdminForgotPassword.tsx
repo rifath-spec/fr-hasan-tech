@@ -76,7 +76,8 @@ export const AdminForgotPassword: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="frhasantech@gmail.com"
+                  placeholder="admin@example.com"
+                  autoComplete="email"
                   className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-md text-base text-gray-900 focus:border-[#1E5AA8] focus:outline-none"
                 />
               </div>
