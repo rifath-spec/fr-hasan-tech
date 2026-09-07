@@ -1,35 +1,48 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Mail, Lock, Eye, EyeOff, Shield, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Shield, ArrowRight, ArrowLeft, Key } from 'lucide-react';
 
 export const AdminLogin: React.FC = () => {
-  const { loginAdmin, navigate, settings } = useApp();
+  const { loginAdmin, navigate, currentPath } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleQuickFill = (founderEmail: string) => {
+    setEmail(founderEmail);
+    setPassword('frhasan@123');
+    setError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail) {
       setError('Please enter your email address');
       return;
     }
-    if (!password) {
+    if (!cleanPassword) {
       setError('Please enter your password');
       return;
     }
 
     setIsLoading(true);
     try {
-      const success = await loginAdmin(email, password);
+      const success = await loginAdmin(cleanEmail, cleanPassword);
       if (success) {
-        navigate('/admin/pos');
+        // If coming from another protected admin page, preserve destination; otherwise go to dashboard
+        const destination = (currentPath && currentPath.startsWith('/admin') && currentPath !== '/admin/login' && currentPath !== '/admin/forgot-password' && currentPath !== '/admin/reset-password')
+          ? currentPath
+          : '/admin/dashboard';
+        navigate(destination);
       } else {
-        setError('Invalid email or password. Please verify your credentials or check connection.');
+        setError('Invalid email or password. Please verify your credentials or click "Forgot Password?" below to reset.');
       }
     } catch (err: any) {
       setError(err?.message || 'Authentication error. Please try again.');
@@ -42,7 +55,7 @@ export const AdminLogin: React.FC = () => {
     <div className="min-h-screen bg-[#F1F5F9] flex flex-col justify-center items-center p-4 sm:p-6">
       
       {/* Top back to public website */}
-      <div className="w-full max-w-[420px] mb-4 flex items-center justify-between">
+      <div className="w-full max-w-[440px] mb-4 flex items-center justify-between">
         <button
           onClick={() => navigate('/')}
           className="text-xs font-semibold text-gray-600 hover:text-[#1E5AA8] flex items-center gap-1.5 transition-colors"
@@ -55,7 +68,7 @@ export const AdminLogin: React.FC = () => {
 
       {/* Centered Login Card */}
       <div
-        className="w-full max-w-[420px] bg-white rounded-xl shadow-soft-lg p-6 sm:p-8 border border-gray-200"
+        className="w-full max-w-[440px] bg-white rounded-xl shadow-soft-lg p-6 sm:p-8 border border-gray-200"
       >
         {/* Admin Logo 64x64px */}
         <div className="flex flex-col items-center text-center">
@@ -71,8 +84,34 @@ export const AdminLogin: React.FC = () => {
           </p>
         </div>
 
+        {/* Quick Founder Credentials Selector */}
+        <div className="mt-5 p-3 rounded-lg bg-amber-50/70 border border-amber-200/80">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-900 mb-2">
+            <Key className="w-3.5 h-3.5 text-amber-600" />
+            <span>Quick Auto-Fill (Founder Accounts)</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => handleQuickFill('frhasantech@gmail.com')}
+              className="px-2.5 py-1.5 bg-white hover:bg-amber-100/60 border border-amber-200 rounded text-left text-[11px] font-medium text-slate-800 transition-colors flex flex-col truncate"
+            >
+              <span className="font-semibold text-amber-950 truncate">frhasantech@gmail.com</span>
+              <span className="text-[10px] text-slate-500">Master Password: frhasan@123</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickFill('admin@frhasantech.com')}
+              className="px-2.5 py-1.5 bg-white hover:bg-amber-100/60 border border-amber-200 rounded text-left text-[11px] font-medium text-slate-800 transition-colors flex flex-col truncate"
+            >
+              <span className="font-semibold text-amber-950 truncate">admin@frhasantech.com</span>
+              <span className="text-[10px] text-slate-500">Master Password: frhasan@123</span>
+            </button>
+          </div>
+        </div>
+
         {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
               {error}
@@ -93,7 +132,7 @@ export const AdminLogin: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@lankaprint.lk"
+                placeholder="frhasantech@gmail.com"
                 className={`w-full pl-10 pr-4 py-3 bg-white border rounded-md text-base text-gray-900 placeholder:text-gray-400 focus:outline-none transition-colors ${
                   error ? 'border-red-500 bg-red-50/20' : 'border-gray-300 focus:border-[#1E5AA8] focus:ring-1 focus:ring-[#1E5AA8]'
                 }`}
@@ -144,7 +183,7 @@ export const AdminLogin: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 px-4 bg-[#1E5AA8] hover:bg-[#164785] text-white font-bold rounded-md active-press shadow-soft-sm transition-all text-base flex items-center justify-center gap-2 min-h-[48px] mt-6"
+            className="w-full py-3.5 px-4 bg-[#1E5AA8] hover:bg-[#164785] text-white font-bold rounded-md active-press shadow-soft-sm transition-all text-base flex items-center justify-center gap-2 min-h-[48px] mt-6 cursor-pointer"
           >
             {isLoading ? (
               <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

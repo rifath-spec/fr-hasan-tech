@@ -845,10 +845,11 @@ ON CONFLICT (id) DO UPDATE SET
     lines.push(`INSERT INTO public.admin_users (
     id, email, password_hash, name, role, is_active, phone, created_at
 ) VALUES (
-    'user-founder-001', 'admin@frhasantech.com', 'admin123', 'FR Hasan', 'Super-Admin', true, '076 859 7800', NOW()
+    'user-founder-000', 'frhasantech@gmail.com', 'frhasan@123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW()
 )
 ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
     name = EXCLUDED.name,
     role = EXCLUDED.role,
     is_active = EXCLUDED.is_active,

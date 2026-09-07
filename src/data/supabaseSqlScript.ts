@@ -860,8 +860,9 @@ CREATE POLICY "Public admin users access" ON public.admin_users FOR ALL USING (t
 
 -- 5. SEED INITIAL SUPER-ADMIN ACCOUNTS
 INSERT INTO public.admin_users (id, email, password_hash, name, role, is_active, phone, created_at) VALUES
-('user-founder-001', 'admin@frhasantech.com', 'admin123', 'FR Hasan', 'Super-Admin', true, '076 859 7800', NOW()),
-('user-founder-002', 'ceo@frhasantech.com', 'admin123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW())
+('user-founder-000', 'frhasantech@gmail.com', 'frhasan@123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW()),
+('user-founder-001', 'admin@frhasantech.com', 'frhasan@123', 'FR Hasan', 'Super-Admin', true, '076 859 7800', NOW()),
+('user-founder-002', 'ceo@frhasantech.com', 'frhasan@123', 'FR Hasan (Founder & CEO)', 'Super-Admin', true, '076 859 7800', NOW())
 ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,
     password_hash = EXCLUDED.password_hash,

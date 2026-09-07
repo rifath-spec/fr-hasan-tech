@@ -4,7 +4,9 @@ import { Lock, Eye, EyeOff, CheckCircle2, XCircle, ArrowRight, ShieldCheck } fro
 import { motion } from 'motion/react';
 
 export const AdminResetPassword: React.FC = () => {
-  const { navigate, resetAdminPassword } = useApp();
+  const { navigate, resetAdminPassword, adminUser } = useApp();
+  const emailParam = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('email') || '') : '';
+  const [targetEmail, setTargetEmail] = useState(emailParam || adminUser?.email || 'frhasantech@gmail.com');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +35,7 @@ export const AdminResetPassword: React.FC = () => {
       return;
     }
 
-    const success = await resetAdminPassword(newPassword);
+    const success = await resetAdminPassword(newPassword, targetEmail);
     if (success) {
       setIsSuccess(true);
     }
@@ -54,7 +56,7 @@ export const AdminResetPassword: React.FC = () => {
             Create New Password
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
-            Choose a strong password for your admin dashboard
+            Setting password for: <span className="font-semibold text-gray-800">{targetEmail}</span>
           </p>
         </div>
 

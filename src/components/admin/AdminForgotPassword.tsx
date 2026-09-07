@@ -48,7 +48,7 @@ export const AdminForgotPassword: React.FC = () => {
 
             <div className="pt-2 flex flex-col gap-2">
               <button
-                onClick={() => navigate('/admin/reset-password')}
+                onClick={() => navigate('/admin/reset-password?email=' + encodeURIComponent(email.trim().toLowerCase()))}
                 className="w-full py-3 bg-[#1E5AA8] hover:bg-[#164785] text-white text-sm font-bold rounded-md"
               >
                 Proceed to Set New Password
@@ -76,7 +76,7 @@ export const AdminForgotPassword: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@lankaprint.lk"
+                  placeholder="frhasantech@gmail.com"
                   className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-md text-base text-gray-900 focus:border-[#1E5AA8] focus:outline-none"
                 />
               </div>
